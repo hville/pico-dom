@@ -10,15 +10,15 @@ function creator(defaults) {
 		factory.isFactory = true
 
 		function factory(cfg) {
-			update.context = new List(tagName, Object.assign({}, factory.defaults, cfg), content)
-			update.isUpdate = true
+			view.context = new List(tagName, Object.assign({}, factory.defaults, cfg), content)
+			view.isView = true
 
-			function update(val, idx, nextSibling) {
-				return update.context.update(val, idx, nextSibling)
+			function view(val, idx, nextSibling) {
+				return view.context.view(val, idx, nextSibling)
 			}
-			return update
+			return view
 		}
 		return factory
 	}
-	return defaults
+	return define
 }

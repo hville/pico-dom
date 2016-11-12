@@ -11,15 +11,15 @@ function creator(defaults) {
 
 
 		function factory(cfg) {
-			update.context = factory.template.clone(cfg)
-			update.isUpdate = true
+			view.context = factory.template.clone(cfg)
+			view.isView = true
 
-			function update(val, idx, nextSibling) {
-				return update.context.update(val, idx, nextSibling)
+			function view(val, idx, nextSibling) {
+				return view.context.view(val, idx, nextSibling)
 			}
-			return update
+			return view
 		}
 		return factory
 	}
-	return defaults
+	return define
 }
