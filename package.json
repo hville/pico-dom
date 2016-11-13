@@ -1,9 +1,11 @@
 {
   "name": "pico-dom",
   "version": "0.0.1",
-  "description": "small component system",
+  "description": "small DOM component system",
   "keywords": [
-    "component"
+    "component", "dom", "createElement",
+    "hyperscript",
+    "svg", "xml", "namespace"
   ],
   "author": "Hugo Villeneuve",
   "main": "./index.js",
@@ -18,11 +20,15 @@
     "test": "cotest tst",
     "bld": "webpack ./index.js ./bld/create-element-ns.min.js --progress --colors --optimize-minimize",
     "srv": "webpack-dev-server --progress --colors",
-    "ssl": "webpack-dev-server --progress --colors --https",
-    "min": "uglifyjs ./index.js -c unsafe,drop_console -m --screw-ie8 --preamble //hugov@runbox.com --wrap jsonPatcher -o ./bld/index.min.js"
+    "ssl": "webpack-dev-server --progress --colors --https"
   },
-  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hville/pico-dom.git"
+  },
+  "private": false,
+  "license": "MIT",
   "publishConfig": {
-    "registry": "http://localhost:4873/"
+    "registry": "https://registry.npmjs.org/"
   }
 }
