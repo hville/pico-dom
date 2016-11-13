@@ -5,14 +5,19 @@ var createElementNS = require('create-element-ns'),
 module.exports = Component
 
 function Component(sel, cfg, cnt) {
-	this.el = createElementNS.html(sel, cfg)
-	this.key = cfg && cfg.key
+	if (!cfg) cfg = {}
+	this.el = createElementNS.el(sel, cfg)
+	this.key = cfg.key
 	this.eventHandlers = {}
-	this.edit = cfg && cfg.edit
+	this.edit = cfg.edit
 	this.content = []
 	if (cnt || cnt === 0) this.setContent(cnt)
-	if (cfg && cfg.on) this.on(cfg.on)
+	if (cfg.on) this.on(cfg.on)
+	// temporary node used to position updates. shared across all nodes
 	if (!this.placeholder) this.placeholder = domAPI.document.createComment('placeholder')
+	// callback on instance
+	this.init = cfg.init
+	if (this.init) this.init(cfg)
 }
 Component.prototype = {
 	constructor: Component,
@@ -37,9 +42,7 @@ function clone(cfg) {
 		var el = co.el,
 				decorators = createElementNS.decorators
 		for (var k in cfg) {
-			//console.log('DECORATE0', k, cfg[k], el.value)
 			if (decorators[k]) decorators[k].call(cfg, el, k, cfg[k])
-			//console.log('DECORATE1', k, cfg[k], el.value)
 		}
 	}
 	return co
@@ -57,7 +60,8 @@ function view(val, idx, after) {
 }
 function updateChildren(val, idx) {
 	var elm = this.el,
-			last = this.placeholder,
+			placeholder = this.placeholder,
+			last = placeholder,
 			cnt = this.content
 	elm.insertBefore(last, elm.firstChild)
 	for (var i=0; i<cnt.length; ++i) {
@@ -67,19 +71,19 @@ function updateChildren(val, idx) {
 			: itm.isView ? itm(val, idx+i, last)
 			: elm.insertBefore(itm, last.nextSibling)
 	}
-	elm.removeChild(this.placeholder)
+	elm.removeChild(placeholder)
 	while (last.nextSibling) elm.removeChild(last.nextSibling)
 }
 function setContent(cnt) {
-	this.content.length = 0
-	this.content = (Array.isArray(cnt)) ? cnt.reduce(parseContent, this.content)
-		: parseContent(this.content, cnt)
+	var content = this.content
+	content.length = 0
+	content = (Array.isArray(cnt)) ? cnt.reduce(parseContent, content)
+		: parseContent(content, cnt)
 }
 function parseContent(res, cnt) {
 	var d = domAPI.document
-	if (!cnt) {
-		if (cnt === 0) res.push(d.createTextNode('0'))
-	}
+
+	if (!cnt && cnt !== 0) return res
 	else if (cnt.nodeName && cnt.nodeType > 0) res.push(cnt)
 	else if (cnt.isView || cnt.view) res.push(cnt)
 	else if (cnt.isFactory) res.push(cnt())

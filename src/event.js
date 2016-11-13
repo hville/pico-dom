@@ -4,16 +4,20 @@ module.exports = {
 }
 
 function on(typ, fcn) {
+	var el = this.el,
+			handlers = this.eventHandlers,
+			options = {capture: true, passive:true}
+
 	if (typeof typ === 'object') {
 		for (var k in typ) this.on(k, typ[k])
 	}
 	else if (!fcn) {
-		delete this.eventHandlers[typ]
-		this.el.removeEventListener(typ, this, {capture: true, passive:true})
+		delete handlers[typ]
+		el.removeEventListener(typ, this, options)
 	}
 	else {
-		this.eventHandlers[typ] = fcn
-		this.el.addEventListener(typ, this, {capture: true, passive:true})
+		handlers[typ] = fcn
+		el.addEventListener(typ, this, options)
 	}
 	return this
 }

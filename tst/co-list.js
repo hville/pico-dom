@@ -1,13 +1,21 @@
-var domAPI = require('dom-document'),
+var pico = require('../index'),
 		jsdom = require('jsdom'),
-		ct = require('cotest'),
-		coTuple = require('../src/co-tuple'),
-		coList = require('../src/co-list')
+		ct = require('cotest')
 
 var document = jsdom.jsdom(),
-		li = coList(),
-		co = coTuple()
+		domAPI = pico.dom,
+		li = pico.liCreator(),
+		co = pico.coCreator()
+
 domAPI.document = document
+
+ct('empty list', function() {
+	var minFac = li(''),
+			minView = minFac()
+	// constructors
+	ct('===', minFac.isFactory, true)
+	ct('===', minView.isView, true)
+})
 
 var liFac = li('td', {
 	edit: function(v,i) {

@@ -1,11 +1,13 @@
-var domAPI = require('dom-document'),
+var pico = require('../index'),
 		jsdom = require('jsdom'),
-		ct = require('cotest'),
-		List = require('../src/list')
+		ct = require('cotest')
 
-var document = jsdom.jsdom()
+var document = jsdom.jsdom(),
+		domAPI = pico.dom,
+		List = pico.List
+
 domAPI.document = document
-
+//TODO view() with edge cases el((li()))
 ct('simple List: .isList .template .dataKey', function() {
 	var l = new List('div#myid'),
 			t = l.template
@@ -15,8 +17,6 @@ ct('simple List: .isList .template .dataKey', function() {
 	// template
 	ct('===', t.isComponent(t), true)
 	ct('===', t.el.nodeName.toLowerCase(), 'div')
-	// dataKey default
-	ct('===', l.dataKey('x', 7), 7)
 })
 ct('nested List, dataKeyString', function() {
 	var l = new List('tr#myid0', {}, [

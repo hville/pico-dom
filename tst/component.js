@@ -1,10 +1,11 @@
-var domAPI = require('dom-document'),
+var pico = require('../index'),
 		jsdom = require('jsdom'),
-		ct = require('cotest'),
-		Component = require('../src/component')
+		ct = require('cotest')
 
 var document = jsdom.jsdom(),
-		DOM = document.defaultView
+		DOM = document.defaultView,
+		domAPI = pico.dom,
+		Component = pico.Component
 
 domAPI.document = document
 

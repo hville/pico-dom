@@ -1,11 +1,11 @@
-var domAPI = require('dom-document'),
+var pico = require('../index'),
 		jsdom = require('jsdom'),
-		ct = require('cotest'),
-		coTuple = require('../src/co-tuple')
+		ct = require('cotest')
 
 var document = jsdom.jsdom(),
 		DOM = document.defaultView,
-		co = coTuple()
+		domAPI = pico.dom,
+		co = pico.coCreator()
 
 domAPI.document = document
 

@@ -8,17 +8,18 @@
   "author": "Hugo Villeneuve",
   "main": "./index.js",
   "dependencies": {
-    "create-element-ns": "^0.6.0",
+    "create-element-ns": "^0.7.0",
     "dom-document": "^1.0.0"
   },
   "devDependencies": {
     "cotest": "^1.6.1"
   },
   "scripts": {
-    "bld": "webpack --progress --colors --optimize-minimize",
+    "test": "cotest tst",
+    "bld": "webpack ./index.js ./bld/create-element-ns.min.js --progress --colors --optimize-minimize",
     "srv": "webpack-dev-server --progress --colors",
     "ssl": "webpack-dev-server --progress --colors --https",
-    "min": "uglifyjs ./src/index.js -c unsafe,drop_console -m --screw-ie8 --preamble //hugov@runbox.com --wrap jsonPatcher -o ./bld/index.min.js"
+    "min": "uglifyjs ./index.js -c unsafe,drop_console -m --screw-ie8 --preamble //hugov@runbox.com --wrap jsonPatcher -o ./bld/index.min.js"
   },
   "license": "UNLICENSED",
   "publishConfig": {
