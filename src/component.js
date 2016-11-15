@@ -49,11 +49,9 @@ function updateChildren(val, idx) {
 			placeholder = this.placeholder,
 			last = placeholder,
 			cnt = this.content
-			console.log(elm.tagName, 'updateContent', idx, 'of', cnt.length)
 	elm.insertBefore(last, elm.firstChild)
 	for (var i=0; i<cnt.length; ++i) {
 		var itm = cnt[i]
-		console.log(elm.tagName, 'updateChildren', idx+i, 'of', cnt.length)
 		last = (itm === last) ? last
 			: itm.constructor === Function ? itm(val, idx+i, last)
 			: elm.insertBefore(itm, last.nextSibling)

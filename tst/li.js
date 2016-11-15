@@ -42,7 +42,6 @@ ct('list update through parent update', function() {
 })
 ct('sequence in nested lists', function() {
 	function edit(v, i) {
-		//console.log('edit',v,i)
 		this.el.textContent = v
 		this.el.tabIndex = i
 	}

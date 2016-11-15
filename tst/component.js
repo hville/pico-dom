@@ -26,8 +26,6 @@ var bodyTdInput = new Component('input.tdinput', {
 
 ct('full Component - no children', function() {
 	var c = bodyTdInput
-	//console.log('bodyTdInput.edit',bodyTdInput.edit)
-	//console.log('c.edit',c.edit)
 	// element
 	ct('===', c.el.nodeName.toLowerCase(), 'input')
 	ct('===', c.el.classList.contains('tdinput'), true)
