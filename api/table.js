@@ -9,51 +9,60 @@ var sharedContext = {
 var initContext = {
 	init: function initTableContext(cfg) {
 		this.tableContext = cfg ? Object.assign(sharedContext, cfg) : sharedContext
-	}
+	},
+	dataKey: 'k'
 }
 
 //custom creators for shared scope
-var li = pico.Li(initContext),
-		co = pico.Co(initContext),
+var li = pico.chain(pico.List, initContext),
+		co = pico.chain(pico.Component, initContext),
 		el = pico.el
 var thead = co('thead', {},
-	co('tr', {},
+	co('tr', {
+		edit: function(v) {
+			return this.tableContext.sort[1].map(function(k) {return {k:k, v:v}})
+		}
+	},[
+		el('th', '>'),
 		li('th', {
 			edit: function(v, i) {
 				var ctx = this.tableContext
-				this.el.style.color = (this.k === ctx.focus[1]) ? 'blue' : 'black'
+				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'//TODO : allblack!
+				console.log('TH', v, i, this.key)
 				this.el.textContent = i
 			}
 		})
-	)
+	])
 )
 var tfoot = co('tfoot', {},
-	co('tr', {},
+	co('tr', {}, [
+		el('th', '>'),
 		li('th', {
-			edit: function(v) {
+			edit: function(v, i) {
 				var ctx = this.tableContext
-				this.el.style.color = (this.k === ctx.focus[1]) ? 'blue' : 'black'
-				this.el.textContent = v.length
+				this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
+				this.el.textContent = i
 			}
 		})
-	)
+	])
 )
 var tbody = co('tbody', {},
 	li('tr', {
 		edit: function(row) {
 			var ctx = this.tableContext
-			this.el.style.color = (this.k === ctx.focus[0]) ? 'blue' : 'black'
+			this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
+
 			return ctx.sort[1].map(function(k) { return {k:k, v: row.v[k]} })
 		}
 	}, [
 		co('td',
 			el.svg('svg',
-				el.svg('use[xlink:href="#icon-feather"]')
+				el.svg('use[xlink:href="#icon-feather"]') //TODO display: none gets copied!
 			)
 		),
 		li('td', {
-			edit: function(col, idx) {
-				console.log('tdEdit', col, idx)
+			edit: function(col) {
+				//console.log('tdEdit', col, idx)
 				this.el.textContent = col.v
 			}
 		}),

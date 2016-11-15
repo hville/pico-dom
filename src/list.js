@@ -1,11 +1,14 @@
-var Component = require('./component')
+var Component = require('./component'),
+		chain = require('./chain')
+
+var co = chain(Component)
 
 module.exports = List
 
 function List(sel, cfg, cnt) {
 	if (!cfg) cfg = {}
-	// template to generate new dynamic elements
-	this.template = new Component(sel, cfg, cnt)
+	// factory to generate new dynamic elements
+	this.factory = co(sel, cfg, cnt)
 	// function to derive a unique id from the date and re-sort nodes
 	this.dataKey = cfg.dataKey
 	// lookup maps to locate existing component and delete extra ones
@@ -25,7 +28,7 @@ function isList(o) {
 }
 function view(arr, idx, last) {
 	var parent = last.parentNode,
-			template = this.template,
+			factory = this.factory,
 			dataKey = this.dataKey,
 			isDataKeyFn = dataKey && dataKey.constructor === Function,
 			mIdCo = this.mIdCo,
@@ -34,15 +37,13 @@ function view(arr, idx, last) {
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
 				uid = isDataKeyFn ? dataKey(val, i) : (dataKey !== undefined) ? val[dataKey] : i,
-				cmp = mIdCo.get(uid)
-		if (!cmp) {
-			cmp = template.clone({key: uid})
-			if (cmp.el.id) cmp.el.removeAttribute('id')
-
-			mIdCo.set(uid, cmp)
-			mElId.set(cmp.el, uid)
+				vfn = mIdCo.get(uid)
+		if (!vfn) {
+			vfn = factory({key: uid})
+			mIdCo.set(uid, vfn)
 		}
-		last = cmp.view(val, idx+i, last)
+		last = vfn(val, idx+i, last)
+		mElId.set(last, uid)
 	}
 	// unmount and de-reference remaining nodes that are part of this list
 	while (last.nextSibling) {

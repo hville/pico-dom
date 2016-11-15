@@ -3,8 +3,8 @@ var pico = require('../index'),
 		ct = require('cotest')
 
 var document = jsdom.jsdom(),
-		li = pico.Li(),
-		co = pico.Co()
+		li = pico.li,
+		co = pico.co
 
 pico.global.document = document
 
@@ -42,7 +42,7 @@ ct('list update through parent update', function() {
 })
 ct('sequence in nested lists', function() {
 	function edit(v, i) {
-		console.log('edit',v,i)
+		//console.log('edit',v,i)
 		this.el.textContent = v
 		this.el.tabIndex = i
 	}

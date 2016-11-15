@@ -4,7 +4,7 @@ var pico = require('../index'),
 
 var document = jsdom.jsdom(),
 		DOM = document.defaultView,
-		co = pico.Co()
+		co = pico.co
 
 pico.global.document = document
 
@@ -32,13 +32,12 @@ ct('full Component', function() {
 
 var cell = co('td', {}, [
 	bodyTdInputFac,
-	bodyTdInputFac({props: {id: 'xyz'}})
+	bodyTdInputFac
 ])()
 ct('mixed content', function() {
 	var el = cell('def')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'td')
-	ct('===', el.lastChild.id, 'xyz')
 	// view inputs
 	ct('===', el.childNodes.length, 2)
 	ct('===', el.firstChild.value, 'def')
