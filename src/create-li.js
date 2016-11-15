@@ -1,4 +1,7 @@
-var List = require('./list')
+var List = require('./list'),
+		CE = require('create-element-ns')
+
+var mergeKeys = CE.mergeKeys
 
 module.exports = creator
 
@@ -8,7 +11,6 @@ module.exports = creator
  * @returns {function} list defining function
  */
 function creator(defaults) {
-	define.defaults = defaults
 	/**
 	 * List definition
 	 * @param {string|Object|function} tagName - element selector, definition of factory function
@@ -16,17 +18,13 @@ function creator(defaults) {
 	 * @param {string|number|Object|Array} [content] - individual or array of elements, components of factories
 	 * @returns {function} factory function
 	 */
-	function define(tagName, config, content) {
-		factory.defaults = Object.assign({}, defaults, config)
-		factory.isFactory = true
+	function define(tagName, config, contentxxx) {
 		/**
 		 * Factory function to produce instances of the defined List
 		 * @param {any} [cfg] - optional additional individual configuration
 		 * @returns {function} individual view function
 		 */
 		function factory(cfg) {
-			view.context = new List(tagName, Object.assign({}, factory.defaults, cfg), content)
-			view.isView = true
 			/**
 			 * View function to update the list
 			 * @param {any} [val] - array to iterated for each list element
@@ -37,9 +35,14 @@ function creator(defaults) {
 			function view(val, idx, after) {
 				return view.context.view(val, idx, after)
 			}
+			view.context = new List(tagName, mergeKeys({}, factory.defaults, cfg), content)
+			view.isView = true
 			return view
 		}
+		factory.defaults = mergeKeys({}, define.defaults, config)
+		factory.isFactory = true
 		return factory
 	}
+	define.defaults = defaults
 	return define
 }

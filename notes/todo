@@ -1,0 +1,12 @@
+review merge across CE, and CO
+* rename merge2 assignL2
+
+review cloning
+- child elements must be passed (eg. list)
+- deep clone
+- content must be rebuilt
+- elements/items must not be taken away from ole elements
+
+matrix li test
+
+

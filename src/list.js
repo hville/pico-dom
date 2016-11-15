@@ -30,13 +30,15 @@ function view(arr, idx, last) {
 			isDataKeyFn = dataKey && dataKey.constructor === Function,
 			mIdCo = this.mIdCo,
 			mElId = this.mElId
-	// TODO any transmutation ??? newVal = this.viewSelf(val, idx)
+
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
 				uid = isDataKeyFn ? dataKey(val, i) : (dataKey !== undefined) ? val[dataKey] : i,
 				cmp = mIdCo.get(uid)
 		if (!cmp) {
 			cmp = template.clone({key: uid})
+			if (cmp.el.id) cmp.el.removeAttribute('id')
+
 			mIdCo.set(uid, cmp)
 			mElId.set(cmp.el, uid)
 		}

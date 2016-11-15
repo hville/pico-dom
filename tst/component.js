@@ -4,10 +4,9 @@ var pico = require('../index'),
 
 var document = jsdom.jsdom(),
 		DOM = document.defaultView,
-		domAPI = pico.dom,
 		Component = pico.Component
 
-domAPI.document = document
+pico.global.document = document
 
 ct('simple Component: .el .clone .isComponent', function() {
 	var c = new Component('div#myid')
@@ -20,7 +19,6 @@ ct('simple Component: .el .clone .isComponent', function() {
 	ct('===', c.el.nodeName.toLowerCase(), 'div')
 	// safe clone - remove id
 	ct('===', c.el.id, 'myid')
-	ct('===', c.clone().el.id, '')
 })
 
 var bodyTdInput = new Component('input.tdinput', {
@@ -31,6 +29,8 @@ var bodyTdInput = new Component('input.tdinput', {
 
 ct('full Component - no children', function() {
 	var c = bodyTdInput.clone()
+	console.log('bodyTdInput.edit',bodyTdInput.edit)
+	console.log('c.edit',c.edit)
 	// element
 	ct('===', c.el.nodeName.toLowerCase(), 'input')
 	ct('===', c.el.classList.contains('tdinput'), true)

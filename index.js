@@ -1,6 +1,6 @@
 var CE = require('create-element-ns'),
-		coList = require('./src/co-list'),
-		coTuple = require('./src/co-tuple'),
+		coList = require('./src/create-li'),
+		coTuple = require('./src/create-co'),
 		List = require('./src/list'),
 		Component = require('./src/component')
 

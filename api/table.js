@@ -13,15 +13,16 @@ var initContext = {
 }
 
 //custom creators for shared scope
-var li = pico.liCreator(initContext),
-		co = pico.coCreator(initContext),
+var li = pico.Li(initContext),
+		co = pico.Co(initContext),
 		el = pico.el
 var thead = co('thead', {},
 	co('tr', {},
 		li('th', {
-			edit: function() {
+			edit: function(v, i) {
 				var ctx = this.tableContext
 				this.el.style.color = (this.k === ctx.focus[1]) ? 'blue' : 'black'
+				this.el.textContent = i
 			}
 		})
 	)
@@ -51,8 +52,9 @@ var tbody = co('tbody', {},
 			)
 		),
 		li('td', {
-			edit: function(v) {
-				this.el.textContent = v
+			edit: function(col, idx) {
+				console.log('tdEdit', col, idx)
+				this.el.textContent = col.v
 			}
 		}),
 		co('td', {

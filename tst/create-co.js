@@ -4,10 +4,9 @@ var pico = require('../index'),
 
 var document = jsdom.jsdom(),
 		DOM = document.defaultView,
-		domAPI = pico.dom,
-		co = pico.coCreator()
+		co = pico.Co()
 
-domAPI.document = document
+pico.global.document = document
 
 var bodyTdInputFac = co('input.tdinput', {
 	edit: function (v) { this.el.value = v },

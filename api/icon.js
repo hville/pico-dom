@@ -1,5 +1,5 @@
 var pico = require('../index')
-
+console.log('running ICON', document)
 var el = pico.el
 
 module.exports = el.svg('svg[style="display: none;"]',

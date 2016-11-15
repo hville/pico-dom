@@ -1,12 +1,14 @@
-var createElementNS = require('create-element-ns'),
+var CE = require('create-element-ns'),
 		event = require('./event'),
 		domAPI = require('dom-document')
+
+var mergeKeys = CE.mergeKeys
 
 module.exports = Component
 
 function Component(sel, cfg, cnt) {
 	if (!cfg) cfg = {}
-	this.el = createElementNS.el(sel, cfg)
+	this.el = CE.el(sel, cfg)
 	this.key = cfg.key
 	this.eventHandlers = {}
 	this.edit = cfg.edit
@@ -34,28 +36,39 @@ function isComponent(o) {
 	return (o && o.constructor) === Component
 }
 function clone(cfg) {
-	var content = this.content.map(function(c) { return this.isComponent(c) ? c.clone() : c }, this),
-			config = Object.assign({on: this.eventHandlers}, this, cfg)
-	var co = new Component(this.el.cloneNode(false), config, content)
-	if (co.el.id) co.el.removeAttribute('id')
+	var co = new Component(
+		this.el.cloneNode(true),
+		mergeKeys({
+			on: this.eventHandlers,
+			edit: this.edit,
+			init: this.init,
+			key: this.key
+		}, cfg),
+		this.content.map(cloneChild)
+	)
 	if (cfg) {
-		var el = co.el,
-				decorators = createElementNS.decorators
+		var decorators = CE.decorators
 		for (var k in cfg) {
-			if (decorators[k]) decorators[k].call(cfg, el, k, cfg[k])
+			if (decorators[k]) decorators[k].call(cfg, co.el, k, cfg[k])
 		}
 	}
 	return co
 }
+function cloneChild(c) {
+	return isComponent(c) ? c.clone()
+		: CE.is.node(c) ? c.cloneNode(true)
+		: c
+}
 function view(val, idx, after) {
 	var elm = this.el
+	if (idx === undefined) idx = 0
 	if (after && elm.parentNode !== after.parentNode) {
 		after.parentNode.insertBefore(elm, after.nextSibling)
 	}
 	// the element edit function may change the value to pass down
 	var xval = this.edit ? this.edit(val, idx) : val
 	if (xval === undefined) xval = val
-	if (this.content.length) this.updateChildren(xval, idx)
+	if (this.content.length) this.updateChildren(xval, 0)
 	return elm
 }
 function updateChildren(val, idx) {

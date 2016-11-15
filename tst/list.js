@@ -3,10 +3,9 @@ var pico = require('../index'),
 		ct = require('cotest')
 
 var document = jsdom.jsdom(),
-		domAPI = pico.dom,
 		List = pico.List
 
-domAPI.document = document
+pico.global.document = document
 //TODO view() with edge cases el((li()))
 ct('simple List: .isList .template .dataKey', function() {
 	var l = new List('div#myid'),
