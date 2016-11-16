@@ -14,17 +14,13 @@ var co = pico.co,
     li = pico.li,
     el = pico.el
 
-co('table', {}, [
-  el('caption', 'data-matrix)
-  co('tbody', {},
-    li('tr', {}, [
-      co('td', {},
-        el.svg('svg', svgIcon)
-      ),
-      li('td', {
-        edit: function(val, pos) { this.el.textContent = val }
-      })
-    ])
+co('table', [
+  el('caption', 'data-matrix')
+  co('tbody',
+    li('tr',
+      co('td', el.svg('svg', svgIcon)),
+      li('td', {edit: function(val, pos) { this.el.textContent = val }})
+    )
   ),
 ])
 ```
@@ -37,26 +33,27 @@ co('table', {}, [
 * w3 string selector API, including attributes
 * element decorators for element properties and attributes
 * ability to inject a `document API` for server and/or testing (e.g. `jsdom`)
-* ability to create an element or an element factory
+* ability to create an element or an element factory with preset defaults
 * ability to create additional namespaces and utility namespaced functions
 
 ## API
 
 * Main *hyperscript* function
-  * `el(selector[, option][, children])` => `HTMLElement`
-  * `co(selector[, option][, content])` => `HTMLComponentFactory`
-  * `li(selector[, option][, content])` => `HTMLListFactory`
+  * `el([selector][, options][, children])` => `HTMLElementFactory`
+  * `co([selector][, options][, content])` => `HTMLComponentFactory`
+  * `li([selector][, options][, content])` => `HTMLListFactory`
 * Intermediate partial functions
+  * `HTMLElementFactory([options])` => `HTMLElement`
   * `HTMLComponentFactory([options])` => `HTMLViewFunction`
   * `HTMLListFactory([options])` => `HTMLViewFunction`
-  * `HTMLViewFunction` => `HTMLElement`
+  * `HTMLViewFunction(data, childIndex, previousChild)` => `HTMLElement`
 
 SVG elements, components and lists can be created with the above functions with an `xmlns` attribute
 or by using the following preset functions:
 
-* `el.svg(selector[, option][, children])` => `SVGElement`
-* `co.svg(selector[, option][, content])` => `SVGComponentFactory`
-* `li.svg(selector[, option][, content])` => `SVGListFactory`
+* `el.svg([selector][, options][, children])` => `SVGElement`
+* `co.svg([selector][, options][, content])` => `SVGComponentFactory`
+* `li.svg([selector][, options][, content])` => `SVGListFactory`
 
 ### Optional additional utilities
 

@@ -7,59 +7,65 @@ var sharedContext = {
 	sort: []
 }
 var initContext = {
-	init: function initTableContext(cfg) {
-		this.tableContext = cfg ? Object.assign(sharedContext, cfg) : sharedContext
+	init: function initTableContext() {
+		this.tableContext = sharedContext
 	},
 	dataKey: 'k'
 }
+function editTable(v) {
+	var ctx = this.tableContext
+	ctx.data = v.srt[0].map(function(k) { return {k:k, v:v.val[k]} })
+	ctx.focus = v.sel
+	ctx.sort = v.srt
+	ctx.cols = v.srt[1].map(function(k) {return {k:k, v:k.toUpperCase()}})
+	return ctx.data
+}
 
 //custom creators for shared scope
-var li = pico.chain(pico.List, initContext),
-		co = pico.chain(pico.Component, initContext),
+var li = pico.Li(initContext),
+		co = pico.Co(initContext),
 		el = pico.el
-var thead = co('thead', {},
+var thead = co('thead',
 	co('tr', {
-		edit: function(v) {
-			return this.tableContext.sort[1].map(function(k) {return {k:k, v:v}})
+		edit: function() {
+			return this.tableContext.cols
 		}
 	},[
 		el('th', '>'),
 		li('th', {
 			edit: function(v, i) {
 				var ctx = this.tableContext
-				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'//TODO : allblack!
-				console.log('TH', v, i, this.key)
+				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
 				this.el.textContent = i
 			}
-		})
+		}),
+		el('th', 'V')
 	])
 )
-var tfoot = co('tfoot', {},
-	co('tr', {}, [
+var tfoot = co('tfoot',
+	co('tr', {edit: function() {
+		return this.tableContext.cols
+	}},
 		el('th', '>'),
 		li('th', {
 			edit: function(v, i) {
 				var ctx = this.tableContext
-				this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
+				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
 				this.el.textContent = i
 			}
-		})
-	])
+		}),
+		el('th', 'A')
+	)
 )
-var tbody = co('tbody', {},
+var tbody = co('tbody',
 	li('tr', {
 		edit: function(row) {
 			var ctx = this.tableContext
 			this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
-
 			return ctx.sort[1].map(function(k) { return {k:k, v: row.v[k]} })
 		}
 	}, [
-		co('td',
-			el.svg('svg',
-				el.svg('use[xlink:href="#icon-feather"]') //TODO display: none gets copied!
-			)
-		),
+		co('td', icon),
 		li('td', {
 			edit: function(col) {
 				//console.log('tdEdit', col, idx)
@@ -73,15 +79,6 @@ var tbody = co('tbody', {},
 		})
 	])
 )
-module.exports = co('div', {}, [
-	icon,
-	co('table', {
-		edit: function(v) {
-			var ctx = this.tableContext
-			ctx.data = v.srt[0].map(function(k) { return {k:k, v:v.val[k]} })
-			ctx.focus = v.sel
-			ctx.sort = v.srt
-			return ctx.data
-		}
-	}, [thead, tbody, tfoot])
-])
+module.exports = co('div',
+	co('table', {edit: editTable}, [thead, tbody, tfoot])
+)

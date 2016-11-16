@@ -1,18 +1,20 @@
 var CE = require('create-element-ns'),
 		event = require('./event'),
-		domAPI = require('dom-document')
+		global = require('dom-document')
+
+var is = CE.is
 
 module.exports = Component
 
-function Component(cfg) { //TODO PARSE MULTIPLE
+function Component(cfg) {
 	this.el = CE.decorate(CE.createElement(cfg), cfg)
 	this.key = cfg.key
 	this.eventHandlers = {}
 	this.edit = cfg.edit
-	this.content = cfg.content
+	this.content = getContent(cfg.content)
 	if (cfg.on) this.on(cfg.on)
 	// temporary node used to position updates. shared across all nodes
-	if (!this.placeholder) this.placeholder = domAPI.document.createComment('placeholder')
+	if (!this.placeholder) this.placeholder = global.document.createComment('placeholder')
 	// callback on instance
 	this.init = cfg.init
 	if (this.init) this.init(cfg)
@@ -30,7 +32,8 @@ function isComponent(o) {
 	return (o && o.constructor) === Component
 }
 function view(val, idx, after) {
-	var elm = this.el
+	var elm = this.el,
+			cnt = this.content
 	if (idx === undefined) idx = 0
 	if (after && elm.parentNode !== after.parentNode) {
 		after.parentNode.insertBefore(elm, after.nextSibling)
@@ -38,7 +41,7 @@ function view(val, idx, after) {
 	// the element edit function may change the value to pass down
 	var xval = this.edit ? this.edit(val, idx) : val
 	if (xval === undefined) xval = val
-	if (this.content.length) this.updateChildren(xval, 0)
+	if (cnt && cnt.length) this.updateChildren(xval, 0)
 	return elm
 }
 function updateChildren(val, idx) {
@@ -55,4 +58,16 @@ function updateChildren(val, idx) {
 	}
 	elm.removeChild(placeholder)
 	while (last.nextSibling) elm.removeChild(last.nextSibling)
+}
+function getContent(src) {
+	if (src) {
+		var tgt = []
+		for (var i=0; i<src.length; ++i) {
+			var itm = src[i]
+			if (is.node(itm)) tgt.push(itm.cloneNode(true))
+			else if (is.stringlike(itm)) tgt.push(global.document.createTextNode(itm))
+			else if (is.function(itm)) tgt.push(itm())
+		}
+		return tgt
+	}
 }

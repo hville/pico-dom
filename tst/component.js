@@ -21,7 +21,8 @@ ct('simple Component: .el .isComponent', function() {
 	ct('===', c.el.id, 'myid')
 })
 
-var bodyTdInput = new Component('input.tdinput', {
+var bodyTdInput = new Component({
+	element: CE.el('input.tdinput'),
 	edit: function (v) { this.el.value = v },
 	props: {tabIndex: 1},
 	on: {click: function(e) { this.el.value = +this.el.value + 1; e.target.tabIndex = 11}}

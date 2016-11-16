@@ -1,14 +1,13 @@
 var Component = require('./component'),
-		chain = require('./chain')
+		factory = require('./factory')
 
-var co = chain(Component)
+var co = factory(Component)
 
 module.exports = List
 
-function List(sel, cfg, cnt) {
-	if (!cfg) cfg = {}
+function List(cfg) {
 	// factory to generate new dynamic elements
-	this.factory = co(sel, cfg, cnt)
+	this.factory = co(cfg)
 	// function to derive a unique id from the date and re-sort nodes
 	this.dataKey = cfg.dataKey
 	// lookup maps to locate existing component and delete extra ones

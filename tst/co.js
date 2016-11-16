@@ -30,7 +30,7 @@ ct('full Component', function() {
 	ct('===', el.tabIndex, 11)
 })
 
-var cell = co('td', {}, [
+var cell = co('td', [
 	bodyTdInputFac,
 	bodyTdInputFac
 ])()
@@ -40,7 +40,6 @@ ct('mixed content', function() {
 	ct('===', el.nodeName.toLowerCase(), 'td')
 	// view inputs
 	ct('===', el.childNodes.length, 2)
-	ct('===', el.firstChild.value, 'def')
-	ct('===', el.lastChild.value, 'def')
+	ct('===', el.firstChild && el.firstChild.value, 'def')
+	ct('===', el.lastChild && el.lastChild.value, 'def')
 })
-
