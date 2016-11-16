@@ -14,7 +14,7 @@
   "author": "Hugo Villeneuve",
   "main": "./index.js",
   "dependencies": {
-    "create-element-ns": "^1.1.2",
+    "create-element-ns": "^2.0.1",
     "dom-document": "^1.1.0"
   },
   "devDependencies": {

@@ -10,3 +10,23 @@ review cloning
 matrix li test
 
 
+TODO
+- el, co, li share the same Argument Parser:
+SELECTOR
+* e => e
+* s|0 => o (selector parse)
+* f => f
+OPTIONS
+* o => o'
+CONTENT
+* e => e
+* s => s
+* f => f
+
+TODO
+- el, co, li share the same nested Functions Creator
+(C, d) => (e, o, c) => (i) => C(e, o&d, c)
+Element: return setChildren(decorate(e||f(o), o), c)
+Co: new C(); return ctx.view
+
+

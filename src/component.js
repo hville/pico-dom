@@ -4,14 +4,12 @@ var CE = require('create-element-ns'),
 
 module.exports = Component
 
-function Component(sel, cfg, cnt) { //TODO PARSE MULTIPLE
-	if (!cfg) cfg = {}
-	this.el = CE.el(sel, cfg)
+function Component(cfg) { //TODO PARSE MULTIPLE
+	this.el = CE.decorate(CE.createElement(cfg), cfg)
 	this.key = cfg.key
 	this.eventHandlers = {}
 	this.edit = cfg.edit
-	this.content = []
-	if (cnt || cnt === 0) this.setContent(cnt)
+	this.content = cfg.content
 	if (cfg.on) this.on(cfg.on)
 	// temporary node used to position updates. shared across all nodes
 	if (!this.placeholder) this.placeholder = domAPI.document.createComment('placeholder')
@@ -26,7 +24,6 @@ Component.prototype = {
 	handleEvent: event.handleEvent,
 	view: view,
 	updateChildren: updateChildren,
-	setContent: setContent,
 	placeholder: null
 }
 function isComponent(o) {
@@ -58,16 +55,4 @@ function updateChildren(val, idx) {
 	}
 	elm.removeChild(placeholder)
 	while (last.nextSibling) elm.removeChild(last.nextSibling)
-}
-function setContent(cnt) {
-	this.content = (Array.isArray(cnt)) ? cnt.reduce(parseContent, this.content)
-		: parseContent(this.content, cnt)
-}
-function parseContent(res, cnt) {
-	var d = domAPI.document
-	if (!cnt && cnt !== 0) return res
-	else if (cnt.nodeName && cnt.nodeType > 0) res.push(cnt.cloneNode(true))
-	else if (cnt.constructor === Function) res.push(cnt())
-	else if (cnt.constructor === String || cnt.constructor === Number) res.push(d.createTextNode(cnt))
-	return res
 }

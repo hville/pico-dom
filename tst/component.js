@@ -1,6 +1,7 @@
 var pico = require('../index'),
 		jsdom = require('jsdom'),
-		ct = require('cotest')
+		ct = require('cotest'),
+		CE = require('create-element-ns')
 
 var document = jsdom.jsdom(),
 		DOM = document.defaultView,
@@ -9,7 +10,9 @@ var document = jsdom.jsdom(),
 pico.global.document = document
 
 ct('simple Component: .el .isComponent', function() {
-	var c = new Component('div#myid')
+	var f = CE.el('div#myid'),
+			e = f(),
+			c = new Component({element: e})
 	//constructors
 	ct('===', c.isComponent(c), true)
 	ct('===', c.constructor, Component)
