@@ -8,14 +8,6 @@ var document = jsdom.jsdom(),
 
 pico.global.document = document
 
-ct('empty list', function() {
-	var minFac = li(''),
-			minView = minFac()
-	// constructors
-	ct('===', minFac.isFactory, true)
-	ct('===', minView.isView, true)
-})
-
 var liFac = li('td', {
 	edit: function(v,i) {
 		this.el.textContent = v.v
@@ -24,16 +16,8 @@ var liFac = li('td', {
 	dataKey: 'k'
 })
 var coFac = co('tr#myid0', {}, liFac),
-		coView = coFac(),
-		liView = liFac()
+		coView = coFac()
 
-ct('nested List, function types and constructors', function() {
-	// constructors
-	ct('===', liFac.isFactory, true)
-	ct('===', coFac.isFactory, true)
-	ct('===', liView.isView, true)
-	ct('===', coView.isView, true)
-})
 ct('list update through parent update', function() {
 	var coEl = coView([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
 	ct('===', coEl.childNodes.length, 3)

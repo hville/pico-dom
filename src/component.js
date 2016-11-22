@@ -1,13 +1,13 @@
-var CE = require('create-element-ns'),
+var createElement = require('create-element-ns/src/create-element'),
+		decorate = require('create-element-ns/src/decorate'),
+		is = require('create-element-ns/src/is'),
 		event = require('./event'),
 		global = require('dom-document')
-
-var is = CE.is
 
 module.exports = Component
 
 function Component(cfg) {
-	this.el = CE.decorate(CE.createElement(cfg), cfg)
+	this.el = decorate(createElement(cfg), cfg)
 	this.key = cfg.key
 	this.eventHandlers = {}
 	this.edit = cfg.edit
@@ -16,20 +16,15 @@ function Component(cfg) {
 	// temporary node used to position updates. shared across all nodes
 	if (!this.placeholder) this.placeholder = global.document.createComment('placeholder')
 	// callback on instance
-	this.init = cfg.init
-	if (this.init) this.init(cfg)
+	if (cfg.init) cfg.init.call(this, cfg)
 }
 Component.prototype = {
 	constructor: Component,
-	isComponent: isComponent,
 	on: event.on,
 	handleEvent: event.handleEvent,
 	view: view,
 	updateChildren: updateChildren,
 	placeholder: null
-}
-function isComponent(o) {
-	return (o && o.constructor) === Component
 }
 function view(val, idx, after) {
 	var elm = this.el,

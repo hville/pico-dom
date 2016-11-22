@@ -9,12 +9,11 @@ var document = jsdom.jsdom(),
 
 pico.global.document = document
 
-ct('simple Component: .el .isComponent', function() {
+ct('simple Component: .el', function() {
 	var f = CE.el('div#myid'),
 			e = f(),
 			c = new Component({element: e})
 	//constructors
-	ct('===', c.isComponent(c), true)
 	ct('===', c.constructor, Component)
 	// element
 	ct('===', c.el.nodeName.toLowerCase(), 'div')

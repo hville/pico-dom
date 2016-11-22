@@ -1,44 +1,33 @@
-var Component = require('./component'),
-		factory = require('./factory')
-
-var co = factory(Component)
+var is = require('create-element-ns/src/is'),
+		Component = require('./component'),
+		Factory = require('./factory')
 
 module.exports = List
 
 function List(cfg) {
-	// factory to generate new dynamic elements
-	this.factory = co(cfg)
 	// function to derive a unique id from the date and re-sort nodes
-	this.dataKey = cfg.dataKey
+	this.dataKey = is.function(cfg.dataKey) ? cfg.dataKey
+		: is.stringlike(cfg.dataKey) ? function(v) { return v}
+		: function(v,i) { return i}
+	// factory to generate new dynamic elements
+	this.factory = Factory(Component)(cfg)
 	// lookup maps to locate existing component and delete extra ones
 	this.mIdCo = new Map()
 	this.mElId = new WeakMap()
-	// callback on instance
-	this.init = cfg.init
-	if (this.init) this.init(cfg)
 }
-List.prototype = {
-	constructor: List,
-	isList: isList,
-	view: view,
-}
-function isList(o) {
-	return (o && o.constructor) === List
-}
+List.prototype.view = view
+
 function view(arr, idx, last) {
 	var parent = last.parentNode,
-			factory = this.factory,
-			dataKey = this.dataKey,
-			isDataKeyFn = dataKey && dataKey.constructor === Function,
 			mIdCo = this.mIdCo,
 			mElId = this.mElId
 
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
-				uid = isDataKeyFn ? dataKey(val, i) : (dataKey !== undefined) ? val[dataKey] : i,
+				uid = this.dataKey(val, i),
 				vfn = mIdCo.get(uid)
 		if (!vfn) {
-			vfn = factory({key: uid})
+			vfn = this.factory({key: uid})
 			mIdCo.set(uid, vfn)
 		}
 		last = vfn(val, idx+i, last)

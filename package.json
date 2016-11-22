@@ -1,6 +1,6 @@
 {
   "name": "pico-dom",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "small DOM component system",
   "keywords": [
     "component",
@@ -14,7 +14,7 @@
   "author": "Hugo Villeneuve",
   "main": "./index.js",
   "dependencies": {
-    "create-element-ns": "^2.1.1",
+    "create-element-ns": "^3.0.0",
     "dom-document": "^1.1.0"
   },
   "devDependencies": {
@@ -22,10 +22,9 @@
   },
   "scripts": {
     "test": "cotest tst",
-    "bld": "webpack ./index.js ./bld/index.min.js --progress --colors --optimize-minimize",
+    "min": "webpack --progress --colors --optimize-minimize",
     "btest": "webpack-dev-server api/browser.js --content-base bld/ --progress --colors",
-    "srv": "webpack-dev-server --progress --colors",
-    "ssl": "webpack-dev-server --progress --colors --https"
+    "srv": "webpack-dev-server --progress --colors"
   },
   "repository": {
     "type": "git",

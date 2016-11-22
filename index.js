@@ -4,22 +4,28 @@ var CE = require('create-element-ns'),
 		Component = require('./src/component')
 
 var co = factory(Component),
-		li = factory(List),
-		el = CE.el
+		li = factory(List)
 
-co.svg = factory(Component, {xmlns: 'http://www.w3.org/2000/svg'})
-li.svg = factory(List, {xmlns: 'http://www.w3.org/2000/svg'})
+function Co(cfg) {
+	return factory(Component, cfg)
+}
+function Li(cfg) {
+	return factory(List, cfg)
+}
+
+co.svg = Co({xmlns: 'http://www.w3.org/2000/svg'})
+li.svg = Li({xmlns: 'http://www.w3.org/2000/svg'})
 
 module.exports = {
+	el: CE.el,
 	co: co,
 	li: li,
-	el: el,
-	Co: function(cfg) { return factory(Component, cfg) },
-	Li: function(cfg) { return factory(List, cfg) },
+	Co: Co,
+	Li: Li,
+	Component: Component,
+	List: List,
+	factory: factory,
 	namespaces: CE.namespaces,
 	decorators: CE.decorators,
 	global: CE.global,
-	factory: factory,
-	Component: Component,
-	List: List
 }
