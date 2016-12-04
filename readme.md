@@ -9,7 +9,7 @@
 ## Example
 
 ```javascript
-var pico = require('pico-dom)
+var pico = require('pico-dom')
 var co = pico.co,
     li = pico.li,
     el = pico.el
