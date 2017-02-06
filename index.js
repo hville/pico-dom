@@ -1,30 +1,22 @@
 var CE = require('create-element-ns'),
-		factory = require('./src/factory'),
+		factory = require('create-element-ns/src/create-factory'),
 		List = require('./src/list'),
-		Component = require('./src/component')
+		coSet = require('./src/co-set')
 
-var co = factory(Component),
-		li = factory(List)
+var getView = coSet.creator(List)
 
-function Co(cfg) {
-	return factory(Component, cfg)
+function Li(def) {
+	return factory(getView, def)
 }
-function Li(cfg) {
-	return factory(List, cfg)
-}
-
-co.svg = Co({xmlns: 'http://www.w3.org/2000/svg'})
-li.svg = Li({xmlns: 'http://www.w3.org/2000/svg'})
+var li = Li()
+li.svg = Li({xmlns: CE.namespaces.svg})
 
 module.exports = {
 	el: CE.el,
-	co: co,
+	co: coSet.co,
 	li: li,
-	Co: Co,
+	Co: coSet.Co,
 	Li: Li,
-	Component: Component,
-	List: List,
-	factory: factory,
 	namespaces: CE.namespaces,
 	decorators: CE.decorators,
 	global: CE.global,

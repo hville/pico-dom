@@ -27,13 +27,13 @@ var li = pico.Li(initContext),
 		el = pico.el
 var thead = co('thead',
 	co('tr', {
-		edit: function() {
+		ondata: function() {
 			return this.tableContext.cols
 		}
 	},[
 		el('th', '>'),
 		li('th', {
-			edit: function(v, i) {
+			ondata: function(v, i) {
 				var ctx = this.tableContext
 				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
 				this.el.textContent = i
@@ -43,12 +43,12 @@ var thead = co('thead',
 	])
 )
 var tfoot = co('tfoot',
-	co('tr', {edit: function() {
+	co('tr', {ondata: function() {
 		return this.tableContext.cols
 	}},
 		el('th', '>'),
 		li('th', {
-			edit: function(v, i) {
+			ondata: function(v, i) {
 				var ctx = this.tableContext
 				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
 				this.el.textContent = i
@@ -59,7 +59,7 @@ var tfoot = co('tfoot',
 )
 var tbody = co('tbody',
 	li('tr', {
-		edit: function(row) {
+		ondata: function(row) {
 			var ctx = this.tableContext
 			this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
 			return ctx.sort[1].map(function(k) { return {k:k, v: row.v[k]} })
@@ -67,18 +67,18 @@ var tbody = co('tbody',
 	}, [
 		co('td', icon),
 		li('td', {
-			edit: function(col) {
+			ondata: function(col) {
 				//console.log('tdEdit', col, idx)
 				this.el.textContent = col.v
 			}
 		}),
 		co('td', {
-			edit: function(v) {
+			ondata: function(v) {
 				this.el.textContent = v.length
 			}
 		})
 	])
 )
 module.exports = co('div',
-	co('table', {edit: editTable}, [thead, tbody, tfoot])
+	co('table', {ondata: editTable}, [thead, tbody, tfoot])
 )
