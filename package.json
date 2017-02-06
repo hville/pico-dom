@@ -14,11 +14,11 @@
   "author": "Hugo Villeneuve",
   "main": "./index.js",
   "dependencies": {
-    "create-element-ns": "^3.0.0",
+    "create-element-ns": "^3.2.1",
     "dom-document": "^1.1.0"
   },
   "devDependencies": {
-    "cotest": "^1.6.1"
+    "cotest": "^2.0.2"
   },
   "scripts": {
     "test": "cotest tst",

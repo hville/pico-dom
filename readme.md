@@ -42,6 +42,18 @@ co('table', [
   * `el([selector][, options][, children])` => `HTMLElementFactory`
   * `co([selector][, options][, content])` => `HTMLComponentFactory`
   * `li([selector][, options][, content])` => `HTMLListFactory`
+* selector
+  * TODO
+* options
+  * TODO
+  * decorators: `.dataset`, `.attributes|.attrs`, `.properties|.props`, `.style`
+  * element: decorators & `.element`, `.xmlns`, `.prefix`, `.tag`
+  * component: element & `.content`, `.key`, `.edit`, `.on`, `.init`
+  * list: component & `.datakey`
+* children
+  * TODO
+* content
+  * TODO
 * Intermediate partial functions
   * `HTMLElementFactory([options])` => `HTMLElement`
   * `HTMLComponentFactory([options])` => `HTMLViewFunction`
@@ -51,7 +63,7 @@ co('table', [
 SVG elements, components and lists can be created with the above functions with an `xmlns` attribute
 or by using the following preset functions:
 
-* `el.svg([selector][, options][, children])` => `SVGElement`
+* `el.svg([selector][, options][, children])` => `SVGElementFactory`
 * `co.svg([selector][, options][, content])` => `SVGComponentFactory`
 * `li.svg([selector][, options][, content])` => `SVGListFactory`
 

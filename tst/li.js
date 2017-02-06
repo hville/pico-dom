@@ -9,7 +9,7 @@ var document = jsdom.jsdom(),
 pico.global.document = document
 
 var liFac = li('td', {
-	edit: function(v,i) {
+	ondata: function(v,i) {
 		this.el.textContent = v.v
 		this.el.tabIndex = i
 	},

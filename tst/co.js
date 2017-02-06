@@ -9,10 +9,19 @@ var document = jsdom.jsdom(),
 pico.global.document = document
 
 var bodyTdInputFac = co('input.tdinput', {
-	edit: function (v) { this.el.value = v },
+	ondata: function (v) { this.el.value = v },
 	props: {tabIndex: 1},
 	on: {click: function(e) { this.el.value = 'click'; e.target.tabIndex = 11}}
 })
+ct('simple Component: .el', function() {
+	var comp = co('div#myid'),
+			view = comp(),
+			elem = view()
+	// element
+	ct('===', elem.nodeName.toLowerCase(), 'div')
+	ct('===', elem.id, 'myid')
+})
+
 ct('full Component', function() {
 	var c = bodyTdInputFac({props: {id: 'xyz'}}),
 			el = c('abc')
