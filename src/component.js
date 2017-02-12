@@ -1,6 +1,6 @@
-var getChild = require('create-element-ns/src/get-child'),
+var getChild = require('./elem/get-child'),
 		event = require('./event'),
-		global = require('dom-document')
+		global = require('./root/root')
 
 module.exports = Component
 

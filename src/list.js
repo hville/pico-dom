@@ -1,5 +1,5 @@
 var co = require('./co-set').co,
-		typ = require('create-element-ns/src/typ')
+		typ = require('./util/typ')
 
 module.exports = List
 

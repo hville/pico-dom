@@ -1,7 +1,7 @@
 var pico = require('../index'),
 		jsdom = require('jsdom'),
 		ct = require('cotest'),
-		CE = require('create-element-ns'),
+		el = require('../src/elem/elem'),
 		Component = require('../src/Component')
 
 var document = jsdom.jsdom(),
@@ -10,7 +10,7 @@ var document = jsdom.jsdom(),
 pico.global.document = document
 
 ct('simple Component: .el', function() {
-	var f = CE.el('div#myid'),
+	var f = el('div#myid'),
 			e = f(),
 			c = new Component(e, {})
 	//constructors
@@ -20,7 +20,7 @@ ct('simple Component: .el', function() {
 	ct('===', c.el.id, 'myid')
 })
 
-var bodyTdInput = new Component(CE.el('input.tdinput')({props: {tabIndex: 1}}), {
+var bodyTdInput = new Component(el('input.tdinput')({props: {tabIndex: 1}}), {
 	ondata: function (v) { this.el.value = v },
 	on: {click: function(e) { this.el.value = +this.el.value + 1; e.target.tabIndex = 11}}
 })

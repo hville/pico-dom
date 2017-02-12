@@ -7,7 +7,7 @@ var sharedContext = {
 	sort: []
 }
 var initContext = {
-	init: function initTableContext() {
+	oninit: function initTableContext() {
 		this.tableContext = sharedContext
 	},
 	dataKey: 'k'

@@ -1,7 +1,7 @@
-var factory = require('create-element-ns/src/create-factory'),
+var factory = require('./util/create-factory'),
 		Component = require('./component'),
-		getElement = require('create-element-ns/src/get-element'),
-		ns = require('create-element-ns').namespaces.svg
+		getElement = require('./elem/get-element'),
+		ns = require('./util/namespaces')
 
 function creator(Constructor) {
 	return function (elm, cfg, cnt) {
@@ -19,7 +19,7 @@ function Co(def) {
 }
 
 var co = Co()
-co.svg = Co({xmlns: ns})
+co.svg = Co({xmlns: ns.svg})
 
 module.exports = {
 	creator: creator,
