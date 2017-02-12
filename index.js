@@ -3,8 +3,7 @@ var factory = require('./src/util/create-factory'),
 		coSet = require('./src/co-set'),
 		ns = require('./src/util/namespaces'),
 		el = require('./src/elem/elem'),
-		root = require('./src/root/root'),
-		decorators = require('./src/elem/decorators')
+		root = require('./src/root/root')
 
 var getView = coSet.creator(List)
 
@@ -21,6 +20,5 @@ module.exports = {
 	Co: coSet.Co,
 	Li: Li,
 	namespaces: ns,
-	decorators: decorators,
 	global: root,
 }
