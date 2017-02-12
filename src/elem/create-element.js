@@ -1,7 +1,7 @@
-var globals = require('../utils/root'),
-		decorate = require('./decorate'),
-		namespaces = require('../utils/namespaces'),
-		typ = require('../utils/typ')
+var globals = require('../root/root'),
+		decorate = require('./decorators').automatic,
+		namespaces = require('../util/namespaces'),
+		typ = require('../util/typ')
 
 var rRE =/[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
@@ -17,7 +17,7 @@ module.exports = function createElement(xmlns, selector, options) {
 	switch(typ(selector)) {
 		case globals.Node:
 			if (xmlns && xmlns !== selector.namespaceURI) throw Error('xmlns mismatch: ' + xmlns + ' vs ' + selector.namespaceURI)
-			return decorate.magic(selector.cloneNode(false), options)
+			return decorate(selector.cloneNode(false), options)
 		case String:
 			return fromString(xmlns, selector, options)
 		default:
@@ -35,7 +35,7 @@ function fromString(xmlns, selector, options) {
 	var doc = globals.document,
 			tag = def.tag || 'div',
 			elm = def.xns ? doc.createElementNS(def.xns, tag) : doc.createElement(tag)
-	return decorate.magic(elm, def.att)
+	return decorate(elm, def.att)
 }
 function parse(res, txt) {
 	var idx = -1,

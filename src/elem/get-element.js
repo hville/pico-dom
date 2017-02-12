@@ -2,15 +2,13 @@ var dom = require('../root/root'),
 		namespaces = require('../util/namespaces'),
 		typ = require('../util/typ'),
 		setChildren = require('./set-children'),
-		decorators = require('./decorators')
+		decorate = require('./decorators').automatic
 
 module.exports = getElement
 
 function getElement(elm, def, cnt) {
 	var el = element(elm, def)
-	if (def) for (var k in decorators) {
-		if (def[k]) decorators[k](el, k, def[k])
-	}
+	if (def) decorate(el, def)
 	if (cnt && cnt.length) setChildren(el, cnt)
 	return el
 }

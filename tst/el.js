@@ -1,120 +1,144 @@
-var pico = require('../index'),
-		jsdom = require('jsdom'),
+var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		htm = require('../src/elem/elem')
+		el = require('../src/elem/el'),
+		globals = require('../src/root/root')
 
-var document = jsdom.jsdom(),
-		DOM = document.defaultView,
-		svg = htm.svg
+globals.document = jsdom()
 
-pico.global.document = document
+var handler = function(){}
 
 ct('api', function() {
-	ct('===', typeof htm, 'function')
-	ct('===', typeof svg, 'function')
+	ct('===', typeof el, 'function')
+	ct('===', typeof el.svg, 'function')
 })
 ct('html', function() {
-	var el = htm('div')()
-	ct('===', el instanceof DOM.Node, true)
-	ct('===', typeof el, 'object')
-	ct('===', el.nodeName.toLowerCase(), 'div')
+	var elm = el('div')
+	ct('===', elm instanceof globals.Node, true)
+	ct('===', typeof elm, 'object')
+	ct('===', elm.nodeName.toLowerCase(), 'div')
 })
 ct('svg', function() {
-	var el = svg('svg')()
-	ct('===', el.nodeName.toLowerCase(), 'svg')
-	ct('!!', el instanceof DOM.Node)
+	var elm = el.svg('svg')
+	ct('===', elm.nodeName.toLowerCase(), 'svg')
+	ct('!!', elm instanceof globals.Node)
 })
 ct('svg attributes', function() {
-	var el = svg('svg', svg('path[d=mypath]'))()
-	ct('===', el.nodeName.toLowerCase(), 'svg')
-	ct('!!', el instanceof DOM.Node)
-	ct('===', el.childNodes.length, 1)
-	ct('===', el.firstChild instanceof DOM.Node, true)
-	//ct('===', el.firstChild.nodeName, 'path')
+	var elm = el.svg('svg', el.svg('path[d=mypath]'))
+	ct('===', elm.nodeName.toLowerCase(), 'svg')
+	ct('!!', elm instanceof globals.Node)
+	ct('===', elm.childNodes.length, 1)
+	ct('===', elm.firstChild instanceof globals.Node, true)
 })
 ct('svg style attributes', function() {
-	var el = svg('svg[style="display: none;"]')()
-	ct('===', el.hasAttribute('style'), true)
-	ct('===', el.getAttribute('style'), 'display:none;')
+	var elm = el.svg('svg[style="display: none;"]')
+	ct('===', elm.hasAttribute('style'), true)
+	ct('===', elm.getAttribute('style'), 'display:none;')
 })
 ct('html text nodes', function() {
-	var el = htm('div', 'one', [2, 'three'])()
-	ct('===', el.childNodes.length, 3)
-	ct('===', el.children.length, 0)
+	var elm = el('div', 'one', [2, 'three'])
+	ct('===', elm.childNodes.length, 3)
+	ct('===', elm.children.length, 0)
 })
 ct('html text content', function() {
-	var el = htm('div', [2])()
-	ct('===', el.textContent, '2')
-	ct('===', el.children.length, 0)
+	var elm = el('div', [2])
+	ct('===', elm.textContent, '2')
+	ct('===', elm.children.length, 0)
 })
 ct('html falsy children', function() {
-	var el = htm('div', '', 0, null, [undefined, 0])()
-	ct('===', el.childNodes.length, 2)
-	ct('===', el.childNodes[1].textContent, '0')
+	var elm = el('div', '', 0, null, [undefined, 0])
+	ct('===', elm.childNodes.length, 2)
+	ct('===', elm.childNodes[1].textContent, '0')
 })
 ct('mixed nested namespace', function() {
-	var el = htm('div', svg('svg'), htm('p', 'text'))()
-	ct('===', el.childNodes.length, 2)
-	ct('===', el.children.length, 2)
+	var elm = el('div', el.svg('svg'), el('p', 'text'))
+	ct('===', elm.childNodes.length, 2)
+	ct('===', elm.children.length, 2)
 })
 ct('selectors', function() {
-	var el = htm('div.c1#i1[style="color:blue"].c2')()
-	ct('===', el.nodeName, 'DIV')
-	ct('===', el.id, 'i1')
-	ct('===', el.className, 'c1 c2')
-	ct('===', el.style.color, 'blue')
-	ct('===', el.getAttribute('style'), 'color:blue')
+	var elm = el('div.c1#i1[style="color:blue"].c2')
+	ct('===', elm.nodeName, 'DIV')
+	ct('===', elm.id, 'i1')
+	ct('===', elm.className, 'c1 c2')
+	ct('===', elm.style.color, 'blue')
+	ct('===', elm.getAttribute('style').replace(/\s|\;/g, ''), 'color:blue')
 })
-ct('decorators', function() {
-	var handler = function(){},
-			el = htm('div', {
-				style: {color: 'blue'},
-				props: {className: 'c1 c2', id: 'i1', onclick: handler}
-			})()
-	ct('===', el.nodeName, 'DIV')
-	ct('===', el.id, 'i1')
-	ct('===', el.className, 'c1 c2')
-	ct('===', el.style.color, 'blue')
-	ct('===', el.getAttribute('style').replace(/\s/g,''), 'color:blue;')
+ct.skip('decorators-magic', function() {
+	var elm = el('div', {
+		style: {color: 'blue'},
+		class: 'c1 c2',
+		id: 'i1',
+		onclick: handler
+	})
+	ct('===', elm.id, 'i1')
+	ct('===', elm.className, 'c1 c2')
+	ct('===', elm.style.color, 'blue')
+	ct('===', elm.getAttribute('style').replace(/\s/g, ''), 'color:blue;')
+	ct('===', elm.onclick, handler)
+})
+ct('decorators-props', function() {
+	var elm = el('div', {props: {
+		className: 'c1 c2',
+		class: 'c3',
+		id: 'i1',
+		onclick: handler
+	}})
+	ct('===', elm.id, 'i1')
+	ct('===', elm.className, 'c1 c2')
+	ct('===', elm.onclick, handler)
+})
+ct('decorators-attrs', function() {
+	var elm = el('div', {attrs: {
+		class: 'c1 c2',
+		className: 'c3',
+		id: 'i1',
+		onclick: handler
+	}})
+	ct('===', elm.id, 'i1')
+	ct('===', elm.className, 'c1 c2')
 })
 ct('element namespace', function() {
-	var el0 = svg('circle')(),
-			el1 = htm('svg:circle')(),
-			el2 = htm('circle[xmlns="http://www.w3.org/2000/svg"]')()
+	var el0 = el.svg('circle'),
+			el1 = el('svg:circle'),
+			el2 = el('circle[xmlns="http://www.w3.org/2000/svg"]')
 	ct('===', el0.namespaceURI, 'http://www.w3.org/2000/svg')
 	ct('===', el1.namespaceURI, 'http://www.w3.org/2000/svg')
 	ct('===', el2.namespaceURI, 'http://www.w3.org/2000/svg')
 })
 ct('styles', function() { //font-weight: bold; color: red; font-size:150%;
-	var el0 = svg('circle[style=font-size:150%;color:blue;]')(),
-			el1 = htm('svg:circle[style=font-size:150%;color:blue]')(),
-			el2 = svg('circle', {style: {'font-size':'150%', color:'blue'}})(),
-			el3 = htm('div', {style: {'font-size':'150%', color:'blue'}})()
-	ct('===', el0.getAttribute('style'), 'font-size:150%;color:blue;')
-	ct('===', el1.getAttribute('style'), 'font-size:150%;color:blue')
-	ct('===', el2.getAttribute('style'), 'font-size:150%;color:blue;')
-	ct('===', el3.getAttribute('style').replace(/\s/g,''), 'font-size:150%;color:blue;')
+	var el0 = el.svg('circle[style=font-size:150%;color:blue;]'),
+			el1 = el('svg:circle[style=font-size:150%;color:blue]'),
+			el2 = el.svg('circle', {style: {'font-size':'150%', color:'blue'}}),
+			el3 = el('div', {style: {'font-size':'150%', color:'blue'}})
+	ct('===', el0.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
+	ct('===', el1.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue')
+	ct('===', el2.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
+	ct('===', el3.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
 })
 ct.skip('attribute namespace', function() {
-	var el0 = svg('circle[xmlns:xlink="http://www.w3.org/1999/xlink"]')(),
-			el1 = svg('circle[xmlns:xlink="http://www.w3.org/1999/xlink"]')(),
-			el2 = htm('circle', {attrs: {'xmlns:xlink':'http://www.w3.org/2000/svg'}})()
+	var el0 = el.svg('circle[xmlns:xlink="http://www.w3.org/1999/xlink"]'),
+			el1 = el.svg('circle[xmlns:xlink="http://www.w3.org/1999/xlink"]'),
+			el2 = el('circle', {attrs: {'xmlns:xlink':'http://www.w3.org/2000/svg'}})
 	ct('===', el0.hasAttributeNS('xmlns','xlink'), true)
 	ct('===', el1.hasAttributeNS('xmlns','xlink'), true)
 	ct('===', el2.hasAttributeNS('xmlns','xlink'), true)
 })
-ct('factory options', function() {
-	var fac = htm('p'),
-			el0 = fac({props:{textContent: 'y'}}),
-			el1 = fac({props:{textContent: 'z'}})
-	ct('===', el0.textContent, 'y')
-	ct('===', el1.textContent, 'z')
+ct('re-decorate', function() {
+	var elm = el('p'),
+			el0 = el(elm, {props:{className: 'y'}})
+	ct('!==', elm, el0)
+	ct('===', elm.className, '')
+	ct('===', el0.className, 'y')
+	var el1 = el(el0, {className: 'z'})
+	ct('!==', el0, el1)
+	ct('===', elm.className, '')
+	ct('===', el0.className, 'y')
+	ct('===', el1.className, 'z')
 })
 ct('forced properties and attributes', function() {
-	var ela = htm('div')({
+	var ela = el(el('div'), {
 		attrs:{class: 'c', tabIndex: 2}
 	})
-	var elp = htm('div')({
+	var elp = el(el('div'), {
 		props:{className: 'c', tabIndex: 2}
 	})
 	ct('===', ela.tabIndex, 2)
