@@ -1,4 +1,5 @@
-var ctyp = require('./util/typ')
+var ctyp = require('./util/typ'),
+		reduce = require('../src/util/reduce')
 
 module.exports = {
 	listen: listen,
@@ -11,7 +12,7 @@ function listen(typ, fcn) {
 			options = {capture: true, passive:true}
 
 	if (ctyp(typ) === Object) {
-		for (var k in typ) this.listen(k, typ[k])
+		reduce(typ, addListener, this)
 	}
 	else if (!fcn) {
 		delete handlers[typ]
@@ -28,4 +29,7 @@ function handleEvent(evt) {
 	var fcn = this.on[evt.type]
 	evt.stopPropagation()
 	fcn.call(this, evt)
+}
+function addListener(ctx, val, key) {
+	return ctx.listen(key, val)
 }
