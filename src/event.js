@@ -1,15 +1,17 @@
+var ctyp = require('./util/typ')
+
 module.exports = {
-	on: on,
+	listen: listen,
 	handleEvent: handleEvent
 }
 
-function on(typ, fcn) {
+function listen(typ, fcn) {
 	var el = this.el,
-			handlers = this.eventHandlers,
+			handlers = this.on,
 			options = {capture: true, passive:true}
 
-	if (typeof typ === 'object') {
-		for (var k in typ) this.on(k, typ[k])
+	if (ctyp(typ) === Object) {
+		for (var k in typ) this.listen(k, typ[k])
 	}
 	else if (!fcn) {
 		delete handlers[typ]
@@ -23,7 +25,7 @@ function on(typ, fcn) {
 }
 // standard property called by window on event, binded to co
 function handleEvent(evt) {
-	var fcn = this.eventHandlers[evt.type]
+	var fcn = this.on[evt.type]
 	evt.stopPropagation()
 	fcn.call(this, evt)
 }

@@ -33,7 +33,7 @@ ct('full Component - no children', function() {
 	ct('===', c.el.tabIndex, 1)
 	// component
 	ct('===', c.view.constructor, Function)
-	ct('===', !!c.eventHandlers.click, true)
+	ct('===', !!c.on.click, true)
 	// updates
 	c.view(2.1)
 	ct('===', c.el.value, '2.1')

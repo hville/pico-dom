@@ -10,9 +10,9 @@ function Component(elm, cfg, cnt) {
 
 	this.el = elm
 	this.key = cfg.key
-	this.eventHandlers = {}
+	this.on = {}
 	this.content = getContent(cnt)
-	if (cfg.on) this.on(cfg.on)
+	if (cfg.on) this.listen(cfg.on)
 
 	//lifecycle hooks
 	this.oninit = cfg.oninit || noop // (cfg) => void
@@ -21,7 +21,7 @@ function Component(elm, cfg, cnt) {
 }
 Component.prototype = {
 	constructor: Component,
-	on: event.on,
+	listen: event.listen,
 	handleEvent: event.handleEvent,
 	view: view,
 	updateChildren: updateChildren,
