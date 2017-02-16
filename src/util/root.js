@@ -6,8 +6,9 @@ module.exports = {
 	Node: typeof Node === UNDEF ? null : Node,
 	get document() { return $$doc },
 	set document(doc) {
+		var win = doc.defaultView
 		$$doc = doc
-		this.window = doc.defaultView
-		this.Node = doc.defaultView.Node
+		this.window = win
+		this.Node = win.Node
 	}
 }

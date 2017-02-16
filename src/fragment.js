@@ -20,6 +20,7 @@ function Fragment(content, cfg) {
 }
 Fragment.prototype = {
 	constructor: Fragment,
+	isFragment: true,
 	key: '',
 	kinIndex: NaN,
 	get parent() { return this.header.parentNode },
@@ -34,7 +35,7 @@ Fragment.prototype = {
 		var itm = this.content[this.content.length-1]
 		if (!itm) return null
 		if (itm.el) return (itm.el)
-		if (itm.content) return itm.lastKin
+		if (itm.constructor === Fragment) return itm.lastKin //TODO isFragment?
 		return itm
 	},
 	dataKey: function getIndex(v,i) { return i },
@@ -46,12 +47,5 @@ Fragment.prototype = {
 	moveTo: function moveTo(parent, before) {
 		parent.insertBefore(this.header, before||null)
 		return insertBefore(parent, this.content, before||null)
-	},
-/*	remove: function remove() {
-		//TODO header, footer,,,
-		//TODO remove from parent Component???
-		var content = this.content,
-				parent = this.parent
-		for (var i=0; i<content.length; ++i) parent.removeChild(content[i].el || content[i])
-	}*/
+	}
 }

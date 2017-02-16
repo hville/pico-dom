@@ -1,15 +1,18 @@
 var factory = require('./util/factory'),
-		co = require('./co'),
-		List = require('./list'),
+		Component = require('./component'),
 		ns = require('./util/namespaces'),
 		createElement = require('./el/create-element'),
 		Config = require('./util/config'),
-		createChild = require('./util/create-child')
+		createChild = require('./util/create-child'),
+		List = require('./list')
 
 function liCreator(sel, att, cnt) {
 	return function constructor(opt) {
-		var cofcn = co(sel, opt ? new Config(att, opt) : att, cnt)
-		return new List(cofcn)
+		var cfg = opt ? new Config(att, opt) : att
+		function coFab() {
+			return new Component(createElement(sel, cfg), cfg, cnt.map(createChild))
+		}
+		return new List(coFab)
 	}
 }
 

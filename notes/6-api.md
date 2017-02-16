@@ -27,4 +27,11 @@ Takeway:
 
 ## instance vs function
 
-...
+* instance
+  * ? ugly `myco().ondata()`
+  * `document.body.appendChild(myco().el)`
+  * component: access to element
+  * fragment: access to methods
+* view function:
+  * nice `document.body.appendChild(myco()(data))`
+  * need custom function closure with custom function properties ()

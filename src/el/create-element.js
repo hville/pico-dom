@@ -8,31 +8,28 @@ var rRE =/[\s\"\']+/g,
 
 /**
  * Parse a CSS-style selector string and return a new Element
- * @param {string} xmlns - namespace URL
  * @param {*} selector - css like selector string
  * @param {Object} [options] - The existing definition to be augmented
  * @returns {Object} - The parsed element definition [sel,att]
  */
-module.exports = function createElement(xmlns, selector, options) {
+module.exports = function createElement(selector, options) {
 	switch(typ(selector)) {
 		case G.Node:
 			return decorate(selector.cloneNode(false), options)
 		case String:
-			return fromString(xmlns, selector, options)
-		case Function:
-			return selector(options)
+			return fromString(selector, options)
 		default:
 			throw Error('invalid selector: ' + typeof selector)
 	}
 }
-function fromString(xmlns, selector, options) {
+function fromString(selector, options) {
 	var matches = selector.replace(rRE, '').match(mRE)
 	if (!matches) throw Error('invalid selector: '+selector)
 	if (!options) options = {attrs:{}}
 	else if (!options.attrs) options.attrs = {}
 	var def = matches.reduce(parse, {
 		tag: '',
-		xns: xmlns,
+		xns: options.xmlns, //TODO redundant
 		att: options.attrs
 	})
 	var doc = G.document,
@@ -70,7 +67,6 @@ function parse(res, txt) {
 				res.tag = txt.slice(idx+1)
 				res.xns = NS[txt.slice(0,idx)]
 			}
-			break
 	}
 	return res
 }

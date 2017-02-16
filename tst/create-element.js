@@ -6,6 +6,6 @@ var jsdom = require('jsdom').jsdom,
 globals.document = jsdom()
 
 ct('ce-api', function() {
-	ct('===', ce(null, 'div').tagName, 'DIV')
-	ct('===', ce(null, '#a').tagName, 'DIV')
+	ct('===', ce('div').tagName, 'DIV')
+	ct('===', ce('#a').tagName, 'DIV')
 })

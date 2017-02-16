@@ -253,13 +253,6 @@ Returns a Node representing the previous node in the tree, or null if there isn'
 Node.rootNode Read only
 Returns a Node object representing the topmost node in the tree, or the current node if it's the topmost node in the tree. This is found by walking backward along Node.parentNode until the top is reached.
 
-* TODO
-* rawElement: `.xmlns`, `.prefix`, `.tag`
-* ??????????: `.element`
-* decorated: rawElement + `.dataset`, `.attributes|.attrs`, `.properties|.props`, `.style`
-* component: decorated & `.content`, `.key`, `.edit`, `.on`, `.init`
-* list: component & `.datakey`
-
 PARSESEL
 * parse('ss') => {attributes, xmlns, tag, prefix}
 CREATE ELEMENT

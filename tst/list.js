@@ -28,18 +28,20 @@ ct('list-simple', function() {
 	ct('==', l0().header.parentNode, null)
 	var comp = co('div#myid', l0)(),
 			el = comp.el
-	ct('===', el.childNodes.length, 0+1+1, 'no content, 1 fragment, 1 list')
+	ct('===', el.children.length, 0, 'no content, 1 fragment, 1 list')
 	comp.ondata([1,2,3])
-	ct('===', el.childNodes.length, 3+1+1)
-	//ct.skip('==', e.firstChild.textContent, 1)
+	ct('===', el.children.length, 3)
+	ct.skip('==', el.firstChild.textContent, 1)
 	ct('==', el.lastChild && el.lastChild.textContent, 3)
+	comp.ondata([4])
+	ct('===', el.children.length, 1)
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis)(),
 			el = comp.el
-	ct('===', el.childNodes.length, 0+3+1)
+	ct('===', el.children.length, 0)
 	comp.ondata([1,2,3])
-	ct('===', el.childNodes.length, 9+3+1)
+	ct('===', el.children.length, 9)
 	ct.skip('==', el.firstChild.textContent, 1)
 	ct('==', el.lastChild.textContent, 3)
 })

@@ -61,7 +61,11 @@ function ondata(arr) {
 	}
 
 	// de-reference leftover items
-	while (cnt.length>arr.length) keys.remove(cnt.pop().key)
+	while (cnt.length>arr.length) {
+		var extra = cnt.pop()
+		keys.delete(extra.key)
+		extra.el.parentNode.removeChild(extra.el)
+	}
 
 	//sync children if mounted
 	if (head.parentNode) {

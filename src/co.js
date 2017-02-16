@@ -8,7 +8,7 @@ var factory = require('./util/factory'),
 function coCreator(sel, att, cnt) {
 	return function constructor(opt) {
 		var cfg = new Config(att, opt),
-				elm = createElement(att.xmlns, sel, cfg)
+				elm = createElement(sel, cfg)
 		return new Component(elm, cfg, cnt.map(createChild))
 	}
 }
