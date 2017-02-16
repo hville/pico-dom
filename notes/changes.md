@@ -1,23 +1,9 @@
 <!-- markdownlint-disable MD004 MD007 MD010 MD012 MD041 MD022 MD024 MD032 -->
 
-TODO
-* on mounting, set.childIndex
-* manual update => this.update(...) this.updateChildren(...) this.updateTree(...) this.children(...) this.content(...)
-* default ondata passthrough
-* content ALWAYS ovewrite element children
-	* element => cloneNode(true)
-	* component => cloneNode(false)
-* el(co); co(co)
-
-ISSUES
-* AUTUPDATE => automount(last) ...parent gives pointer to each
-* ManualUpdate =>
-
-
-
-
-
-
+Changes
+* el => Element
+* manual update
+* co => instance
 
 BEFORE
 `el(sel, cfg, cnt)(opt)` => `HTML`

@@ -1,5 +1,5 @@
-var ctyp = require('./util/typ'),
-		reduce = require('../src/util/reduce')
+var ctyp = require('../util/typ'),
+		reduce = require('../util/reduce')
 
 module.exports = {
 	listen: listen,

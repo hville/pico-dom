@@ -1,6 +1,6 @@
-var globals = require('../root/root'),
-		decorate = require('./decorators').automatic,
-		namespaces = require('../util/namespaces'),
+var G = require('../util/root'),
+		decorate = require('./decorate'),
+		NS = require('../util/namespaces'),
 		typ = require('../util/typ')
 
 var rRE =/[\s\"\']+/g,
@@ -9,17 +9,18 @@ var rRE =/[\s\"\']+/g,
 /**
  * Parse a CSS-style selector string and return a new Element
  * @param {string} xmlns - namespace URL
- * @param {string} selector - css like selector string
+ * @param {*} selector - css like selector string
  * @param {Object} [options] - The existing definition to be augmented
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function createElement(xmlns, selector, options) {
 	switch(typ(selector)) {
-		case globals.Node:
-			if (xmlns && xmlns !== selector.namespaceURI) throw Error('xmlns mismatch: ' + xmlns + ' vs ' + selector.namespaceURI)
+		case G.Node:
 			return decorate(selector.cloneNode(false), options)
 		case String:
 			return fromString(xmlns, selector, options)
+		case Function:
+			return selector(options)
 		default:
 			throw Error('invalid selector: ' + typeof selector)
 	}
@@ -27,15 +28,17 @@ module.exports = function createElement(xmlns, selector, options) {
 function fromString(xmlns, selector, options) {
 	var matches = selector.replace(rRE, '').match(mRE)
 	if (!matches) throw Error('invalid selector: '+selector)
+	if (!options) options = {attrs:{}}
+	else if (!options.attrs) options.attrs = {}
 	var def = matches.reduce(parse, {
 		tag: '',
 		xns: xmlns,
-		att: options || {}
+		att: options.attrs
 	})
-	var doc = globals.document,
+	var doc = G.document,
 			tag = def.tag || 'div',
 			elm = def.xns ? doc.createElementNS(def.xns, tag) : doc.createElement(tag)
-	return decorate(elm, def.att)
+	return decorate(elm, options)
 }
 function parse(res, txt) {
 	var idx = -1,
@@ -65,7 +68,7 @@ function parse(res, txt) {
 			if (idx === -1) res.tag = txt
 			else {
 				res.tag = txt.slice(idx+1)
-				res.xns = namespaces[txt.slice(0,idx)]
+				res.xns = NS[txt.slice(0,idx)]
 			}
 			break
 	}

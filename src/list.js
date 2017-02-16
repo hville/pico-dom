@@ -1,49 +1,74 @@
-var co = require('./co-set').co,
-		typ = require('./util/typ')
+var Fragment = require('./fragment'),
+		ctyp = require('./util/typ')
 
 module.exports = List
 
-function List(elm, cfg, cnt) {
-	// function to derive a unique id from the date and re-sort nodes
-	this.dataKey = dataKey(cfg.dataKey)
-	// factory to generate new dynamic elements
-	this.factory = co(elm, cfg, cnt)
-	// lookup maps to locate existing component and delete extra ones
-	this.mIdCo = new Map()
-	this.mElId = new WeakMap()
-}
-List.prototype.view = view
-function dataKey(key) {
-	switch(typ(key)) {
-		case typ.F: return key
-		case typ.S: case typ.N: return function(v) { return v[key] }
-		default: return function(v,i) { return i }
+function List(factory, cfg) {
+	if (cfg) {
+		var dataKey = cfg.dataKey
+		switch(ctyp(dataKey)) {
+			case Function:
+				this.dataKey = dataKey
+				break
+			case String: case Number:
+				this.dataKey = function(v) { return v[dataKey] }
+				break
+		}
 	}
+	this.factory = factory
+	// lookup maps to locate existing component and delete extra ones
+	this.keys = new Map()
+	this.ondata = ondata
+	Fragment.call(this, [], cfg) //.content, .header, .key, .kinIndex, .ondata, .oninit
 }
-function view(arr, idx, last) {
-	var parent = last.parentNode,
-			mIdCo = this.mIdCo,
-			mElId = this.mElId
-
+List.prototype = Fragment.prototype
+function ondata(arr) {
+	var cnt = this.content,
+			keys = this.keys,
+			getK = this.dataKey,
+			head = this.header
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
-				uid = this.dataKey(val, i),
-				vfn = mIdCo.get(uid)
-		if (!vfn) {
-			vfn = this.factory({key: uid})
-			mIdCo.set(uid, vfn)
+				key = getK(val, i)
+
+		// find item, create Item if it does not exits
+		var itm = keys.get(key)
+		if (!itm) {
+			itm = this.factory({key: key, kinIndex: arr.length})
+			keys.set(key, itm)
+			cnt.push(itm)
 		}
-		last = vfn(val, idx+i, last)
-		mElId.set(last, uid)
-	}
-	// unmount and de-reference remaining nodes that are part of this list
-	while (last.nextSibling) {
-		var next = last.nextSibling,
-				nKey = mElId.get(next)
-		if (nKey !== undefined) {
-			mIdCo.delete(nKey)
-			parent.removeChild(next)
+
+		// fix content sorting if out of place
+		if (itm !== cnt[i]) {
+			var idx = i,
+					tmpItm = cnt[idx],
+					tmpKey = tmpItm.key,
+					srcKey = getK(arr[idx], idx)
+			//if srcKey === tmpKey, simple swap, else chained insertions
+			while (tmpKey !== srcKey && idx < arr.length) {
+				cnt[idx] = keys.get(srcKey)
+				idx = cnt[idx].kinIndex
+				srcKey = getK(arr[idx], idx)
+			}
+			//final swap
+			cnt[idx] = tmpItm
 		}
+
+		// fix index and update
+		if (itm.kinIndex !== i) itm.kinIndex = i
+		cnt[i].ondata(val, i, arr)
 	}
-	return last
+
+	// de-reference leftover items
+	while (cnt.length>arr.length) keys.remove(cnt.pop().key)
+
+	//sync children if mounted
+	if (head.parentNode) {
+		var nextSibling = (cnt[cnt.length-1] || head).nextSibling
+		if (head.parentNode) this.moveTo(head.parentNode, nextSibling)
+	}
+
+	// return last inserted item
+	return cnt[cnt.length-1]
 }

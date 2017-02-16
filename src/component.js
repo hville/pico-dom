@@ -1,69 +1,35 @@
-var getChild = require('./elem/get-child'),
-		event = require('./event'),
-		global = require('./root/root')
+var Fragment = require('./fragment'),
+		event = require('./co/event')
 
 module.exports = Component
 
 function Component(elm, cfg, cnt) {
-	// internal temporary node used to position updates. shared across all nodes
-	if (!this.placeholder) this.placeholder = global.document.createComment('placeholder')
-
 	this.el = elm
-	this.key = cfg.key
 	this.on = {}
-	this.content = getContent(cnt)
+	if (cfg.key) this.key = cfg.key
+	if (cfg.kinIndex) this.kinIndex = cfg.kinIndex
 	if (cfg.on) this.listen(cfg.on)
-
-	//lifecycle hooks
-	this.oninit = cfg.oninit || noop // (cfg) => void
-	this.ondata = cfg.ondata || noop // (data[, childIndex]) => data'
-	this.oninit(cfg)
+	// children
+	if (cnt) {
+		this.children = new Fragment(cnt)
+		this.children.moveTo(elm, null)
+	}
+	// lifecycle hooks
+	if (cfg && cfg.ondata) this.ondata = cfg.ondata
+	if (cfg && cfg.oninit) {
+		this.oninit = cfg.oninit
+		this.oninit(cfg)
+	}
 }
 Component.prototype = {
 	constructor: Component,
+	key: '',
+	kinIndex: NaN,
+	oninit: null,
+	children: null,
 	listen: event.listen,
 	handleEvent: event.handleEvent,
-	view: view,
-	updateChildren: updateChildren,
-	placeholder: null
-}
-function view(val, idx, after) {
-	var elm = this.el,
-			cnt = this.content
-	if (idx === undefined) idx = 0
-
-	// the element edit function may change the value to pass down
-	var xval = this.ondata(val, idx)
-	if (xval === undefined) xval = val
-	if (cnt && cnt.length) this.updateChildren(xval, 0)
-
-	// mount the group if a target is provided
-	if (after && elm.parentNode !== after.parentNode) {
-		after.parentNode.insertBefore(elm, after.nextSibling)
+	ondata: function ondata(a,b,c) {
+		this.children.ondata(a,b,c) //default pass-through
 	}
-	return elm
 }
-function updateChildren(val, idx) {
-	var elm = this.el,
-			placeholder = this.placeholder,
-			last = placeholder,
-			cnt = this.content
-	elm.insertBefore(last, elm.firstChild)
-	for (var i=0; i<cnt.length; ++i) {
-		var itm = cnt[i]
-		last = (itm === last) ? last
-			: itm.constructor === Function ? itm(val, idx+i, last)
-			: elm.insertBefore(itm, last.nextSibling)
-	}
-	elm.removeChild(placeholder)
-	while (last.nextSibling) elm.removeChild(last.nextSibling)
-}
-function getContent(src) {
-	var tgt = []
-	if (src) for (var i=0; i<src.length; ++i) {
-		var child = getChild(src[i])
-		if (child) tgt.push(child)
-	}
-	return tgt
-}
-function noop() {}

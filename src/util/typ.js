@@ -1,4 +1,4 @@
-var G = require('../root/root')
+var G = require('./root')
 
 module.exports = typ
 

@@ -1,24 +1,13 @@
-var factory = require('./src/util/create-factory'),
-		List = require('./src/list'),
-		coSet = require('./src/co-set'),
-		ns = require('./src/util/namespaces'),
-		el = require('./src/elem/elem'),
-		root = require('./src/root/root')
-
-var getView = coSet.creator(List)
-
-function Li(def) {
-	return factory(getView, def)
-}
-var li = Li()
-li.svg = Li({xmlns: ns.svg})
+var ns = require('./src/util/namespaces'),
+		el = require('./src/el'),
+		co = require('./src/co'),
+		li = require('./src/li'),
+		root = require('./src/util/root')
 
 module.exports = {
 	el: el,
-	co: coSet.co,
+	co: co,
 	li: li,
-	Co: coSet.Co,
-	Li: Li,
 	namespaces: ns,
 	global: root,
 }
