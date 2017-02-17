@@ -42,13 +42,13 @@ var cell = co('td', [
 	bodyTdInputFac
 ])()
 ct('co - mixed content', function() {
-	ct('===', cell.children.content.length, 2)
+	ct('===', cell.children.content.length, 2+1)
 	var el = cell.el
 	cell.ondata('def')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'td')
 	// view inputs
 	ct('===', el.childNodes.length, 2+1)
-	ct.skip('===', el.firstChild && el.firstChild.value, 'def')
-	ct('===', el.lastChild && el.lastChild.value, 'def')
+	ct('===', el.childNodes.item(0).value, 'def')
+	ct('===', el.childNodes.item(1).value, 'def')
 })

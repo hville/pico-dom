@@ -1,118 +1,5 @@
 <!-- markdownlint-disable MD004 MD007 MD010 MD012 MD041 MD022 MD024 MD032 -->
 
-Changes
-* el => Element
-* manual update
-* co => instance
-
-BEFORE
-`el(sel, cfg, cnt)(opt)` => `HTML`
-`el.svg(sel, cfg, cnt)(opt)` => `svg`
-cfg: `{attrs, props}`
-
-AFTER
-`el(sel, cfg, cnt)` => `HTML`
-`el.svg(sel, cfg, cnt)` => `SVG`
-cfg: **???**
-* just decorate with `el(refEL, cfg, cnt)` => `newEL`
-
-BEFORE
-`co(sel, cfg, cnt)(opt)(val, idx)` => `HTML`
-`co.svg(sel, cfg, cnt)(opt)(val, idx)` => `svg`
-cfg: `{on, ondata, oninit, key, datakey, attrs, props}`
-
-AFTER-A
-`co(el(sel, att), cfg, cnt).update(val, idx)` => `HTML`
-`co(co(sel, att, cnt), cfg, cnt).update(val, idx)` => `HTML`
-* split el and component options
-* components are exposed and can be cloned
-* mixing props and attrs is tricky
-
-AFTER-B
-`co(sel, cfg, cnt)(val, idx)` => `HTML`
-`co(el(sel, att), cfg, cnt)(val, idx)` => `HTML`
-`co(co(sel, att, cnt), cfg, cnt)(val, idx)` => `HTML`
-* flexible
-* need a handle on the function to access component `this.view.component`
-
-
-```javascript
-co('tbody',
-  li('tr',
-    co('td', el.svg('svg', svgIcon)),
-    li('td', {edit: function(val, pos) { this.el.textContent = val }})
-  )
-)
-```
-
-```javascript
-co(el('tbody'),
-  li('tr',
-    co('td', el.svg('svg', svgIcon)),
-    li('td', {edit: function(val, pos) { this.el.textContent = val }})
-  )
-)
-```
-
-
-
-
-```javascript
-//custom creators for shared scope
-var li = pico.Li(defaults)
-var tableCo = co('table', [
-  el('caption', 'data-matrix')
-  co('tbody',
-    li('tr',
-      co('td', el.svg('svg', svgIcon)),
-      li('td', {edit: function(val, pos) { this.el.textContent = val }})
-    )
-  ),
-])
-var tableFn = tableCo(options)
-var tableEl = tableFn(data)
-document.body.appendChild(tableEl)
-```
-
-# lifecycle
-
-co(...) => create component factory
-ff(opt) => (new Component).view
-* create & decorate parent element
-
-
-* functional
-* tiny API
-* view only
-* node require
-
-lifecycle
-* init() || oninit()
-* view() ||
-* edit() || ondata()
-* drop()
-
-events
-* on: {}
-
-
-mount: =>
-	onparent: (oldParentNode, newParentNode)
-
-
-
-
-
-
-
-
-
-oninit(opt) => void, this:component, this.el:element
-ondata(val, idx) => val' => child(val', idx, after)
-
-
-
-
 Co(def) => co
 co(sel, opt, cnt) => factory function
 ff(opt) => view
@@ -123,23 +10,11 @@ ff(opt) => view
 view(val, idx, after) => element
 	* mount child elements and run view functions
 
-lifecycle
-	* create & decorate Element
-	* create Component
-	* create child Elements & child Components
-	* >> init() || oninit()
-	* mount children
-	* mount self
-	* >> onmount
-	* >> onview
-	* >> unmount
-
 Node.rootNode === topmost
 Node.parentNode === parent
 
 same parent, new rootNode ==> parent was mounted, self unchanged
 same rootNode, newParent ===> self mounted, parent
-
 
 Read only
 Returns a Node object representing the topmost node in the tree, or the current node if it's the topmost node in the tree. This is found by walking backward along Node.parentNode until the top is reached
@@ -181,93 +56,19 @@ SPECIAL
 {sel:{tag, ns, pre}, att:{...}, cnt:[txt|num|fcn|el|co]} [sel, att, cnt]
 
 
-COMPONENT:
-Mithril: {
-* oninit: vnode => void, // before mounting, parent before children
-* oncreate: vnode => void, // after mounting
-* onupdate: vnode => void, // after update if already mounted
-  * onbeforeremove: vnode => void||Promise, // before unmount, wait if promise, head of fragment only
-  * onremove: vnode => void, //after onbeforeremove, all children
-  * onbeforeupdate: (vnode,old) => Boolean, //false:prevent diff self and children
-* view: vnode => vdom
+https://www.npmjs.com/package/nanocomponent
+render = nanocomponent(HtmlOrFunctionOrObject)
+Create an object with different methods attached. Cached until new arguments are passed in or when it's removed from the DOM. Availble methods are:
 
-	}
-	redom: {
-		update: (v,i,a)=>void
-		View: (initData, v, i, a) => Co
-		key: ''
-		initData: {}
-		views: []
-		el: Element
-		mount: ()=>void, //mounting&&!isMounted
-		mounted: ()=>void, //mounting&&!isMounted&&mount
-		remount: ()=>void, //mounting&&isMounted
-		remounted: ()=>void, //mounting&&isMounted&&remount
-		unmount: ()=>void, //mounted
-	}
-	snabbdomCO: {
-* init: vnode => void
-  * create: (vnode,vnode) => void
-* insert: vnode => void
-  * prepatch: (vnode,vnode) => void
-* update: (vnode,vnode) => void
-		postpatch: (vnode,vnode) => void
-		destroy: vnode => void
-		remove: (vnode, cb) => void
-	}
-	CustomElement: this === element
-		constructor: function() {super(); this.something=somevalue} //created or upgraded
-		connectedCallback() //inserted into a document, including into a shadow tree
-		disconnectedCallback() //clean up code (removing event listeners, etc.).
-		attributeChangedCallback(name, oldValue, newValue, namespace) //attributes are changed, appended, removed, or replaced, its attributeChangedCallback is run
-		adoptedCallback(oldDocument, newDocument) //old !== new
-		observedAttributes: ['disabled', 'open']
-	}
+.
+placeholder(..args)
+* Render DOM elements and delegate the render call to the next requestIdleCallback tick. This is useful to spread CPU intensive work over more time and not block the render loop. When executed on the server placeholder will always be rendered in favor of render. This makes it easier for client-side JS to pick up where the server left off (rehydration).
 
-		createdCallback: () => void //	 an instance of the element is created
-		attachedCallback: () => void //	an instance was inserted into the document
-		detachedCallback: () => void //	an instance was removed from the document
-		attributeChangedCallback: (attrName, oldVal, newVal) => void	an attribute was added, removed, or updated
-	pico
-		oninit: cfg => void
-		onview: (v,i,a) => void //mount, load, hire
-		ondata: (v,i,a) => void
-		ondrop: () => void //drop, wipe, shed, sack, fire, lose, oust, unmount, part
-picoMODULE
-?	ante === pre
-?	post
-
-visibility changes when rootNode changes....
-root===
-
-Node.ownerDocument Read only
-Returns the Document that this node belongs to. If no document is associated with it, returns null.
-Node.parentNode Read only
-Returns a Node that is the parent of this node. If there is no such node, like if this node is the top of the tree or if doesn't participate in a tree, this property returns null.
-Node.parentElement Read only
-Returns an Element that is the parent of this node. If the node has no parent, or if that parent is not an Element, this property returns null.
-Node.prefix Read only
-Is a DOMString representing the namespace prefix of the node, or null if no prefix is specified.
-Node.previousSibling Read only
-Returns a Node representing the previous node in the tree, or null if there isn't such node.
-Node.rootNode Read only
-Returns a Node object representing the topmost node in the tree, or the current node if it's the topmost node in the tree. This is found by walking backward along Node.parentNode until the top is reached.
-
-PARSESEL
-* parse('ss') => {attributes, xmlns, tag, prefix}
-CREATE ELEMENT
-* create-element({element || xmlns, prefix, tag}) ==> Node
-* decorate(el, {dataset, attributes, properties, style})
-* factory(cfg)(sel, cfg, cnt)(cfg) ==> {element || xmlns, prefix, tag, content} ==> Node
-	* parseArgs: {element:Node||Function} || {content:[string||number||Node||Function]} || {attributes, xmlns, tag, prefix}
-
-
-
-GRAND MASTER CHANGE: [
-	element || {tag, xmlns, prefix} || factory,
-	{attrs, props, style},
-	children
-]
+TOOLS
+`Node.ownerDocument` Read only, Returns the Document that this node belongs to. If no document is associated with it, returns null.
+`Node.parentNode` Read only
+`Node.parentElement` Read only
+`Node.rootNode` Read only
 
 NOTES
 * YUK - parse arguments uses the weird .element and .content props instead of just creating|decorating

@@ -112,13 +112,10 @@ ct.skip('el-attribute namespace, ie: xmlns:xlink', function() {
 ct('el-re-decorate', function() {
 	var elm = el('p'),
 			el0 = el(elm, {props:{className: 'y'}})
-	ct('!==', elm, el0)
-	ct('===', elm.className, '')
+	ct('===', elm, el0)
 	ct('===', el0.className, 'y')
 	var el1 = el(el0, {props: {className: 'z'}})
-	ct('!==', el0, el1)
-	ct('===', elm.className, '')
-	ct('===', el0.className, 'y')
+	ct('===', el0, el1)
 	ct('===', el1.className, 'z')
 })
 ct('el-forced properties and attributes', function() {

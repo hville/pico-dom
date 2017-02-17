@@ -6,19 +6,21 @@ module.exports = Component
 function Component(elm, cfg, cnt) {
 	this.el = elm
 	this.on = {}
-	if (cfg.key) this.key = cfg.key
-	if (cfg.kinIndex) this.kinIndex = cfg.kinIndex
-	if (cfg.on) this.listen(cfg.on)
 	// children
 	if (cnt) {
 		this.children = new Fragment(cnt)
-		this.children.moveTo(elm, null)
+		this.children.moveBefore(elm)
 	}
-	// lifecycle hooks
-	if (cfg && cfg.ondata) this.ondata = cfg.ondata
-	if (cfg && cfg.oninit) {
-		this.oninit = cfg.oninit
-		this.oninit(cfg)
+	if (cfg) {
+		if (cfg.key) this.key = cfg.key
+		if (cfg.kinIndex) this.kinIndex = cfg.kinIndex
+		if (cfg.on) this.listen(cfg.on)
+		// lifecycle hooks
+		if (cfg.ondata) this.ondata = cfg.ondata
+		if (cfg.oninit) {
+			this.oninit = cfg.oninit
+			this.oninit(cfg)
+		}
 	}
 }
 Component.prototype = {

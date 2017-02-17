@@ -10,18 +10,16 @@ module.exports = {
 		return val ? reduce(val, setProp, elm) : elm
 	},
 	style: function props(elm, val) {
-		if (!elm.namespaceURI || elm.namespaceURI === ns.html) switch (typ(val)) {
+		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html
+		switch (typ(val)) {
 			case String:
-				elm.style.cssText = val
+				if (isNS) setAttr(elm, val, 'style')
+				else elm.style.cssText = val
 				return elm
 			case Object:
-				return reduce(val, setStyles, elm)
-		}
-		else switch (typ(val)) {
-			case String:
-				return setAttr(elm, val, 'style')
-			case Object:
-				return setAttr(elm, reduce(val, styleString, ''), 'style')
+				if (isNS) setAttr(elm, reduce(val, styleString, ''), 'style')
+				else reduce(val, setStyles, elm)
+				return elm
 		}
 		throw Error('invalid attribute: style:' + typeof val)
 	}

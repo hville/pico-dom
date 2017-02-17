@@ -1,8 +1,7 @@
 var merge = require('./merge-object'),
 		flatConcat = require('./flat-concat'),
 		typ = require('./typ'),
-		G = require('../util/root'),
-		Config = require('../util/config')
+		G = require('../util/root')
 
 /**
  * creator to inject settings applicable to many instances (namespace, ...)
@@ -12,7 +11,7 @@ var merge = require('./merge-object'),
  */
 module.exports = function createFactory(creator, defaults) {
 	return function define(selector) {
-		var options = new Config(defaults),
+		var options = merge({}, defaults),
 				content = []
 		for (var i=1; i<arguments.length; ++i) argument(arguments[i], options, content)
 		return creator(selector, options, content)
@@ -20,7 +19,7 @@ module.exports = function createFactory(creator, defaults) {
 }
 function argument(arg, options, content) {
 	switch(typ(arg)) {
-		case Object: case Config:
+		case Object:
 			merge(options, arg)
 			break
 		case Array:

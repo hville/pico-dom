@@ -1,15 +1,14 @@
 var factory = require('./util/factory'),
 		Component = require('./component'),
 		ns = require('./util/namespaces'),
-		createElement = require('./el/create-element'),
-		Config = require('./util/config'),
-		createChild = require('./util/create-child')
+		createElement = require('./element'),
+		merge = require('./util/merge-object')
 
 function coCreator(sel, att, cnt) {
 	return function constructor(opt) {
-		var cfg = new Config(att, opt),
+		var cfg = merge({}, att, opt),
 				elm = createElement(sel, cfg)
-		return new Component(elm, cfg, cnt.map(createChild))
+		return new Component(elm, cfg, cnt)
 	}
 }
 

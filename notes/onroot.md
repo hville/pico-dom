@@ -6,12 +6,12 @@ observer.observe(document.documentElement, {
     subtree: true
 })
 (function(win) {
-    'use strict';
+'use strict';
 
-    var listeners = [],
-    doc = win.document,
-    MutationObserver = win.MutationObserver || win.WebKitMutationObserver,
-    observer;
+var listeners = [],
+doc = win.document,
+MutationObserver = win.MutationObserver || win.WebKitMutationObserver,
+observer;
 
     function ready(selector, fn) {
         // Store the selector and callback to be monitored

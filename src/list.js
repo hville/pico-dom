@@ -25,8 +25,10 @@ List.prototype = Fragment.prototype
 function ondata(arr) {
 	var cnt = this.content,
 			keys = this.keys,
-			getK = this.dataKey,
-			head = this.header
+			getK = this.dataKey
+
+	cnt.pop() // temporary removal of the footer
+
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
 				key = getK(val, i)
@@ -34,7 +36,7 @@ function ondata(arr) {
 		// find item, create Item if it does not exits
 		var itm = keys.get(key)
 		if (!itm) {
-			itm = this.factory({key: key, kinIndex: arr.length})
+			itm = this.factory({key: key, kinIndex: cnt.length})
 			keys.set(key, itm)
 			cnt.push(itm)
 		}
@@ -60,19 +62,17 @@ function ondata(arr) {
 		cnt[i].ondata(val, i, arr)
 	}
 
-	// de-reference leftover items
+	// de-reference leftover items and re-insert the footer
 	while (cnt.length>arr.length) {
 		var extra = cnt.pop()
 		keys.delete(extra.key)
 		extra.el.parentNode.removeChild(extra.el)
 	}
+	cnt.push(this.footer)
 
 	//sync children if mounted
-	if (head.parentNode) {
-		var nextSibling = (cnt[cnt.length-1] || head).nextSibling
-		if (head.parentNode) this.moveTo(head.parentNode, nextSibling)
-	}
+	if (this.parentNode) this.moveBefore(this.parentNode, this.footer)
 
 	// return last inserted item
-	return cnt[cnt.length-1]
+	return this.footer
 }
