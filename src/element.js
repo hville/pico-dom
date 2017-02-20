@@ -20,21 +20,13 @@ var rRE =/[\s\"\']+/g,
  */
 module.exports = function element(selector, options, children) {
 	var elem = createElement(selector, options)
-	if (children) appendChildren(elem, getChildItems(children))
+	if (children) getChildItems(children).forEach(appendChild, elem)
 	return elem
 }
-function appendChildren(elem, items) {
-	switch (typ(items)) {
-		case Array:
-			for (var i=0; i<items.length; ++i) appendChildren(elem, items[i])
-			break
-		case G.Node:
-			elem.appendChild(items)
-			break
-		default:
-			if (items.el) appendChildren(elem, items.el)
-			else if (items.content) appendChildren(elem, items.content)
-	}
+function appendChild(item) {
+	if (typ(item) === G.Node) this.appendChild(item)
+	else if(item.node) this.appendChild(item.node)
+	else if (item.content) item.content.forEach(appendChild, this)
 }
 function createElement(selector, options) {
 	switch(typ(selector)) {

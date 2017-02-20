@@ -12,29 +12,29 @@ ct('Component - simple', function() {
 	//constructors
 	ct('===', c.constructor, Component)
 	// element
-	ct('===', c.el.nodeName.toLowerCase(), 'div')
-	ct('===', c.el.id, 'myid')
+	ct('===', c.node.nodeName.toLowerCase(), 'div')
+	ct('===', c.node.id, 'myid')
 })
 
 var bodyTdInput = new Component(el('input.tdinput', {props: {tabIndex: 1}}), {
-	ondata: function (v) { this.el.value = v },
-	on: {click: function(e) { this.el.value = +this.el.value + 1; e.target.tabIndex = 11}}
+	ondata: function (v) { this.node.value = v },
+	on: {click: function(e) { this.node.value = +this.node.value + 1; e.target.tabIndex = 11}}
 })
 
 ct('Component - full, no children', function() {
 	var c = bodyTdInput
 	// element
-	ct('===', c.el.nodeName.toLowerCase(), 'input')
-	ct('===', c.el.classList.contains('tdinput'), true)
-	ct('===', c.el.tabIndex, 1)
+	ct('===', c.node.nodeName.toLowerCase(), 'input')
+	ct('===', c.node.classList.contains('tdinput'), true)
+	ct('===', c.node.tabIndex, 1)
 	// component
-	ct('===', !!c.on.click, true)
+	ct('===', c.on().indexOf('click'), 0)
 	// updates
 	c.ondata(2.1)
-	ct('===', c.el.value, '2.1')
-	ct('===', c.el.tabIndex, 1)
+	ct('===', c.node.value, '2.1')
+	ct('===', c.node.tabIndex, 1)
 	// events .on .handleEvent .eventHandlers
-	c.el.dispatchEvent(new G.window.Event('click'))
-	ct('===', c.el.value, '3.1')
-	ct('===', c.el.tabIndex, 11)
+	c.node.dispatchEvent(new G.window.Event('click'))
+	ct('===', c.node.value, '3.1')
+	ct('===', c.node.tabIndex, 11)
 })

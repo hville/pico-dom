@@ -5,15 +5,14 @@ var jsdom = require('jsdom').jsdom,
 
 G.document = jsdom()
 
-
 var bodyTdInputFac = co('input.tdinput', {
-	ondata: function (v) { this.el.value = v; this.children.ondata(v) },
+	ondata: function (v) { this.node.value = v; this.children.ondata(v) },
 	props: {tabIndex: 1},
-	on: {click: function(e) { this.el.value = 'click'; e.target.tabIndex = 11}}
+	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
 })
 ct('co - simple', function() {
 	var comp = co('div#myid')(),
-			elem = comp.el
+			elem = comp.node
 	// element
 	ct('===', elem.nodeName.toLowerCase(), 'div')
 	ct('===', elem.id, 'myid')
@@ -21,7 +20,7 @@ ct('co - simple', function() {
 
 ct('co - full', function() {
 	var c = bodyTdInputFac({props: {id: 'xyz'}}),
-			el = c.el
+			el = c.node
 	c.ondata('abc')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'input')
@@ -43,7 +42,7 @@ var cell = co('td', [
 ])()
 ct('co - mixed content', function() {
 	ct('===', cell.children.content.length, 2+1)
-	var el = cell.el
+	var el = cell.node
 	cell.ondata('def')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'td')

@@ -1,22 +1,20 @@
-var Fragment = require('./fragment'),
-		event = require('./co/event')
+var event = require('./co/event')
 
 module.exports = Component
 
-function Component(elm, cfg, cnt) {
-	this.el = elm
-	this.on = {}
+function Component(node, cfg, fragment) {
+	this.node = node
+	this._eventHandlers = {}
 	// children
-	if (cnt) {
-		this.children = new Fragment(cnt)
-		this.children.moveBefore(elm)
+	if (fragment) {
+		this.children = fragment
+		this.children.moveto(node)
 	}
 	if (cfg) {
-		if (cfg.key) this.key = cfg.key
-		if (cfg.kinIndex) this.kinIndex = cfg.kinIndex
-		if (cfg.on) this.listen(cfg.on)
+		if (cfg.on) this.on(cfg.on)
 		// lifecycle hooks
 		if (cfg.ondata) this.ondata = cfg.ondata
+		if (cfg.onmove) this.onmove = cfg.onmove
 		if (cfg.oninit) {
 			this.oninit = cfg.oninit
 			this.oninit(cfg)
@@ -25,13 +23,17 @@ function Component(elm, cfg, cnt) {
 }
 Component.prototype = {
 	constructor: Component,
-	key: '',
-	kinIndex: NaN,
 	oninit: null,
 	children: null,
-	listen: event.listen,
+	on: event.listen,
 	handleEvent: event.handleEvent,
 	ondata: function ondata(a,b,c) {
 		this.children.ondata(a,b,c) //default pass-through
+	},
+	moveto: function moveto(parent, before) {
+		var oldParent = this.parentNode
+		parent.insertBefore(this.node, before || null)
+		if (this.onmove) this.onmove(oldParent, parent)
+		return this.node
 	}
 }

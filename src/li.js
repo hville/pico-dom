@@ -3,15 +3,16 @@ var factory = require('./util/factory'),
 		ns = require('./util/namespaces'),
 		createElement = require('./element'),
 		merge = require('./util/merge-object'),
-		List = require('./list')
+		list = require('./list'),
+		Fragment = require('./fragment')
 
 function liCreator(sel, att, cnt) {
 	return function constructor(opt) {
 		var cfg = merge({}, att, opt)
 		function coFab() {
-			return new Component(createElement(sel, cfg), cfg, cnt)
+			return new Component(createElement(sel, cfg), cfg, new Fragment(cnt))
 		}
-		return new List(coFab)
+		return list(coFab)
 	}
 }
 

@@ -7,29 +7,36 @@ module.exports = {
 }
 
 function listen(typ, fcn) {
-	var el = this.el,
-			handlers = this.on,
+	var el = this.node,
+			handlers = this._eventHandlers,
 			options = {capture: true, passive:true}
-
-	if (ctyp(typ) === Object) {
-		reduce(typ, addListener, this)
-	}
-	else if (!fcn) {
-		delete handlers[typ]
-		el.removeEventListener(typ, this, options)
-	}
-	else {
-		handlers[typ] = fcn
-		el.addEventListener(typ, this, options)
+	switch (arguments.length) {
+		case 2:
+			if (!fcn) {
+				delete handlers[typ]
+				el.removeEventListener(typ, this, options)
+			}
+			else {
+				handlers[typ] = fcn
+				el.addEventListener(typ, this, options)
+			}
+			break
+		case 1:
+			if (ctyp(typ) === Object) reduce(typ, addListener, this)
+			else return handlers[typ]
+			break
+		case 0:
+			return Object.keys(handlers)
 	}
 	return this
 }
 // standard property called by window on event, binded to co
 function handleEvent(evt) {
-	var fcn = this.on[evt.type]
+	var fcn = this._eventHandlers[evt.type]
 	evt.stopPropagation()
 	fcn.call(this, evt)
 }
 function addListener(ctx, val, key) {
-	return ctx.listen(key, val)
+	ctx.on(key, val)
+	return this
 }

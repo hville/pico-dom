@@ -3,16 +3,16 @@ var G = require('./util/root'),
 
 module.exports = Fragment
 
-function Fragment(content, cfg) {
+function Fragment(content, cfg) { //TODO no Config?
 	this.content = getChildItems(content)
 	//required to keep parent ref when no children.length === 0
 	this.footer = G.document.createComment('$')
 	this.content.push(this.footer)
+	//TODO reduce(cfg, assign, this)
 	if (cfg) {
-		if (cfg.key) this.key = cfg.key
-		if (cfg.kinIndex) this.kinIndex = cfg.kinIndex
 		//lifecycle hooks
 		if (cfg.ondata) this.ondata = cfg.ondata
+		if (cfg.onmove) this.onmove = cfg.onmove
 		if (cfg.oninit) {
 			this.oninit = cfg.oninit
 			this.oninit(cfg)
@@ -21,13 +21,8 @@ function Fragment(content, cfg) {
 }
 Fragment.prototype = {
 	constructor: Fragment,
-	isFragment: true,
-	key: '',
-	kinIndex: NaN,
 	get length() { return this.content.length - 1 },
 	get parentNode() { return this.footer.parentNode },
-	//get previousSibling() { return this.content[0].previousSibling },
-	//get nextSibling() { return this.footer.nextSibling },
 	dataKey: function getIndex(v,i) { return i },
 	oninit: null,
 	ondata: function ondata(a,b,c) {
@@ -35,14 +30,15 @@ Fragment.prototype = {
 		for (var i=0; i<content.length; ++i) if (content[i].ondata) content[i].ondata(a,b,c)
 	},
 	onmove: null,
-	moveBefore: function moveBefore(parent, before) {
-		var content = this.content,
+	moveto: function moveto(parent, before) {
+		var oldParent = this.parentNode,
+				content = this.content,
 				i = content.length
 		while (i--) {
-			var child = content[i].el || content[i]
-			if (child !== before) before = child.moveBefore ? child.moveBefore(parent, before) : parent.insertBefore(child, before || null)
+			var child = content[i].node || content[i]
+			if (child !== before) before = child.moveto ? child.moveto(parent, before) : parent.insertBefore(child, before || null)
 		}
-		//if (this.onmove) this.onmove(oldParent, parent) //TODO
-		return before
+		if (this.onmove) this.onmove(oldParent, parent)
+		return before //last insertedChild || first fragmentElement
 	}
 }

@@ -1,30 +1,32 @@
 var Fragment = require('./fragment'),
 		ctyp = require('./util/typ')
 
-module.exports = List
+module.exports = list
 
-function List(factory, cfg) {
+function list(factory, cfg) {
+	var fr = new Fragment([], cfg)
 	if (cfg) {
 		var dataKey = cfg.dataKey
 		switch(ctyp(dataKey)) {
 			case Function:
-				this.dataKey = dataKey
+				fr.dataKey = dataKey
 				break
 			case String: case Number:
-				this.dataKey = function(v) { return v[dataKey] }
+				fr.dataKey = function(v) { return v[dataKey] }
 				break
 		}
 	}
-	this.factory = factory
+	fr.factory = factory
 	// lookup maps to locate existing component and delete extra ones
-	this.keys = new Map()
-	this.ondata = ondata
-	Fragment.call(this, [], cfg) //.content, .header, .key, .kinIndex, .ondata, .oninit
+	fr.mapKI = new Map()
+	fr.mapIK = new WeakMap()
+	fr.ondata = ondata
+	return fr
 }
-List.prototype = Fragment.prototype
 function ondata(arr) {
 	var cnt = this.content,
-			keys = this.keys,
+			mapKI = this.mapKI,
+			mapIK = this.mapIK,
 			getK = this.dataKey
 
 	cnt.pop() // temporary removal of the footer
@@ -34,10 +36,11 @@ function ondata(arr) {
 				key = getK(val, i)
 
 		// find item, create Item if it does not exits
-		var itm = keys.get(key)
+		var itm = mapKI.get(key)
 		if (!itm) {
-			itm = this.factory({key: key, kinIndex: cnt.length})
-			keys.set(key, itm)
+			itm = this.factory()
+			mapIK.set(itm, key)
+			mapKI.set(key, itm)
 			cnt.push(itm)
 		}
 
@@ -45,12 +48,11 @@ function ondata(arr) {
 		if (itm !== cnt[i]) {
 			var idx = i,
 					tmpItm = cnt[idx],
-					tmpKey = tmpItm.key,
+					tmpKey = mapIK.get(tmpItm),
 					srcKey = getK(arr[idx], idx)
 			//if srcKey === tmpKey, simple swap, else chained insertions
-			while (tmpKey !== srcKey && idx < arr.length) {
-				cnt[idx] = keys.get(srcKey)
-				idx = cnt[idx].kinIndex
+			if (idx < arr.length) while (tmpKey !== srcKey) {
+				cnt[idx] = mapKI.get(srcKey)
 				srcKey = getK(arr[idx], idx)
 			}
 			//final swap
@@ -58,20 +60,21 @@ function ondata(arr) {
 		}
 
 		// fix index and update
-		if (itm.kinIndex !== i) itm.kinIndex = i
 		cnt[i].ondata(val, i, arr)
 	}
 
 	// de-reference leftover items and re-insert the footer
 	while (cnt.length>arr.length) {
-		var extra = cnt.pop()
-		keys.delete(extra.key)
-		extra.el.parentNode.removeChild(extra.el)
+		var extra = cnt.pop(),
+				node = extra.node || extra
+		mapKI.delete(mapIK.get(extra))
+		mapIK.delete(extra)
+		node.parentNode.removeChild(node)
 	}
 	cnt.push(this.footer)
 
 	//sync children if mounted
-	if (this.parentNode) this.moveBefore(this.parentNode, this.footer)
+	if (this.parentNode) this.moveto(this.parentNode, this.footer)
 
 	// return last inserted item
 	return this.footer
