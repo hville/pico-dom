@@ -3,7 +3,8 @@ var factory = require('./util/factory'),
 		ns = require('./util/namespaces'),
 		createElement = require('./element'),
 		merge = require('./util/merge-object'),
-		Fragment = require('./fragment')
+		Fragment = require('./fragment'),
+		cofab = require('./co-fab')
 
 function coCreator(sel, att, cnt) {
 	return function constructor(opt) {
@@ -13,7 +14,7 @@ function coCreator(sel, att, cnt) {
 	}
 }
 
-var co = factory(coCreator)
-co.svg = factory(coCreator, {xmlns: ns.svg})
+var co = cofab()
+co.svg = cofab({xmlns: ns.svg})
 
 module.exports = co

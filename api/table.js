@@ -26,13 +26,13 @@ var li = pico.Li(initContext),
 		co = pico.Co(initContext),
 		el = pico.el
 var thead = co('thead',
-	co('tr', {
+	co('tr', initContext, {
 		ondata: function() {
 			return this.tableContext.cols
 		}
 	},[
 		el('th', '>'),
-		li('th', {
+		li('th', initContext, {
 			ondata: function(v, i) {
 				var ctx = this.tableContext
 				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
@@ -43,11 +43,11 @@ var thead = co('thead',
 	])
 )
 var tfoot = co('tfoot',
-	co('tr', {ondata: function() {
+	co('tr', initContext, {ondata: function() {
 		return this.tableContext.cols
 	}},
 		el('th', '>'),
-		li('th', {
+		li('th', initContext, {
 			ondata: function(v, i) {
 				var ctx = this.tableContext
 				this.el.style.color = (this.key === ctx.focus[1]) ? 'blue' : 'black'
@@ -58,7 +58,7 @@ var tfoot = co('tfoot',
 	)
 )
 var tbody = co('tbody',
-	li('tr', {
+	li('tr', initContext, {
 		ondata: function(row) {
 			var ctx = this.tableContext
 			this.el.style.color = (this.key === ctx.focus[0]) ? 'blue' : 'black'
@@ -66,7 +66,7 @@ var tbody = co('tbody',
 		}
 	}, [
 		co('td', icon),
-		li('td', {
+		li('td', initContext, {
 			ondata: function(col) {
 				//console.log('tdEdit', col, idx)
 				this.el.textContent = col.v

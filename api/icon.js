@@ -1,6 +1,4 @@
-var pico = require('../index')
-
-var el = pico.el
+var el = require('../index').el
 
 module.exports = el.svg('svg[viewBox="0 0 32 32"]',
 	el.svg('path.path1', {attributes: {

@@ -27,8 +27,13 @@ Component.prototype = {
 	children: null,
 	on: event.listen,
 	handleEvent: event.handleEvent,
-	ondata: function ondata(a,b,c) {
-		this.children.ondata(a,b,c) //default pass-through
+	ondata: function ondata() {
+		var children = this.children
+		children.ondata.apply(children, arguments) //default pass-through
+	},
+	view: function() {
+		this.ondata.apply(this, arguments)
+		return this.node
 	},
 	moveto: function moveto(parent, before) {
 		var oldParent = this.parentNode
