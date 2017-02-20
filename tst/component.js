@@ -7,7 +7,7 @@ var jsdom = require('jsdom').jsdom,
 G.document = jsdom()
 
 ct('Component - simple', function() {
-	var e = el('div#myid'),
+	var e = el('div#myid')(),
 			c = new Component(e, {})
 	//constructors
 	ct('===', c.constructor, Component)
@@ -16,7 +16,7 @@ ct('Component - simple', function() {
 	ct('===', c.node.id, 'myid')
 })
 
-var bodyTdInput = new Component(el('input.tdinput', {props: {tabIndex: 1}}), {
+var bodyTdInput = new Component(el('input.tdinput', {props: {tabIndex: 1}})(), {
 	ondata: function (v) { this.node.value = v },
 	on: {click: function(e) { this.node.value = +this.node.value + 1; e.target.tabIndex = 11}}
 })

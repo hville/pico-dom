@@ -1,22 +1,13 @@
-var factory = require('./util/factory'),
-		Component = require('./component'),
+var creator = require('./util/creator'),
+		co = require('./co'),
 		ns = require('./util/namespaces'),
-		createElement = require('./element'),
-		merge = require('./util/merge-object'),
-		list = require('./list'),
-		Fragment = require('./fragment')
+		list = require('./list')
 
-function liCreator(sel, att, cnt) {
-	return function constructor(opt) {
-		var cfg = merge({}, att, opt)
-		function coFab() {
-			return new Component(createElement(sel, cfg), cfg, new Fragment(cnt))
-		}
-		return list(coFab)
-	}
-}
+var Li = creator(function li(sel, cfg, cnt) {
+	return list(co(sel, cfg, cnt))
+})
 
-var li = factory(liCreator)
-li.svg = factory(liCreator, {xmlns: ns.svg})
+var li = Li()
+li.svg = Li({xmlns: ns.svg})
 
 module.exports = li

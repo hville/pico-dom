@@ -1,13 +1,9 @@
-var factory = require('./util/factory'),
+var creator = require('./util/creator'),
 		element = require('./element'),
 		NS = require('./util/namespaces')
 
-function svg(sel, att, cnt) {
-	att.xmlns = NS.svg
-	return element(sel, att, cnt)
-}
-
-var el = factory(element)
-el.svg = factory(svg)
+var El = creator(element)
+var el = El()
+el.svg = El({xmlns: NS.svg})
 
 module.exports = el

@@ -1,15 +1,8 @@
-var factory = require('./util/factory'),
+var creator = require('./util/creator'),
 		Component = require('./component'),
-		createElement = require('./element'),
-		merge = require('./util/merge-object'),
+		element = require('./element'),
 		Fragment = require('./fragment')
 
-module.exports = function coCreator(def) {
-	return factory(function co(sel, att, cnt) {
-		return function constructor(opt) {
-			var cfg = merge({}, def, att, opt),
-					elm = createElement(sel, cfg)
-			return new Component(elm, cfg, new Fragment(cnt))
-		}
-	})
-}
+module.exports = creator(function co(sel, cfg, cnt) {
+	return new Component(element(sel, cfg), cfg, new Fragment(cnt))
+})
