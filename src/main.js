@@ -11,22 +11,3 @@ module.exports = function main(node, plus) {
 			return {}
 	}
 }
-/*
-function onclick(evt) {
-	ctx = this
-}
-
-
-
-
-ctx does not have reverence to node???
-> no auto update children
-> no moveto
-	moveto: function moveto(parent, before) {
-		var oldParent = this.parentNode
-		parent.insertBefore(node, before || null)
-		if (this.onmove) this.onmove(oldParent, parent)
-		return node
-	}
-
-*/
