@@ -17,7 +17,7 @@ function List(factory, cfg) {
 	this.mapIK = new WeakMap()
 	//required to keep parent ref when no children.length === 0
 	//this.header = W.document.createComment('^')
-	this.footer = W.document.createComment('$') //TODOusedbyLi
+	this.footer = W.document.createComment('$')
 	decorate(this, cfg, decorators)
 	if (this.oninit) this.oninit(cfg)
 }
@@ -37,12 +37,9 @@ List.prototype = {
 }
 function getIndex(v,i) { return i }
 function ondata(arr) {
-	//TODO children in 4 places!!!
-	//TODO CURRENT: DOM:idx=>node; CNT:idx=>item;  MKI:key=>item; MIK:item=>key
-	//TODO NATIVE:  DOM:idx=>node; WMN:node=>item; MKI:key=>item; item.key
-	var cnt = this.content, //TODO idx=>itm VS nodelist.map(extra)
+	var cnt = this.content,
 			mapKI = this.mapKI, //key=>itm
-			mapIK = this.mapIK, //itm=>key
+			mapIK = this.mapIK, //itm=>key, only used to ref and de-ref mapKI
 			getK = this.dataKey
 
 	for (var i=0; i<arr.length; ++i) {
@@ -62,12 +59,11 @@ function ondata(arr) {
 		if (itm !== cnt[i]) {
 			var idx = i,
 					tmpItm = cnt[idx],
-					tmpKey = mapIK.get(tmpItm),
-					srcKey = getK(arr[idx], idx)
+					srcItm = mapKI.get(getK(arr[idx], idx))
 			//if srcKey === tmpKey, simple swap, else chained insertions
-			if (idx < arr.length) while (tmpKey !== srcKey) {
-				cnt[idx] = mapKI.get(srcKey)
-				srcKey = getK(arr[idx], idx)
+			if (idx < arr.length) while (tmpItm !== srcItm) {
+				cnt[idx] = srcItm
+				srcItm = mapKI.get(getK(arr[idx], idx))
 			}
 			//final swap
 			cnt[idx] = tmpItm

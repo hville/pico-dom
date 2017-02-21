@@ -19,7 +19,9 @@ co('table', [
   co('tbody',
     li('tr',
       co('td', el.svg('svg', svgIcon)),
-      li('td', {edit: function(val, pos) { this.el.textContent = val }})
+      li('td', {
+        ondata: function(val, pos) { this.el.textContent = val }
+      })
     )
   ),
 ])
@@ -33,47 +35,58 @@ co('table', [
 * w3 string selector API, including attributes
 * element decorators for element properties and attributes
 * ability to inject a `document API` for server and/or testing (e.g. `jsdom`)
-* ability to create an element or an element factory with preset defaults
-* ability to create additional namespaces and utility namespaced functions
+* factories with preset defaults to facilitate the creation of components
+* All ES5 and HTML5 to avoid transpiling and facilitate compatibility
+* no virtual DOM, all operations are done on actual nodes
+
+## Limitations
+
+* still in early trial phase. proof of concept only
+* currently only available as a common JS module (i.e. `require('pico-dom')`)
+
 
 ## API
 
-* Main *hyperscript* function
-  * `el([selector][, options][, children])` => `HTMLElementFactory`
-  * `co([selector][, options][, content])` => `HTMLComponentFactory`
-  * `li([selector][, options][, content])` => `HTMLListFactory`
-* selector
-  * TODO
-* options
-  * TODO
-  * decorators: `.dataset`, `.attributes|.attrs`, `.properties|.props`, `.style`
-  * element: decorators & `.element`, `.xmlns`, `.prefix`, `.tag`
-  * component: element & `.content`, `.key`, `.edit`, `.on`, `.init`
-  * list: component & `.datakey`
-* children
-  * TODO
-* content
-  * TODO
-* Intermediate partial functions
-  * `HTMLElementFactory([options])` => `HTMLElement`
-  * `HTMLComponentFactory([options])` => `HTMLViewFunction`
-  * `HTMLListFactory([options])` => `HTMLViewFunction`
-  * `HTMLViewFunction(data, childIndex, previousChild)` => `HTMLElement`
+* Three types of *hyperscript* function
+  * `el`: to generate HTML or Namespaced Elements
+  * `co`: to generate components with custom behavious and lifecycle events
+  * `li`: to generate a list of components derived from an array of values
 
-SVG elements, components and lists can be created with the above functions with an `xmlns` attribute
-or by using the following preset functions:
+* each *hyperscript* function has 2 additional properties:
+  * `.preset` to create a new function with preset defaults. (e.g `el.svg = el.preset({xmlns: ns.svg})`)
+  * `.svg` same *hyperscript* function with the svg namespace preset
 
-* `el.svg([selector][, options][, children])` => `SVGElementFactory`
-* `co.svg([selector][, options][, content])` => `SVGComponentFactory`
-* `li.svg([selector][, options][, content])` => `SVGListFactory`
+* Additional exposed objects
+  * `text`: to generate a text node
+  * `ns`: configurable namspaces (`html` and `svg` already defined)
+  * `global`: configurable global object to set the `document` object in any environment
 
-### Optional additional utilities
+Functions    | Type                                      | Notes
+:--------    | :---                                      | :----
+`.el`        | `(selector[, ...elConfig])` => `Factory`  | `el('p', {style: {color:'blue'}}, '1'))`
+`.co`        | `(selector[, ...coConfig])` => `Factory`  | `co('p', {ondata: setText}))`
+`.li`        | `(selector[, ...liConfig])` => `Factory`  | `li('li', {ondata: setIndex}))`
+only the selector is required, remaining arguments can be in any order
 
-* `CO.global.document` injects an external document API like `jsdom`. Uses the global `document` if not specified.
-* `CO.namespaces` adds additional namespace prefix (svg is already defined). E.g. `CO.namespaces.xlink: 'http://www.w3.org/1999/xlink'`
-* `CO.decorators` to add element decorators E.g. `CO.decorators.a = CO.decorators.attributes`
-* `CO.Co` to create a custom `co` function E.g. `coTable = Co({init: createSharedContext})`
-* `CO.Li` to create a custom `li` function E.g. `liSVG = Li({xmlns: 'http://www.w3.org/2000/svg'})`
+Exposed      | Type                                      | Notes
+:--------    | :---                                      | :----
+`.text`      | `string` => `TextNode`                    | `var textNode = text('mytext')`
+`.ns`        | `Object {prefix: namespace}`              | `{svg : 'http://www.w3.org/2000/svg'}`
+`.global`    | `Object {document, Node, window}`         | eg. `global.document = jsdom.jsdom()`
+
+Other Types  | Type                                      | Notes
+:--------    | :---                                      | :----
+`selector`   | `string`, `factory` or `Node`             | `svg:circle[style=font-size:150%;color:blue]`
+`elConfig`   | `elDecorator` or `contentItem`            |
+`elDecorator`| `Object` {attrs, props, style, xmlns}     | element's attributes, properties and style
+`contentItem`| `Factory`, `string`, `Node` or `Array`    | element child Nodes
+`Factory`    | `elConfig` => `Node`                      | `elFactory({props: {tabIndex:2}})`
+`coConfig`   | `coDecorator` or `contentItem`            |
+`coDecorator`| `elDecorator`, `lifecycleFn`              | `{ondata: setIndex, style: {color:'blue'}}`
+`lifecycleFn`| `Object` {oninit, ondata, onmove}         |
+`liConfig`   | `liDecorator` or `contentItem`            |
+`liDecorator`| `coDecorator`, `dataKey`                  | `{dataKey: 'uid'}`
+
 
 ## License
 

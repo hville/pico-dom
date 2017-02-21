@@ -7,12 +7,7 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-- one fewer array created
-- dependency create-element-ns 3.1.0
-- TODO el options (styles, class, ...)
-- TODO co options (edit)
-- TODO co(cfg) ==> .key, .edit, .content, .on, .init
 
-## [1.0.0] - 2017-02-??
-### Added
-- First publish
+## [0.5.0] - 2017-02-21
+### Changed
+- Full rewrite
