@@ -44,9 +44,10 @@ var cell = co('td', [
 	bodyTdInputFac
 ])()
 ct('co - mixed content', function() {
-	ct('===', cell.children.content.length, 2+1)
 	var el = cell.node
 	cell.ondata('def')
+	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)
+	//console.log(typ)
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'td')
 	// view inputs

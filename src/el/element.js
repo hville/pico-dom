@@ -25,8 +25,8 @@ module.exports = function element(selector, options, children) {
 }
 function appendChild(item) {
 	if (typ(item) === W.Node) this.appendChild(item)
+	else if (item.moveto) item.moveto(this)
 	else if(item.node) this.appendChild(item.node)
-	else if (item.content) item.content.forEach(appendChild, this)
 }
 function createElement(selector, options) {
 	switch(typ(selector)) {

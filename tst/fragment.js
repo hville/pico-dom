@@ -22,7 +22,6 @@ var frs = [
 ct('fragment-single', function() {
 	var f = frs[0]()
 	ct('===', f.constructor, Fr)
-	ct('==', f.length, 3)
 	var e = el('div#myid', frs[0])()
 	ct('===', concatData(e), '123$')
 })
@@ -33,15 +32,8 @@ ct('fragment-stacked', function() {
 ct('fragment-grouped', function() {
 	var e = el('div#myid', fr([frs[0], frs[1], frs[2]]))()
 	ct('===', concatData(e), '123$456$789$$')
-	var f = fr([frs[0], frs[1], frs[2]])()
-	ct('==', f.length, 3)
-	ct('==', f.content[0].length, 3)
 })
 ct('fragment-turtles...', function() {
 	var e = el('div#myid', fr([fr([frs[0], frs[1]]), fr([frs[2]])]))()
 	ct('===', concatData(e), '123$456$$789$$$')
-	var f = fr([fr([frs[0], frs[1]]), fr([frs[2]])])()
-	ct('==', f.length, 2)
-	ct('==', f.content[0].length, 2)
-	ct('==', f.content[1].length, 1)
 })

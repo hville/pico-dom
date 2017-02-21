@@ -23,7 +23,6 @@ var lis = [
 ct('list-simple', function() {
 	var l0 = lis[0]
 	ct('===', l0().constructor, Fr)
-	ct('==', l0().content.length, 0+1)
 	ct('==', l0().parentNode, null)
 	var comp = co('div#myid', l0)(),
 			el = comp.node

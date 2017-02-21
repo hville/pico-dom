@@ -13,7 +13,7 @@ function list(factory, cfg) {
 	// lookup maps to locate existing component and delete extra ones
 	fr.mapKI = new Map()
 	fr.mapIK = new WeakMap()
-	fr.ondata = ondata //TODO
+	fr.ondata = ondata
 	return fr
 }
 function ondata(arr) {
@@ -24,8 +24,6 @@ function ondata(arr) {
 			mapKI = this.mapKI, //key=>itm
 			mapIK = this.mapIK, //itm=>key
 			getK = this.dataKey
-
-	cnt.pop() // temporary removal of the footer
 
 	for (var i=0; i<arr.length; ++i) {
 		var val = arr[i],
@@ -67,7 +65,6 @@ function ondata(arr) {
 		mapIK.delete(extra)
 		node.parentNode.removeChild(node)
 	}
-	cnt.push(this.footer)
 
 	//sync children if mounted
 	if (this.footer.parentNode) this.moveto(this.footer.parentNode, this.footer)

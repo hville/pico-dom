@@ -11,22 +11,22 @@ function Fragment(content, cfg) { //TODO no Config?
 	//required to keep parent ref when no children.length === 0
 	//this.header = W.document.createComment('^')
 	this.footer = W.document.createComment('$') //TODOusedbyLi
-	this.content.push(this.footer)
 	decorate(this, cfg, decorators)
 	if (this.oninit) this.oninit(cfg)
 }
 Fragment.prototype = {
 	constructor: Fragment,
-	get length() { return this.content.length - 1 },
+	//get length() { return this.content.length },
 	forEach: function forEach(fcn, ctx) { //TODOusedbyCo
-		for (var i=0; i<this.content.length-1; ++i) fcn.call(ctx||null, this.content[i], i, this.content)
+		for (var i=0; i<this.content.length; ++i) fcn.call(ctx||null, this.content[i], i, this.content)
 	},
 	moveto: function moveto(parent, before) { //TODOusedbyCo //TODOusedbyLi
+		if (this.footer !== before) before = parent.insertBefore(this.footer, before || null)
 		var content = this.content,
 				i = content.length
 		while (i--) {
 			var child = content[i].node || content[i]
-			if (child !== before) before = child.moveto ? child.moveto(parent, before) : parent.insertBefore(child, before || null)
+			if (child !== before) before = child.moveto ? child.moveto(parent, before) : parent.insertBefore(child, before)
 		}
 		return before //last insertedChild || first fragmentElement
 	}
