@@ -1,21 +1,18 @@
-var G = require('./util/root'),
-		getChildItems = require('./util/get-child-items')
+var W = require('../util/root'),
+		getChildItems = require('../util/get-child-items'),
+		decorate = require('../util/decorate'),
+		decorators = require('./decorators')
+
 
 module.exports = Fragment
 
 function Fragment(content, cfg) { //TODO no Config?
 	this.content = getChildItems(content)
 	//required to keep parent ref when no children.length === 0
-	this.footer = G.document.createComment('$')
+	this.footer = W.document.createComment('$')
 	this.content.push(this.footer)
-	if (cfg) {
-		//lifecycle hooks
-		if (cfg.ondata) this.ondata = cfg.ondata
-		if (cfg.oninit) {
-			this.oninit = cfg.oninit
-			this.oninit(cfg)
-		}
-	}
+	decorate(this, cfg, decorators)
+	if (this.oninit) this.oninit(cfg)
 }
 Fragment.prototype = {
 	constructor: Fragment,

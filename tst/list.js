@@ -1,8 +1,8 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		List = require('../src/list'),
+		List = require('../src/co/list'),
 		co = require('../src/co'),
-		Fr = require('../src/fragment'),
+		Fr = require('../src/co/fragment'),
 		globals = require('../src/util/root')
 
 globals.document = jsdom()

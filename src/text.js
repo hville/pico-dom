@@ -1,5 +1,5 @@
-var G = require('./util/root')
+var W = require('./util/root')
 
 module.exports = function text(itm) {
-	return G.document.createTextNode(itm)
+	return W.document.createTextNode(itm)
 }

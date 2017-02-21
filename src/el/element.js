@@ -1,9 +1,9 @@
-var G = require('./util/root'),
-		NS = require('./util/namespaces'),
-		typ = require('./util/typ'),
-		getChildItems = require('./util/get-child-items'),
-		reduce = require('./util/reduce'),
-		decorators = require('./el/decorators')
+var W = require('../util/root'),
+		NS = require('../util/namespaces'),
+		typ = require('../util/typ'),
+		getChildItems = require('../util/get-child-items'),
+		decorate = require('../util/decorate'),
+		decorators = require('./decorators')
 
 /**
  * @const {!Object}
@@ -24,14 +24,14 @@ module.exports = function element(selector, options, children) {
 	return elem
 }
 function appendChild(item) {
-	if (typ(item) === G.Node) this.appendChild(item)
+	if (typ(item) === W.Node) this.appendChild(item)
 	else if(item.node) this.appendChild(item.node)
 	else if (item.content) item.content.forEach(appendChild, this)
 }
 function createElement(selector, options) {
 	switch(typ(selector)) {
-		case G.Node:
-			return decorate(selector, options)
+		case W.Node:
+			return decorate(selector, options, decorators)
 		case String:
 			return fromString(selector, options)
 		case Function:
@@ -46,10 +46,10 @@ function fromString(selector, options) {
 	if (!options) options = {attrs:{}}
 	else if (!options.attrs) options.attrs = {}
 	matches.reduce(parse, options)
-	var doc = G.document,
+	var doc = W.document,
 			tag = options.tagName || 'div',
 			elm = options.xmlns ? doc.createElementNS(options.xmlns, tag) : doc.createElement(tag)
-	return decorate(elm, options)
+	return decorate(elm, options, decorators)
 }
 function parse(def, txt) {
 	var idx = -1,
@@ -83,10 +83,4 @@ function parse(def, txt) {
 			}
 	}
 	return def
-}
-function decorate(elem, opts) {
-	return !opts ? elem : reduce(decorators, applyItem, elem, opts)
-}
-function applyItem(elm, dec, key) {
-	return this[key] ? dec(elm, this[key]) : elm
 }

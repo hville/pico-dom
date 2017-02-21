@@ -1,6 +1,12 @@
 # cloning vs factory
 
-Takeaway: hide constructors under the hood
+Takeaway: factory
+
+* hide constructors under the hood
+* cloning can have issues
+  * Element forms and listeners
+  * mismatch between element and component children
+  * unclear if element is meant to be moved or cloned
 
 ## Exports
 

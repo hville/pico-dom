@@ -1,9 +1,11 @@
 var creator = require('./util/creator'),
-		element = require('./element'),
-		NS = require('./util/namespaces')
+		element = require('./el/element'),
+		ns = require('./util/namespaces')
+//TODO retry createElementNS?
+var preset = creator(element)
 
-var El = creator(element)
-var el = El()
-el.svg = El({xmlns: NS.svg})
+var el = preset()
+el.svg = preset({xmlns: ns.svg})
+el.preset = preset
 
 module.exports = el

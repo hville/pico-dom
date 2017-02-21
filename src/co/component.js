@@ -1,4 +1,6 @@
-var event = require('./co/event')
+var event = require('./event'),
+		decorate = require('../util/decorate'),
+		decorators = require('./decorators')
 
 module.exports = Component
 
@@ -10,16 +12,8 @@ function Component(node, cfg, fragment) {
 		this.children = fragment
 		this.children.moveto(node)
 	}
-	if (cfg) {
-		if (cfg.on) this.on(cfg.on)
-		// lifecycle hooks
-		if (cfg.ondata) this.ondata = cfg.ondata
-		if (cfg.onmove) this.onmove = cfg.onmove
-		if (cfg.oninit) {
-			this.oninit = cfg.oninit
-			this.oninit(cfg)
-		}
-	}
+	decorate(this, cfg, decorators)
+	if (this.oninit) this.oninit(cfg)
 }
 Component.prototype = {
 	constructor: Component,

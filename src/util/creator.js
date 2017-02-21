@@ -1,7 +1,7 @@
 var merge = require('./merge-object'),
 		flatConcat = require('./flat-concat'),
 		typ = require('./typ'),
-		G = require('./root')
+		W = require('./root')
 
 module.exports = function creator(constructor) {
 	return function create(defaults) {
@@ -24,7 +24,7 @@ function argument(arg, options, content) {
 		case Array:
 			flatConcat(content, arg)
 			break
-		case String: case Number: case Function: case G.Node: // child-like
+		case String: case Number: case Function: case W.Node: // child-like
 			content.push(arg)
 			break
 		case null: case undefined:

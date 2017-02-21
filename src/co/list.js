@@ -1,12 +1,12 @@
 var Fragment = require('./fragment'),
-		ctyp = require('./util/typ')
+		ctyp = require('../util/typ')
 
 module.exports = list
 
 function list(factory, cfg) {
-	var fr = new Fragment([], cfg)
+	var fr = new Fragment([], cfg) //TODO config for factory
 	if (cfg) {
-		var dataKey = cfg.dataKey
+		var dataKey = cfg.dataKey //TODO
 		switch(ctyp(dataKey)) {
 			case Function:
 				fr.dataKey = dataKey
@@ -20,7 +20,7 @@ function list(factory, cfg) {
 	// lookup maps to locate existing component and delete extra ones
 	fr.mapKI = new Map()
 	fr.mapIK = new WeakMap()
-	fr.ondata = ondata
+	fr.ondata = ondata //TODO
 	return fr
 }
 function ondata(arr) {

@@ -1,6 +1,6 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		Component = require('../src/component'),
+		Component = require('../src/co/component'),
 		el = require('../src/el'),
 		G = require('../src/util/root')
 

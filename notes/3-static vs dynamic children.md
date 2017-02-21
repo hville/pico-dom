@@ -1,6 +1,6 @@
 # static vs dynamic groups
 
-Takeaway: dynamic children with `.moveChild` and `.mount`
+Takeaway: dynamic children with `.moveto(parent, before)`
 
 ## static
 

@@ -22,8 +22,8 @@ function editTable(v) {
 }
 
 //custom creators for shared scope
-var li = pico.Li(initContext),
-		co = pico.Co(initContext),
+var li = pico.li.preset(initContext),
+		co = pico.li.preset(initContext),
 		el = pico.el
 var thead = co('thead',
 	co('tr', initContext, {
