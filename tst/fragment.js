@@ -1,6 +1,6 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		Fr = require('../src/co/fragment'),
+		Fr = require('../src/co/fragment'), //TODO delete fragment?
 		el = require('../src/el'),
 		globals = require('../src/util/root')
 
