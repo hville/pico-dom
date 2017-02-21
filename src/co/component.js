@@ -1,15 +1,16 @@
 var event = require('./event'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators')
+		decorators = require('./decorators'),
+		Fragment = require('./fragment')
 
 module.exports = Component
 
-function Component(node, cfg, fragment) {
+function Component(node, cfg, cnt) {
 	this.node = node
 	this._eventHandlers = {}
 	// children
-	if (fragment) {
-		this.children = fragment
+	if (cnt) {
+		this.children = new Fragment(cnt)
 		this.children.moveto(node)
 	}
 	decorate(this, cfg, decorators)
@@ -31,5 +32,9 @@ Component.prototype = {
 		parent.insertBefore(this.node, before || null)
 		if (this.onmove) this.onmove(oldParent, parent)
 		return this.node
-	}
+	}/*,
+	forEachChild: function forEachChild(fcn, ctx) {
+		var childNodes = this.node.childNodes
+		for (var i=0; i<childNodes; ++i) fcn.call(ctx||null, childNodes.item(i), i, childNodes)
+	}*/
 }

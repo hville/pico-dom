@@ -17,10 +17,12 @@ function list(factory, cfg) {
 	return fr
 }
 function ondata(arr) {
-	//TODO children in 3 places!!!
-	var cnt = this.content, //TODO idx=>itm
-			mapKI = this.mapKI, //TODO key=>itm
-			mapIK = this.mapIK, //TODO itm=>key
+	//TODO children in 4 places!!!
+	//TODO CURRENT: DOM:idx=>node; CNT:idx=>item;  MKI:key=>item; MIK:item=>key
+	//TODO NATIVE:  DOM:idx=>node; WMN:node=>item; MKI:key=>item; item.key
+	var cnt = this.content, //TODO idx=>itm VS nodelist.map(extra)
+			mapKI = this.mapKI, //key=>itm
+			mapIK = this.mapIK, //itm=>key
 			getK = this.dataKey
 
 	cnt.pop() // temporary removal of the footer
@@ -68,7 +70,7 @@ function ondata(arr) {
 	cnt.push(this.footer)
 
 	//sync children if mounted
-	if (this.parentNode) this.moveto(this.parentNode, this.footer)
+	if (this.footer.parentNode) this.moveto(this.footer.parentNode, this.footer)
 
 	// return last inserted item
 	return this.footer
