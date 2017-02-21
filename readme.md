@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD004 MD007 MD010 MD041 MD022 MD024 MD032 -->
+<!-- markdownlint-disable MD004 MD007 MD010 MD012 MD041 MD022 MD024 MD032 -->
 
 # pico-dom
 

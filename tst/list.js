@@ -30,13 +30,13 @@ ct('list-simple', function() {
 			el = comp.node
 	//ct('===', el.children.length, 0, 'no content, 1 fragment, 1 list')
 	comp.ondata([1,2,3])
-	ct('===', concatData(el), '123$')
+	ct('===', concatData(el), '^123$')
 	comp.ondata([4])
-	ct('===', concatData(el), '4$')
+	ct('===', concatData(el), '^4$')
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis)(),
 			el = comp.node
 	comp.ondata([1,2,3])
-	ct('===', concatData(el), '123$123$123$')
+	ct('===', concatData(el), '^123$^123$^123$')
 })

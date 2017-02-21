@@ -24,20 +24,18 @@ ct('list-simple', function() {
 	ct('==', l0().parentNode, null)
 	var comp = co('div#myid', l0)(),
 			el = comp.node
-	ct('===', el.childNodes.length, 0+1, 'no content, 1 fragment, 1 list')
 	comp.ondata([1,2,3])
-	ct('===', concatData(el), '123$')
+	ct('===', concatData(el), '^123$')
 	comp.ondata([4,3,1,2])
-	ct('===', concatData(el), '4312$')
+	ct('===', concatData(el), '^4312$')
 	comp.ondata([1,5,3])
-	ct('===', concatData(el), '153$')
+	ct('===', concatData(el), '^153$')
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis)(),
 			el = comp.node
-	ct('===', el.childNodes.length, 0+3)
 	comp.ondata([1,2,3])
-	ct('===', concatData(el), '123$123$123$')
+	ct('===', concatData(el), '^123$^123$^123$')
 })
 ct('list-complex', function() {
 	//list update through parent update
@@ -52,7 +50,7 @@ ct('list-complex', function() {
 			coObj = coFac(),
 			coEl = coObj.node
 	coObj.ondata([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
-	ct('===', concatData(coEl), 'onetwotwe$')
+	ct('===', concatData(coEl), '^onetwotwe$')
 })
 ct('sequence in nested lists', function() {
 	function edit(v, i) {
