@@ -17,13 +17,10 @@ function Component(node, cfg, fragment) {
 }
 Component.prototype = {
 	constructor: Component,
-	oninit: null,
-	children: null,
 	on: event.listen,
 	handleEvent: event.handleEvent,
-	ondata: function ondata() {
-		var children = this.children
-		children.ondata.apply(children, arguments) //default pass-through
+	ondata: function ondata(a,b,c) {
+		this.children.forEach(function(child) { if (child.ondata) child.ondata(a,b,c) })
 	},
 	view: function() {
 		this.ondata.apply(this, arguments)

@@ -7,9 +7,10 @@ var W = require('../util/root'),
 module.exports = Fragment
 
 function Fragment(content, cfg) { //TODO no Config?
-	this.content = getChildItems(content)
+	this.content = getChildItems(content) //TODOusedbyLi
 	//required to keep parent ref when no children.length === 0
-	this.footer = W.document.createComment('$')
+	this.header = W.document.createComment('^')
+	this.footer = W.document.createComment('$') //TODOusedbyLi
 	this.content.push(this.footer)
 	decorate(this, cfg, decorators)
 	if (this.oninit) this.oninit(cfg)
@@ -17,18 +18,12 @@ function Fragment(content, cfg) { //TODO no Config?
 Fragment.prototype = {
 	constructor: Fragment,
 	get length() { return this.content.length - 1 },
-	get parentNode() { return this.footer.parentNode },
-	dataKey: function getIndex(v,i) { return i },
-	oninit: null,
-	ondata: function ondata() {
-		var content = this.content
-		for (var i=0; i<content.length; ++i) if (content[i].ondata) content[i].ondata.apply(content[i], arguments)
+	item: function item(i) { return this.content(i) },
+	forEach: function forEach(fcn, ctx) { //TODOusedbyCo
+		for (var i=0; i<this.content.length-1; ++i) fcn.call(ctx||null, this.content[i], i, this.content)
 	},
-	view: function() {
-		this.ondata.apply(this, arguments)
-		return this.node
-	},
-	moveto: function moveto(parent, before) {
+	get parentNode() { return this.footer.parentNode }, //TODOusedbyLi
+	moveto: function moveto(parent, before) { //TODOusedbyCo //TODOusedbyLi
 		var content = this.content,
 				i = content.length
 		while (i--) {

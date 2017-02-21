@@ -6,7 +6,10 @@ var jsdom = require('jsdom').jsdom,
 G.document = jsdom()
 
 var bodyTdInputFac = co('input.tdinput', {
-	ondata: function (v) { this.node.value = v; this.children.ondata(v) },
+	ondata: function (v) {
+		this.node.value = v
+		this.children.forEach(function(child) { if (child.ondata) child.ondata(v) })
+	},
 	props: {tabIndex: 1},
 	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
 })

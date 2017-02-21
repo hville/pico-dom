@@ -2,20 +2,13 @@ var Fragment = require('./fragment'),
 		ctyp = require('../util/typ')
 
 module.exports = list
-
+function getIndex(v,i) { return i }
 function list(factory, cfg) {
-	var fr = new Fragment([], cfg) //TODO config for factory
-	if (cfg) {
-		var dataKey = cfg.dataKey //TODO
-		switch(ctyp(dataKey)) {
-			case Function:
-				fr.dataKey = dataKey
-				break
-			case String: case Number:
-				fr.dataKey = function(v) { return v[dataKey] }
-				break
-		}
-	}
+	var fr = new Fragment([]) //TODO config for factory
+	var dKey = cfg && cfg.dataKey
+	fr.dataKey = !dKey ? getIndex
+		: ctyp(dKey) === Function ? dKey
+		: function(v) { return v[dKey] }
 	fr.factory = factory
 	// lookup maps to locate existing component and delete extra ones
 	fr.mapKI = new Map()
@@ -24,9 +17,10 @@ function list(factory, cfg) {
 	return fr
 }
 function ondata(arr) {
-	var cnt = this.content,
-			mapKI = this.mapKI,
-			mapIK = this.mapIK,
+	//TODO children in 3 places!!!
+	var cnt = this.content, //TODO idx=>itm
+			mapKI = this.mapKI, //TODO key=>itm
+			mapIK = this.mapIK, //TODO itm=>key
 			getK = this.dataKey
 
 	cnt.pop() // temporary removal of the footer
