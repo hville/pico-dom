@@ -1,21 +1,41 @@
-var Fragment = require('./fragment'),
+var W = require('../util/root'),
+		decorate = require('../util/decorate'),
+		decorators = require('./decorators'),
 		ctyp = require('../util/typ')
 
-module.exports = list
-function getIndex(v,i) { return i }
-function list(factory, cfg) {
-	var fr = new Fragment([]) //TODO config for factory
+module.exports = List
+
+function List(factory, cfg) {
+	this.content = []
 	var dKey = cfg && cfg.dataKey
-	fr.dataKey = !dKey ? getIndex
+	this.dataKey = !dKey ? getIndex
 		: ctyp(dKey) === Function ? dKey
 		: function(v) { return v[dKey] }
-	fr.factory = factory
+	this.factory = factory
 	// lookup maps to locate existing component and delete extra ones
-	fr.mapKI = new Map()
-	fr.mapIK = new WeakMap()
-	fr.ondata = ondata
-	return fr
+	this.mapKI = new Map()
+	this.mapIK = new WeakMap()
+	//required to keep parent ref when no children.length === 0
+	//this.header = W.document.createComment('^')
+	this.footer = W.document.createComment('$') //TODOusedbyLi
+	decorate(this, cfg, decorators)
+	if (this.oninit) this.oninit(cfg)
 }
+List.prototype = {
+	constructor: List,
+	moveto: function moveto(parent, before) {
+		if (this.footer !== before) before = parent.insertBefore(this.footer, before || null)
+		var content = this.content,
+				i = content.length
+		while (i--) {
+			var child = content[i].node || content[i]
+			if (child !== before) before = child.moveto ? child.moveto(parent, before) : parent.insertBefore(child, before)
+		}
+		return before //last insertedChild || first fragmentElement
+	},
+	ondata: ondata
+}
+function getIndex(v,i) { return i }
 function ondata(arr) {
 	//TODO children in 4 places!!!
 	//TODO CURRENT: DOM:idx=>node; CNT:idx=>item;  MKI:key=>item; MIK:item=>key

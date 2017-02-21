@@ -6,9 +6,9 @@ var jsdom = require('jsdom').jsdom,
 G.document = jsdom()
 
 var bodyTdInputFac = co('input.tdinput', {
-	ondata: function (v) {
-		this.node.value = v
-		this.children.forEach(function(child) { if (child.ondata) child.ondata(v) })
+	oninit: function() {
+		var updateChildren = this.ondata
+		this.ondata = function(v) { this.node.value = v; updateChildren.call(this, v) }
 	},
 	props: {tabIndex: 1},
 	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
@@ -51,7 +51,6 @@ ct('co - mixed content', function() {
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'td')
 	// view inputs
-	ct('===', el.childNodes.length, 2+1)
 	ct('===', el.childNodes.item(0).value, 'def')
 	ct('===', el.childNodes.item(1).value, 'def')
 })

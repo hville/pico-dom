@@ -1,18 +1,17 @@
 var event = require('./event'),
 		decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
-		Fragment = require('./fragment')
+		getChildItems = require('../util/get-child-items')
 
 module.exports = Component
 
 function Component(node, cfg, cnt) {
 	this.node = node
 	this._eventHandlers = {}
-	// children
-	if (cnt) {
-		this.children = new Fragment(cnt)
-		this.children.moveto(node)
-	}
+	this.content = getChildItems(cnt)
+	this.content.forEach(function(itm) {
+		itm.moveto ? itm.moveto(node) : node.appendChild(itm)
+	})
 	decorate(this, cfg, decorators)
 	if (this.oninit) this.oninit(cfg)
 }
@@ -21,7 +20,7 @@ Component.prototype = {
 	on: event.listen,
 	handleEvent: event.handleEvent,
 	ondata: function ondata(a,b,c) {
-		this.children.forEach(function(child) { if (child.ondata) child.ondata(a,b,c) })
+		this.content.forEach(function(item) { if (item.ondata) item.ondata(a,b,c) })
 	},
 	view: function() {
 		this.ondata.apply(this, arguments)
