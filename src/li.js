@@ -3,7 +3,7 @@ var creator = require('./util/creator'),
 		ns = require('./util/namespaces'),
 		List = require('./co/list')
 
-var preset = creator(function li(sel, cfg, cnt) {
+var preset = creator(function(sel, cfg, cnt) {
 	return new List(co(sel, cfg, cnt))
 })
 

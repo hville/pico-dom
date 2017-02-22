@@ -5,9 +5,6 @@ var W = require('../util/root'),
 		decorate = require('../util/decorate'),
 		decorators = require('./decorators')
 
-/**
- * @const {!Object}
- */
 var rRE =/[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
