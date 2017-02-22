@@ -1,13 +1,10 @@
 var W = require('../util/root'),
-		decorate = require('../util/decorate'),
-		decorators = require('./decorators'),
 		ctyp = require('../util/typ')
 
 module.exports = List
 
-function List(factory, cfg) {
+function List(factory, dKey) {
 	this.content = []
-	var dKey = cfg && cfg.dataKey
 	this.dataKey = !dKey ? getIndex
 		: ctyp(dKey) === Function ? dKey
 		: function(v) { return v[dKey] }
@@ -18,8 +15,7 @@ function List(factory, cfg) {
 	//required to keep parent ref when no children.length === 0
 	//this.header = W.document.createComment('^')
 	this.footer = W.document.createComment('$')
-	decorate(this, cfg, decorators)
-	if (this.oninit) this.oninit(cfg)
+	if (this.oninit) this.oninit() //TODO dead?
 }
 List.prototype = {
 	constructor: List,

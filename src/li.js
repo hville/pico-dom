@@ -4,7 +4,7 @@ var creator = require('./util/creator'),
 		List = require('./co/list')
 
 var preset = creator(function li(sel, cfg, cnt) {
-	return new List(co(sel, cfg, cnt))
+	return new List(co(sel, cfg, cnt), cfg.dataKey)
 })
 
 var li = preset()
