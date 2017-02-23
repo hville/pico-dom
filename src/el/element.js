@@ -1,10 +1,11 @@
 var W = require('../util/root'),
 		NS = require('../util/namespaces'),
 		typ = require('../util/typ'),
-		getChildItems = require('../util/get-child-items'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators')
-
+		decorators = require('./decorators'),
+		text = require('../text'),
+		store = require('../extra/store')
+//TODO #comment, #text
 var rRE =/[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
@@ -17,13 +18,27 @@ var rRE =/[\s\"\']+/g,
  */
 module.exports = function element(selector, options, children) {
 	var elem = createElement(selector, options)
-	if (children) getChildItems(children).forEach(appendChild, elem)
+	if (children) {
+		if (Array.isArray(children)) children.reduce(addChild, elem)
+		else addChild(elem, children)
+	}
 	return elem
 }
-function appendChild(item) {
-	if (typ(item) === W.Node) this.appendChild(item)
-	else if (item.moveto) item.moveto(this)
-	else if(item.node) this.appendChild(item.node)
+function addChild(elm, itm) {
+	var cnt = getChild(itm)
+	if (cnt) {
+		var ctx = store(cnt)
+		ctx ? ctx.moveto(elm) : elm.appendChild(cnt)
+	}
+	return elm
+}
+function getChild(itm) {
+	switch (typ(itm)) {
+		case Function: return getChild(itm())
+		case Number: return text(''+itm)
+		case String: return itm === '' ? null : text(itm)
+		default: return itm
+	}
 }
 function createElement(selector, options) {
 	switch(typ(selector)) {

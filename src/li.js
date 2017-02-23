@@ -3,7 +3,6 @@ var creator = require('./util/creator'),
 		ns = require('./util/namespaces'),
 		W = require('./util/root'),
 		ctyp = require('./util/typ'),
-		root = require('./util/root'),
 		store = require('./extra/store')
 
 var preset = creator(function(sel, cfg, cnt) {
