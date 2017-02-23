@@ -6,7 +6,8 @@ var creator = require('./util/creator'),
 		store = require('./extra/store')
 
 var preset = creator(function(sel, cfg, cnt) {
-	return new List(co(sel, cfg, cnt), cfg.dataKey)
+	var ctx = new List(co(sel, cfg, cnt), cfg.dataKey)
+	return ctx.header
 })
 
 var li = preset()
@@ -66,7 +67,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = this.factory()
+				itm = store(this.factory())
 				mapNK.set(itm.node, key)
 				mapKC.set(key, itm)
 			}

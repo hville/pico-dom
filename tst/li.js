@@ -2,7 +2,8 @@ var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		li = require('../src/li'),
 		co = require('../src/co'),
-		globals = require('../src/util/root')
+		globals = require('../src/util/root'),
+		store = require('../src/extra/store')
 
 globals.document = jsdom()
 
@@ -22,8 +23,8 @@ var lis = [
 ct('list-simple', function() {
 	var l0 = lis[0]
 	ct('==', l0().parentNode, null)
-	var comp = co('div#myid', l0)(),
-			el = comp.node
+	var el = co('div#myid', l0)(),
+			comp = store(el)
 	comp.ondata([1,2,3])
 	ct('===', concatData(el), '^123$')
 	comp.ondata([4,3,1,2])
@@ -32,8 +33,8 @@ ct('list-simple', function() {
 	ct('===', concatData(el), '^153$')
 })
 ct('list-stacked', function() {
-	var comp = co('div#myid', lis)(),
-			el = comp.node
+	var el = co('div#myid', lis)(),
+			comp = store(el)
 	comp.ondata([1,2,3])
 	ct('===', concatData(el), '^123$^123$^123$')
 })
@@ -47,8 +48,8 @@ ct('list-complex', function() {
 		dataKey: 'k'
 	})
 	var coFac = co('tr#myid0', {}, liFac),
-			coObj = coFac(),
-			coEl = coObj.node
+			coEl = coFac(),
+			coObj = store(coEl)
 	coObj.ondata([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
 	ct('===', concatData(coEl), '^onetwotwe$')
 })
@@ -57,10 +58,10 @@ ct('sequence in nested lists', function() {
 		this.node.textContent = v
 		this.node.tabIndex = i
 	}
-	var matCo = co('div', {},
+	var matEl = co('div', {},
 		li('p', li('span', {ondata: edit}))
 	)()
-	var matEl = matCo.node
+	var matCo = store(matEl)
 	matCo.ondata([[11,12,13],[21,22,23],[31,32,33]])
 	ct('===', matEl.children.length, 3)
 	ct('===', matEl.children[0].children.length, 3)
