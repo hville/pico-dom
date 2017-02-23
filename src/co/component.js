@@ -4,7 +4,8 @@ var event = require('./event'),
 		decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
 		getChildItems = require('../util/get-child-items'),
-		root = require('../util/root')
+		roots = require('../util/root'),
+		store = require('../extra/store')
 
 module.exports = Component
 
@@ -16,7 +17,7 @@ function Component(node, cfg, cnt) {
 	})
 	decorate(this, cfg, decorators)
 	if (this.oninit) this.oninit(cfg)
-	root.extra.set(node, this)
+	store(node, this)
 }
 Component.prototype = {
 	constructor: Component,
@@ -41,7 +42,7 @@ Component.prototype = {
 		var ptr = this.node.firstChild,
 				idx = 0
 		while (ptr) {
-			var extra = root.extra.get(ptr)
+			var extra = store(ptr)
 			fcn.call(ctx||null, extra, idx++)
 			ptr = (extra.footer || ptr).nextSibling
 		}

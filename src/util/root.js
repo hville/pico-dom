@@ -10,6 +10,5 @@ module.exports = {
 		$$doc = doc
 		this.window = win
 		this.Node = win.Node
-	},
-	extra: new WeakMap()
+	}
 }

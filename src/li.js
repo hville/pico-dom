@@ -3,7 +3,8 @@ var creator = require('./util/creator'),
 		ns = require('./util/namespaces'),
 		W = require('./util/root'),
 		ctyp = require('./util/typ'),
-		root = require('./util/root')
+		root = require('./util/root'),
+		store = require('./extra/store')
 
 var preset = creator(function(sel, cfg, cnt) {
 	return new List(co(sel, cfg, cnt), cfg.dataKey)
@@ -28,8 +29,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = W.document.createComment('^')
 	this.footer = W.document.createComment('$')
-	root.extra.set(this.header, this)
-	root.extra.set(this.footer, this)
+	store(this.header, this)
+	store(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
