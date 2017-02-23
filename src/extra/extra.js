@@ -53,6 +53,15 @@ Extra.prototype = {
 		parent.insertBefore(this.node, before || null)
 		if (this.onmove) this.onmove(oldParent, parent)
 		return this.node
+	},
+	get textContent() { return this.node.textContent },
+	set textContent(text) {
+		var node = this.node
+		if (node.testContent !== text) {
+			var child = node.firstChild
+			if (child && !child.nextSibling) child.nodeValue = text
+			else node.textContent = text
+		}
 	}
 }
 function addListener(ctx, val, key) {

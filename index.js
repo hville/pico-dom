@@ -3,7 +3,8 @@ var ns = require('./src/util/namespaces'),
 		co = require('./src/co'),
 		li = require('./src/li'),
 		root = require('./src/util/root'),
-		text = require('./src/text')
+		text = require('./src/text'),
+		store = require('./src/extra/store')
 
 module.exports = {
 	el: el,
@@ -11,5 +12,6 @@ module.exports = {
 	li: li,
 	text: text,
 	ns: ns,
+	store: store,
 	global: root,
 }

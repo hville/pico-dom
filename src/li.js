@@ -7,6 +7,8 @@ var creator = require('./util/creator'),
 
 var preset = creator(function(sel, cfg, cnt) {
 	var ctx = new List(co(sel, cfg, cnt), cfg.dataKey)
+	store(ctx.header, ctx)
+	store(ctx.footer, ctx)
 	return ctx.header
 })
 
@@ -16,6 +18,11 @@ li.preset = preset
 
 module.exports = li
 
+/**
+ * @constructor
+ * @param {any} factory - component generating function
+ * @param {any} dKey - data key
+ */
 function List(factory, dKey) {
 	this.dataKey = !dKey ? getIndex
 		: ctyp(dKey) === Function ? dKey
@@ -29,8 +36,6 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = W.document.createComment('^')
 	this.footer = W.document.createComment('$')
-	store(this.header, this)
-	store(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
