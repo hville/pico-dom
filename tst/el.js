@@ -1,9 +1,9 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		el = require('../src/el'),
-		globals = require('../src/util/root')
+		ENV = require('../src/util/root')
 
-globals.document = jsdom()
+ENV.window = jsdom().defaultView
 
 var handler = function(){}
 
@@ -13,21 +13,21 @@ ct('el-api', function() {
 })
 ct('el-html', function() {
 	var elm = el('div')()
-	ct('===', elm instanceof globals.Node, true)
+	ct('===', elm instanceof ENV.Node, true)
 	ct('===', typeof elm, 'object')
 	ct('===', elm.nodeName.toLowerCase(), 'div')
 })
 ct('el-svg', function() {
 	var elm = el.svg('svg')()
 	ct('===', elm.nodeName.toLowerCase(), 'svg')
-	ct('!!', elm instanceof globals.Node)
+	ct('!!', elm instanceof ENV.Node)
 })
 ct('el-svg attributes', function() {
 	var elm = el.svg('svg', el.svg('path[d=mypath]'))()
 	ct('===', elm.nodeName.toLowerCase(), 'svg')
-	ct('!!', elm instanceof globals.Node)
+	ct('!!', elm instanceof ENV.Node)
 	ct('===', elm.childNodes.length, 1)
-	ct('===', elm.firstChild instanceof globals.Node, true)
+	ct('===', elm.firstChild instanceof ENV.Node, true)
 })
 ct('el-svg style attributes', function() {
 	var elm = el.svg('svg[style="display: none;"]')()

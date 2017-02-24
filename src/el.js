@@ -1,7 +1,7 @@
 var creator = require('./util/creator'),
 		element = require('./el/element'),
 		ns = require('./util/namespaces')
-//TODO retry createElementNS?
+
 var preset = creator(element)
 
 var el = preset()

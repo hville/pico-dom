@@ -8,6 +8,14 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
+## [0.6.0] - 2017-02-24
+### Changed
+- More major cleanup
+- API change for the Environment setting (was `.global.document = doc`, now `.setWindow(win)`)
+
+### Fixed
+- Documentation
+
 ## [0.5.0] - 2017-02-21
 ### Changed
 - Full rewrite

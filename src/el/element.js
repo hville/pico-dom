@@ -1,13 +1,10 @@
-var W = require('../util/root'),
+var ENV = require('../util/root'),
 		NS = require('../util/namespaces'),
 		typ = require('../util/typ'),
-		getChildItems = require('../util/get-child-items'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators')
+		decorators = require('./decorators'),
+		text = require('../text')
 
-/**
- * @const {!Object}
- */
 var rRE =/[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
@@ -19,25 +16,34 @@ var rRE =/[\s\"\']+/g,
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var elem = createElement(selector, options)
-	if (children) getChildItems(children).forEach(appendChild, elem)
+	var styp = typ(selector)
+
+	var elem = styp === ENV.Node ? decorate(selector, options, decorators)
+		: styp === String ? fromString(selector, options)
+		: styp === Function ? selector(options)
+		: null
+	if (!elem) throw Error('invalid selector: ' + typeof selector)
+
+	if (children) {
+		if (Array.isArray(children)) children.reduce(addChild, elem)
+		else addChild(elem, children)
+	}
 	return elem
 }
-function appendChild(item) {
-	if (typ(item) === W.Node) this.appendChild(item)
-	else if (item.moveto) item.moveto(this)
-	else if(item.node) this.appendChild(item.node)
+function addChild(elm, itm) {
+	var cnt = getChild(itm)
+	if (cnt) {
+		if (cnt.moveto) cnt.moveto(elm)
+		else elm.appendChild(cnt)
+	}
+	return elm
 }
-function createElement(selector, options) {
-	switch(typ(selector)) {
-		case W.Node:
-			return decorate(selector, options, decorators)
-		case String:
-			return fromString(selector, options)
-		case Function:
-			return selector(options)
-		default:
-			throw Error('invalid selector: ' + typeof selector)
+function getChild(itm) {
+	switch (typ(itm)) {
+		case Function: return getChild(itm())
+		case Number: return text(''+itm)
+		case String: return itm === '' ? null : text(itm)
+		default: return itm
 	}
 }
 function fromString(selector, options) {
@@ -46,7 +52,7 @@ function fromString(selector, options) {
 	if (!options) options = {attrs:{}}
 	else if (!options.attrs) options.attrs = {}
 	matches.reduce(parse, options)
-	var doc = W.document,
+	var doc = ENV.document,
 			tag = options.tagName || 'div',
 			elm = options.xmlns ? doc.createElementNS(options.xmlns, tag) : doc.createElement(tag)
 	return decorate(elm, options, decorators)

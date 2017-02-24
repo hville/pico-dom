@@ -1,14 +1,14 @@
-var UNDEF = 'undefined',
-		$$doc = typeof document === UNDEF ? null : document
-
-module.exports = {
-	window: typeof window === UNDEF ? null : window,
-	Node: typeof Node === UNDEF ? null : Node,
-	get document() { return $$doc },
-	set document(doc) {
-		var win = doc.defaultView
-		$$doc = doc
-		this.window = win
-		this.Node = win.Node
+var WIN = typeof window === 'undefined' ? null : window
+var ENV = {
+	document: null,
+	Node: null,
+	get window() { return WIN },
+	set window(win) {
+		WIN = win
+		ENV.document = win && win.document
+		ENV.Node = win && win.Node
 	}
 }
+ENV.window = WIN
+
+module.exports = ENV

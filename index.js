@@ -11,5 +11,5 @@ module.exports = {
 	li: li,
 	text: text,
 	ns: ns,
-	global: root,
+	setWindow: function setWindow(win) { root.window = win },
 }
