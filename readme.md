@@ -41,6 +41,7 @@ tableApp.moveto(document.body)
 * factories with preset defaults to facilitate the creation of components
 * All ES5 and HTML5 to avoid transpiling and facilitate compatibility
 * no virtual DOM, all operations are done on actual nodes
+* under 3kb gzip, no dependencies
 
 ### Limitations
 
@@ -125,7 +126,11 @@ arguments    | Type                                      | Example
 * lists can be nested or stacked
   * nested: `co('body', li('tr', li('td', {ondata: function(v) { td.textContent = v }})))`
   * stacked: `co('tr', li('td', cellType1), li('td', cellType2))`
-
+* list takes on additional `dataKey` option (eg. `{dataKey: 'uid'}`)
+  * if omitted, list items are never swapped but just updated with the new value
+  * if a `string` or a `function` is provided list items will be swapped to match the new data ordering
+    * string example: `{dataKey: 'uid'}`
+    * funtion example: `{dataKey: function(v,i) { return v.uid }}`
 
 ### Additional utilities
 

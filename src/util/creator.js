@@ -32,6 +32,10 @@ function argument(arg, options, content) {
 			throw Error('invalid argument: ' + typeof arg + ':' + arg)
 	}
 }
+/**
+ * @param {...Object} tgt - target object
+ * @returns {Object} - modified target
+ */
 function merge(tgt) {
 	for (var i=1; i<arguments.length; ++i) {
 		if (arguments[i] != null) tgt = reduce(arguments[i], assign, tgt || {}) //eslint-disable-line eqeqeq

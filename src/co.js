@@ -20,6 +20,11 @@ co.preset = preset
 
 module.exports = co
 
+/**
+ * @constructor
+ * @param {Object} node - DOM node
+ * @param {Object} [config] - configuration
+ */
 function Component(node, config) {
 	this.node = node
 	this._eventHandlers = {}
@@ -63,15 +68,16 @@ Component.prototype = {
 		return this.node
 	},
 	moveto: function moveto(parent, before) {
-		var oldParent = this.parentNode
-		parent.insertBefore(this.node, before || null)
+		var node = this.node,
+				oldParent = node.parentNode
+		parent.insertBefore(node, before || null)
 		if (this.onmove) this.onmove(oldParent, parent)
-		return this.node
+		return node
 	},
 	get textContent() { return this.node.textContent },
 	set textContent(text) {
 		var node = this.node
-		if (node.testContent !== text) {
+		if (node.textContent !== text) {
 			var child = node.firstChild
 			if (child && !child.nextSibling) child.nodeValue = text
 			else node.textContent = text

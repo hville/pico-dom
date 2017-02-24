@@ -93,7 +93,7 @@ List.prototype = {
 		}
 
 		// return last inserted item
-		return this.footer
+		return foot
 	}
 }
 function getIndex(v,i) { return i }
