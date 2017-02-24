@@ -2,9 +2,9 @@ var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		li = require('../src/li'),
 		co = require('../src/co'),
-		globals = require('../src/util/root')
+		ENV = require('../src/util/root')
 
-globals.document = jsdom()
+ENV.window = jsdom().defaultView
 
 function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent

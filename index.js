@@ -3,8 +3,7 @@ var ns = require('./src/util/namespaces'),
 		co = require('./src/co'),
 		li = require('./src/li'),
 		root = require('./src/util/root'),
-		text = require('./src/text'),
-		store = require('./src/extra/store')
+		text = require('./src/text')
 
 module.exports = {
 	el: el,
@@ -12,17 +11,5 @@ module.exports = {
 	li: li,
 	text: text,
 	ns: ns,
-	store: store,
-	global: root,
+	setWindow: function setWindow(win) { root.window = win },
 }
-
-/*
-factory = co(el(li...))
-
-moveto(itm, parent, before)
-update(itm, ...)
-
-util(tgt, )
-
-
-*/

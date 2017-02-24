@@ -1,4 +1,4 @@
-var W = require('../util/root'),
+var ENV = require('../util/root'),
 		NS = require('../util/namespaces'),
 		typ = require('../util/typ'),
 		decorate = require('../util/decorate'),
@@ -16,7 +16,14 @@ var rRE =/[\s\"\']+/g,
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var elem = createElement(selector, options)
+	var styp = typ(selector)
+
+	var elem = styp === ENV.Node ? decorate(selector, options, decorators)
+		: styp === String ? fromString(selector, options)
+		: styp === Function ? selector(options)
+		: null
+	if (!elem) throw Error('invalid selector: ' + typeof selector)
+
 	if (children) {
 		if (Array.isArray(children)) children.reduce(addChild, elem)
 		else addChild(elem, children)
@@ -39,25 +46,13 @@ function getChild(itm) {
 		default: return itm
 	}
 }
-function createElement(selector, options) {
-	switch(typ(selector)) {
-		case W.Node:
-			return decorate(selector, options, decorators)
-		case String:
-			return fromString(selector, options)
-		case Function:
-			return selector(options)
-		default:
-			throw Error('invalid selector: ' + typeof selector)
-	}
-}
 function fromString(selector, options) {
 	var matches = selector.replace(rRE, '').match(mRE)
 	if (!matches) throw Error('invalid selector: '+selector)
 	if (!options) options = {attrs:{}}
 	else if (!options.attrs) options.attrs = {}
 	matches.reduce(parse, options)
-	var doc = W.document,
+	var doc = ENV.document,
 			tag = options.tagName || 'div',
 			elm = options.xmlns ? doc.createElementNS(options.xmlns, tag) : doc.createElement(tag)
 	return decorate(elm, options, decorators)

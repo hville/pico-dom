@@ -1,9 +1,9 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		G = require('../src/util/root'),
+		ENV = require('../src/util/root'),
 		co = require('../src/co')
 
-G.document = jsdom()
+ENV.window = jsdom().defaultView
 
 var bodyTdInputFac = co('input.tdinput', {
 	oninit: function() {
@@ -33,7 +33,7 @@ ct('co - full', function() {
 	// view inputs
 	ct('===', el.value, 'abc')
 	// events .on .handleEvent .eventHandlers
-	el.dispatchEvent(new G.window.Event('click'))
+	el.dispatchEvent(new ENV.window.Event('click'))
 	ct('===', el.value, 'click')
 	ct('===', el.tabIndex, 11)
 })

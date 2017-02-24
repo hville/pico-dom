@@ -1,7 +1,7 @@
 var creator = require('./util/creator'),
 		co = require('./co'),
 		ns = require('./util/namespaces'),
-		W = require('./util/root'),
+		ENV = require('./util/root'),
 		ctyp = require('./util/typ'),
 		store = require('./extra/store')
 
@@ -20,8 +20,8 @@ module.exports = li
 
 /**
  * @constructor
- * @param {any} factory - component generating function
- * @param {any} dKey - data key
+ * @param {Function} factory - component generating function
+ * @param {*} dKey - data key
  */
 function List(factory, dKey) {
 	this.dataKey = !dKey ? getIndex
@@ -34,8 +34,8 @@ function List(factory, dKey) {
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
-	this.header = W.document.createComment('^')
-	this.footer = W.document.createComment('$')
+	this.header = ENV.document.createComment('^')
+	this.footer = ENV.document.createComment('$')
 }
 List.prototype = {
 	constructor: List,
