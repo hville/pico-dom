@@ -15,3 +15,14 @@ module.exports = {
 	store: store,
 	global: root,
 }
+
+/*
+factory = co(el(li...))
+
+moveto(itm, parent, before)
+update(itm, ...)
+
+util(tgt, )
+
+
+*/

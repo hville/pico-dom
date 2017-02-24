@@ -14,7 +14,7 @@ var co = pico.co,
     li = pico.li,
     el = pico.el
 
-co('table', [
+var createTable = co('table', [
   el('caption', 'data-matrix')
   co('tbody',
     li('tr',
@@ -25,6 +25,9 @@ co('table', [
     )
   ),
 ])
+var tableApp = createTable()
+tableApp.update([[]])
+tableApp.moveto(document.body)
 ```
 
 ## Features
@@ -61,11 +64,11 @@ co('table', [
   * `ns`: configurable namspaces (`html` and `svg` already defined)
   * `global`: configurable global object to set the `document` object in any environment
 
-Functions    | Type                                      | Notes
-:--------    | :---                                      | :----
-`.el`        | `(selector[, ...elConfig])` => `Factory`  | `el('p', {style: {color:'blue'}}, '1'))`
-`.co`        | `(selector[, ...coConfig])` => `Factory`  | `co('p', {ondata: setText}))`
-`.li`        | `(selector[, ...liConfig])` => `Factory`  | `li('li', {ondata: setIndex}))`
+Functions    | Type                                        | Notes
+:--------    | :---                                        | :----
+`.el`        | `(selector[, ...elConfig])` => `elFactory`  | `el('p', {style: {color:'blue'}}, '1'))`
+`.co`        | `(selector[, ...coConfig])` => `coFactory`  | `co('p', {ondata: setText}))`
+`.li`        | `(selector[, ...liConfig])` => `liFactory`  | `li('li', {ondata: setIndex}))`
 only the selector is required, remaining arguments can be in any order
 
 Exposed      | Type                                      | Notes
@@ -80,12 +83,15 @@ Other Types  | Type                                      | Notes
 `elConfig`   | `elDecorator` or `contentItem`            |
 `elDecorator`| `Object` {attrs, props, style, xmlns}     | element's attributes, properties and style
 `contentItem`| `Factory`, `string`, `Node` or `Array`    | element child Nodes
-`Factory`    | `elConfig` => `Node`                      | `elFactory({props: {tabIndex:2}})`
+`elFactory`  | `elConfig` => `Node`                      | `elFactory({props: {tabIndex:2}})`
+`coFactory`  | `coConfig` => `Component`                 | `coFactory({on: {click: action}})`
+`liFactory`  | () => `List`                              |
 `coConfig`   | `coDecorator` or `contentItem`            |
-`coDecorator`| `elDecorator`, `lifecycleFn`              | `{ondata: setIndex, style: {color:'blue'}}`
+`coDecorator`| `elDecorator`, `lifecycleFn`, `eventObj`  | `{ondata: setIndex, style: {color:'blue'}}`
 `lifecycleFn`| `Object` {oninit, ondata, onmove}         |
 `liConfig`   | `liDecorator` or `contentItem`            |
 `liDecorator`| `coDecorator`, `dataKey`                  | `{dataKey: 'uid'}`
+`eventObj`   | Object {event: callback}                  | `on:{click: myAction, touch: myAction}`
 
 
 ## License

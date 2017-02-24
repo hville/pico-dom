@@ -1,8 +1,7 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		G = require('../src/util/root'),
-		co = require('../src/co'),
-		store = require('../src/extra/store')
+		co = require('../src/co')
 
 G.document = jsdom()
 
@@ -15,15 +14,15 @@ var bodyTdInputFac = co('input.tdinput', {
 	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
 })
 ct('co - simple', function() {
-	var elem = co('div#myid')()
+	var elem = co('div#myid')().node
 	// element
 	ct('===', elem.nodeName.toLowerCase(), 'div')
 	ct('===', elem.id, 'myid')
 })
 
 ct('co - full', function() {
-	var el = bodyTdInputFac({props: {id: 'xyz'}}),
-			c = store(el)
+	var c = bodyTdInputFac({props: {id: 'xyz'}}),
+			el = c.node
 	c.ondata('abc')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'input')
@@ -39,12 +38,12 @@ ct('co - full', function() {
 	ct('===', el.tabIndex, 11)
 })
 
-var el = co('td', [
+var cell = co('td', [
 	bodyTdInputFac,
 	bodyTdInputFac
 ])()
 ct('co - mixed content', function() {
-	var cell = store(el)
+	var el = cell.node
 	cell.ondata('def')
 	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)
 	//console.log(typ)

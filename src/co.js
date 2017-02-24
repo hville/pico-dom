@@ -8,7 +8,7 @@ var preset = creator(function(sel, cfg, cnt) {
 	var elm = element(sel, cfg, cnt),
 			ctx = new Extra(elm, cfg)
 	store(elm, ctx)
-	return elm
+	return ctx
 })
 
 var co = preset()

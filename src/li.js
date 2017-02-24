@@ -9,7 +9,7 @@ var preset = creator(function(sel, cfg, cnt) {
 	var ctx = new List(co(sel, cfg, cnt), cfg.dataKey)
 	store(ctx.header, ctx)
 	store(ctx.footer, ctx)
-	return ctx.header
+	return ctx
 })
 
 var li = preset()
@@ -72,7 +72,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = store(this.factory())
+				itm = this.factory()
 				mapNK.set(itm.node, key)
 				mapKC.set(key, itm)
 			}

@@ -3,9 +3,8 @@ var W = require('../util/root'),
 		typ = require('../util/typ'),
 		decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
-		text = require('../text'),
-		store = require('../extra/store')
-//TODO #comment, #text
+		text = require('../text')
+
 var rRE =/[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
@@ -27,8 +26,8 @@ module.exports = function element(selector, options, children) {
 function addChild(elm, itm) {
 	var cnt = getChild(itm)
 	if (cnt) {
-		var ctx = store(cnt)
-		ctx ? ctx.moveto(elm) : elm.appendChild(cnt)
+		if (cnt.moveto) cnt.moveto(elm)
+		else elm.appendChild(cnt)
 	}
 	return elm
 }
