@@ -46,8 +46,7 @@ ct('list-complex', function() {
 		},
 		dataKey: 'k'
 	})
-	var coFac = co('tr#myid0', {}, liFac),
-			coObj = coFac(),
+	var coObj = co('tr#myid0', {}, liFac),
 			coEl = coObj.node
 	coObj.ondata([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
 	ct('===', concatData(coEl), '^onetwotwe$')

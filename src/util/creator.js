@@ -1,5 +1,4 @@
 var typ = require('./typ'),
-		ENV = require('./root'),
 		reduce = require('./reduce')
 
 module.exports = function creator(constructor) {
@@ -20,13 +19,11 @@ function argument(arg, options, content) {
 		case Array:
 			flatConcat(content, arg)
 			break
-		case String: case Number: case Function: case ENV.Node: // child-like
-			content.push(arg)
-			break
 		case null: case undefined:
 			break
 		default:
-			throw Error('invalid argument: ' + typeof arg + ':' + arg)
+			content.push(arg)
+			break
 	}
 }
 /**
