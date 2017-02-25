@@ -14,7 +14,7 @@ var bodyTdInputFac = co('input.tdinput', {
 	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
 })
 ct('co - simple', function() {
-	var elem = co('div#myid')().node
+	var elem = co('div#myid').node
 	// element
 	ct('===', elem.nodeName.toLowerCase(), 'div')
 	ct('===', elem.id, 'myid')
@@ -41,7 +41,7 @@ ct('co - full', function() {
 var cell = co('td', [
 	bodyTdInputFac,
 	bodyTdInputFac
-])()
+])
 ct('co - mixed content', function() {
 	var el = cell.node
 	cell.ondata('def')

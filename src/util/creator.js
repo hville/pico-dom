@@ -8,10 +8,7 @@ module.exports = function creator(constructor) {
 			var options = merge({}, defaults),
 					content = []
 			for (var i=1; i<arguments.length; ++i) argument(arguments[i], options, content)
-			return function factory(config) {
-				var cfg = config ? merge({}, options, config) : options
-				return constructor(selector, cfg, content)
-			}
+			return constructor(selector, options, content)
 		}
 	}
 }
