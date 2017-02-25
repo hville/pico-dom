@@ -1,15 +1,14 @@
 var creator = require('./util/creator'),
-		co = require('./co'),
+		Component = require('./co/component'),
+		element = require('./el/element'),
 		ns = require('./util/namespaces'),
 		ENV = require('./util/root'),
 		ctyp = require('./util/typ'),
-		store = require('./extra/store')
+		store = require('./co/store')
 
 var preset = creator(function(sel, cfg, cnt) {
-	var ctx = new List(co(sel, cfg, cnt), cfg.dataKey)
-	store(ctx.header, ctx)
-	store(ctx.footer, ctx)
-	return ctx
+	var ref = element(sel, cfg, cnt)
+	return new List(function() { return new Component(cloneTree(ref), cfg) }, cfg.dataKey)
 })
 
 var li = preset()
@@ -36,6 +35,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = ENV.document.createComment('^')
 	this.footer = ENV.document.createComment('$')
+	store(this.header, this)
+	store(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -96,5 +97,44 @@ List.prototype = {
 		return foot
 	}
 }
-function getIndex(v,i) { return i }
+function getIndex(v,i) {
+	return i
+}
+function cloneTree(model) {
+	var clone, modelC
+	// clone the model as it is: Element, Component or List
+	if (model.nodeType) {
+		clone = model.cloneNode(false)
+		modelC = model.firstChild
+	}
+	else if (model.factory) {
+		clone = new List(model.factory, model.dataKey)
+		modelC = null
+		store(clone.footer, clone)
+		store(clone.header, clone)
+	}
+	else {
+		clone = new Component(model.node.cloneNode(false), model)
+		modelC = model.node.firstChild
+		store(clone.node, clone)
+	}
 
+	// recursively clone children
+	while(modelC) {
+		modelC = store(modelC) || modelC
+		var cloneC = cloneTree(modelC)
+		if (cloneC.nodeType) {
+			clone.appendChild(cloneC)
+			modelC = modelC.nextSibling
+		}
+		else if (cloneC.factory) {
+			cloneC.moveto(clone)
+			modelC = modelC.footer.nextSibling
+		}
+		else {
+			cloneC.moveto(clone)
+			modelC = modelC.node.nextSibling
+		}
+	}
+	return clone
+}

@@ -1,20 +1,22 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		ENV = require('../src/util/root'),
-		co = require('../src/co')
+		co = require('../src/co'),
+		ENV = require('../src/util/root')
 
 ENV.window = jsdom().defaultView
 
-var bodyTdInputFac = co('input.tdinput', {
-	oninit: function() {
-		var updateChildren = this.ondata
-		this.ondata = function(v) { this.node.value = v; updateChildren.call(this, v) }
-	},
-	props: {tabIndex: 1},
-	on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
-})
+var bodyTdInputFac = function(cfg) {
+	return co('input.tdinput', cfg, {
+		oninit: function() {
+			var updateChildren = this.ondata
+			this.ondata = function(v) { this.node.value = v; updateChildren.call(this, v) }
+		},
+		props: {tabIndex: 1},
+		on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
+	})
+}
 ct('co - simple', function() {
-	var elem = co('div#myid')().node
+	var elem = co('div#myid').node
 	// element
 	ct('===', elem.nodeName.toLowerCase(), 'div')
 	ct('===', elem.id, 'myid')
@@ -41,7 +43,7 @@ ct('co - full', function() {
 var cell = co('td', [
 	bodyTdInputFac,
 	bodyTdInputFac
-])()
+])
 ct('co - mixed content', function() {
 	var el = cell.node
 	cell.ondata('def')

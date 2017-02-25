@@ -1,5 +1,4 @@
 var typ = require('./typ'),
-		ENV = require('./root'),
 		reduce = require('./reduce')
 
 module.exports = function creator(constructor) {
@@ -8,10 +7,7 @@ module.exports = function creator(constructor) {
 			var options = merge({}, defaults),
 					content = []
 			for (var i=1; i<arguments.length; ++i) argument(arguments[i], options, content)
-			return function factory(config) {
-				var cfg = config ? merge({}, options, config) : options
-				return constructor(selector, cfg, content)
-			}
+			return constructor(selector, options, content)
 		}
 	}
 }
@@ -23,13 +19,11 @@ function argument(arg, options, content) {
 		case Array:
 			flatConcat(content, arg)
 			break
-		case String: case Number: case Function: case ENV.Node: // child-like
-			content.push(arg)
-			break
 		case null: case undefined:
 			break
 		default:
-			throw Error('invalid argument: ' + typeof arg + ':' + arg)
+			content.push(arg)
+			break
 	}
 }
 /**

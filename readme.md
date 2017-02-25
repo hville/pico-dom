@@ -14,7 +14,7 @@ var co = pico.co,
     li = pico.li,
     el = pico.el
 
-var createTable = co('table', [
+var table = co('table', [
   el('caption', 'data-matrix')
   co('tbody',
     li('tr',
@@ -25,9 +25,8 @@ var createTable = co('table', [
     )
   ),
 ])
-var tableApp = createTable()
-tableApp.update([[]])
-tableApp.moveto(document.body)
+table.update([['Jane', 'Roe'], ['John', 'Doe']])
+table.moveto(document.body)
 ```
 
 ## Features
@@ -62,11 +61,11 @@ Three types of *hyperscript* function
 * `co`: to generate components with custom behavious and lifecycle events
 * `li`: to generate a list of components derived from an array of values
 
-Functions    | Type                                        | Example
-:--------    | :---                                        | :----
-`.el`        | `(selector[, ...elConfig])` => `elFactory`  | `el('p', {style: {color:'blue'}}, '1'))`
-`.co`        | `(selector[, ...coConfig])` => `coFactory`  | `co('p', {ondata: setText}))`
-`.li`        | `(selector[, ...liConfig])` => `liFactory`  | `li('li', {ondata: setIndex}))`
+Functions    | Type                                       | Example
+:--------    | :---                                       | :----
+`.el`        | `(selector[, ...elConfig])` => `Element`   | `el('p', {style: {color:'blue'}}, '1'))`
+`.co`        | `(selector[, ...coConfig])` => `Component` | `co('p', {ondata: setText}))`
+`.li`        | `(selector[, ...liConfig])` => `List`      | `li('li', {ondata: setIndex}))`
 only the selector is required, remaining arguments can be in any order
 
 each *hyperscript* function has 2 additional properties:
@@ -83,25 +82,23 @@ for example, the following are equivalent:
 
 #### Element Factory
 
-* factory: `var elementFactory = el(selector[, ...options][, ...children])`
-* element: `var element = elementFactory(options)`
+* `var element = el(selector[, ...options][, ...children])`
 * element is a normal `DOM Element`
 
-arguments    | Type                                      | Example
-:--------    | :---                                      | :----
-`selector`   | `string`, `factory` or `Node`             | `svg:circle[style=font-size:150%;color:blue]`
-`options`    | `Object` {attrs, props, style, xmlns}     | element's attributes, properties and style
-`.attrs`     | `Object` ...any key-value pair            | `{id: 'myID'}`
-`.props`     | `Object` ...any key-value pair            | `{tabIndex: 2}`
-`.xmlns`     | `Object` ...any key-value pair            | `{xmlns: ns.svg}`
-`.style`     | `Object|String` string of key-values      | `{color:'blue'}` or `font-size:150%;color:blue`
-`children`   | `factory`, `string`, `Node` or `Array`    | element child Nodes, Components of Lists
+arguments  | Type                                    | Example
+:--------  | :---                                    | :----
+`selector` | `string`, `factory` or `Node`           | `svg:circle[style=font-size:150%;color:blue]`
+`options`  | `Object` {attrs, props, style, xmlns}   | element's attributes, properties and style
+`.attrs`   | `Object` ...any key-value pair          | `{id: 'myID'}`
+`.props`   | `Object` ...any key-value pair          | `{tabIndex: 2}`
+`.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
+`.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
+`children` | `factory`, `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
 
 #### Component Factory
 
-* factory: `var componentFactory = co(selector[, ...options][, ...children])`
-* component: `var component = componentFactory(options)`
+* `var component = co(selector[, ...options][, ...children])`
 * a component as an element and associated behaviours
   * `.node` the associated node
   * `.update(...)` the function to trigger changes based on external data
@@ -119,8 +116,7 @@ arguments    | Type                                      | Example
 
 #### List Factory
 
-* factory: `var listFactory = co(selector[, ...options][, ...children])`
-* component: `var list = listFactory()`
+* `var list = co(selector[, ...options][, ...children])`
 * a list is just a component that gets repeated on update to match a given array of values
 * `list.update(array)` triggers multiple components `component.update(value, index, array`
 * lists can be nested or stacked

@@ -8,6 +8,10 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
+## [0.7.0] - 2017-02-25
+### Changed
+- Major API change: intermediate factory step removed
+
 ## [0.6.0] - 2017-02-24
 ### Changed
 - More major cleanup
