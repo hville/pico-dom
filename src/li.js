@@ -4,8 +4,7 @@ var creator = require('./util/creator'),
 		ns = require('./util/namespaces'),
 		ENV = require('./util/root'),
 		ctyp = require('./util/typ'),
-		store = require('./extra/store'),
-		Extra = require('../extra/extra')
+		store = require('./extra/store')
 
 var preset = creator(function(sel, cfg, cnt) {
 	var ref = element(sel, cfg, cnt)
@@ -115,7 +114,7 @@ function cloneTree(model) {
 		store(clone.header, clone)
 	}
 	else {
-		clone = new Extra(model.cloneNode(false), { oninit: model.oninit, ondata: model.ondata, onmove: model.onmove, on: model.on() }) //TODO on...
+		clone = new Component(model.cloneNode(false), { oninit: model.oninit, ondata: model.ondata, onmove: model.onmove, on: model.on() }) //TODO on...
 		modelC = model.node.firstChild
 		store(clone.node, clone)
 	}

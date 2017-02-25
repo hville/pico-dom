@@ -21,7 +21,7 @@ var lis = [
 
 ct('list-simple', function() {
 	var l0 = lis[0]
-	ct('==', l0().parentNode, null)
+	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
 			el = comp.node
 	comp.ondata([1,2,3])
