@@ -8,5 +8,9 @@ module.exports = {
 	oninit: lifecycle('oninit'),
 	ondata: lifecycle('ondata'),
 	onmove: lifecycle('onmove'),
-	on: function on(ctx, obj) { ctx.on(obj) }
+	on: addEventListeners, // events from config
+	_eventHandlers: addEventListeners // events from cloned component
+}
+function addEventListeners(ctx, obj) {
+	ctx.on(obj)
 }
