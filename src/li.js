@@ -122,17 +122,18 @@ function cloneTree(model) {
 	// recursively clone children
 	while(modelC) {
 		modelC = store(modelC) || modelC
-		var cloneC = cloneTree(modelC)
+		var parent = clone.node || clone,
+				cloneC = cloneTree(modelC)
 		if (cloneC.nodeType) {
-			clone.appendChild(cloneC)
+			parent.appendChild(cloneC)
 			modelC = modelC.nextSibling
 		}
 		else if (cloneC.factory) {
-			cloneC.moveto(clone)
+			cloneC.moveto(parent)
 			modelC = modelC.footer.nextSibling
 		}
 		else {
-			cloneC.moveto(clone)
+			cloneC.moveto(parent)
 			modelC = modelC.node.nextSibling
 		}
 	}
