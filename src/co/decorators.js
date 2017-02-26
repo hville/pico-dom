@@ -13,4 +13,5 @@ module.exports = {
 }
 function addEventListeners(ctx, obj) {
 	ctx.on(obj)
+	return ctx
 }
