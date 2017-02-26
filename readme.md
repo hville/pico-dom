@@ -130,7 +130,7 @@ arguments    | Type                                      | Example
 
 ### Additional utilities
 
-* `text`: to generate a text node
+* `text`: to generate a text node (`text(mytext)` is equivalent to `el('#','mytext'`)
 * `ns`: configurable namspaces. `html` and `svg` are already defined, others can be added
 * `setWindow`: configurable global environment to facilitate testing or server generation
 
