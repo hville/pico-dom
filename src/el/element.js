@@ -5,7 +5,7 @@ var ENV = require('../util/root'),
 		decorators = require('./decorators'),
 		text = require('../text')
 
-var rRE =/[\s\"\']+/g,
+var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
 /**
@@ -15,20 +15,28 @@ var rRE =/[\s\"\']+/g,
  * @param {Array} [children] - Element children Nodes,Factory,Text
  * @returns {Object} - The parsed element definition [sel,att]
  */
-module.exports = function element(selector, options, children) {
-	var styp = typ(selector)
-
-	var elem = styp === ENV.Node ? decorate(selector, options, decorators)
-		: styp === String ? fromString(selector, options)
-		: styp === Function ? selector(options)
+function getTextContent(children) {
+	var child = !Array.isArray(children) ? children
+		: children.length === 1 ? children[0]
 		: null
-	if (!elem) throw Error('invalid selector: ' + typeof selector)
+	return typ(child) === String ? child : null
+}
+module.exports = function element(selector, options, children) {
+	var styp = typ(selector),
+			textContent = getTextContent(children)
 
-	if (children) {
-		if (Array.isArray(children)) children.reduce(addChild, elem)
-		else addChild(elem, children)
+	var node = styp === ENV.Node ? decorate(selector, options, decorators)
+		: styp === Function ? selector(options)
+		: styp !== String ? null
+		: selector === '#' ? text(textContent||'')
+		: fromString(selector, options)
+	if (!node) throw Error('invalid selector: ' + typeof selector)
+
+	if (children && node.textContent !== textContent) {
+		if (Array.isArray(children)) children.reduce(addChild, node)
+		else addChild(node, children)
 	}
-	return elem
+	return node
 }
 function addChild(elm, itm) {
 	var cnt = getChild(itm)
