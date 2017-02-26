@@ -16,35 +16,30 @@ var rRE =/[\"\']+/g, ///[\s\"\']+/g,
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var styp = typ(selector),
-			textContent = getTextContent(children)
+	var styp = typ(selector)
 
 	var node = styp === ENV.Node ? decorate(selector, options, decorators)
 		: styp === Function ? selector(options)
 		: styp !== String ? null
-		: selector === '#' ? text(textContent||'')
+		: selector === '#' ? text('')
+		: selector === '!' ? ENV.document.createComment('')
 		: fromString(selector, options)
 	if (!node) throw Error('invalid selector: ' + typeof selector)
 
-	if (children && node.textContent !== textContent) {
-		if (Array.isArray(children)) children.reduce(addChild, node)
-		else addChild(node, children)
+	var childQty = children.length
+	if (childQty) {
+		if (childQty === 1 && typ(children[0]) === String && !node.textContent) {
+			node.textContent = children[0]
+		}
+		else for (var i=0; i<childQty; ++i) {
+			var cnt = getChild(children[i])
+			if (cnt) {
+				if (cnt.moveto) cnt.moveto(node)
+				else node.appendChild(cnt)
+			}
+		}
 	}
 	return node
-}
-function getTextContent(children) {
-	var child = !Array.isArray(children) ? children
-		: children.length === 1 ? children[0]
-		: null
-	return typ(child) === String ? child : null
-}
-function addChild(elm, itm) {
-	var cnt = getChild(itm)
-	if (cnt) {
-		if (cnt.moveto) cnt.moveto(elm)
-		else elm.appendChild(cnt)
-	}
-	return elm
 }
 function getChild(itm) {
 	switch (typ(itm)) {

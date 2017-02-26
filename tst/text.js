@@ -17,4 +17,26 @@ ct('text-el()', function() {
 	ct('===', elm instanceof ENV.Node, true)
 	ct('===', typeof elm, 'object')
 	ct('===', elm.nodeName.toLowerCase(), '#text')
+	ct('===', elm.textContent, 'div')
+
+	elm = el(elm, 'otherText')
+	ct('===', elm.textContent, 'div') //TODO clarify redecoration, overwrite | append or not
+
+	elm = el('#', '')
+	ct('===', elm instanceof ENV.Node, true)
+	ct('===', typeof elm, 'object')
+	ct('===', elm.nodeName.toLowerCase(), '#text')
+	ct('===', elm.textContent, '')
+})
+ct('text-el()-comment', function() {
+	var elm = el('!', 'div')
+	ct('===', elm instanceof ENV.Node, true)
+	ct('===', typeof elm, 'object')
+	ct('===', elm.nodeName.toLowerCase(), '#comment')
+	ct('===', elm.textContent, 'div')
+	elm = el('!', '')
+	ct('===', elm instanceof ENV.Node, true)
+	ct('===', typeof elm, 'object')
+	ct('===', elm.nodeName.toLowerCase(), '#comment')
+	ct('===', elm.textContent, '')
 })

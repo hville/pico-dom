@@ -7,10 +7,12 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+- clarity node decoration rules for existing children (`el(node, ...)`)
 
-## [0.7.0] - 2017-02-26
+## [0.8.0] - 2017-02-26
 ### Changed
 - Major API change: intermediate factory step removed
+- `el(#)` and `el(!)` for text and comment nodes
 
 ## [0.6.0] - 2017-02-24
 ### Changed
