@@ -15,12 +15,6 @@ var rRE =/[\"\']+/g, ///[\s\"\']+/g,
  * @param {Array} [children] - Element children Nodes,Factory,Text
  * @returns {Object} - The parsed element definition [sel,att]
  */
-function getTextContent(children) {
-	var child = !Array.isArray(children) ? children
-		: children.length === 1 ? children[0]
-		: null
-	return typ(child) === String ? child : null
-}
 module.exports = function element(selector, options, children) {
 	var styp = typ(selector),
 			textContent = getTextContent(children)
@@ -37,6 +31,12 @@ module.exports = function element(selector, options, children) {
 		else addChild(node, children)
 	}
 	return node
+}
+function getTextContent(children) {
+	var child = !Array.isArray(children) ? children
+		: children.length === 1 ? children[0]
+		: null
+	return typ(child) === String ? child : null
 }
 function addChild(elm, itm) {
 	var cnt = getChild(itm)
