@@ -32,7 +32,7 @@ ct('el-svg attributes', function() {
 ct('el-svg style attributes', function() {
 	var elm = el.svg('svg[style="display: none;"]')
 	ct('===', elm.hasAttribute('style'), true)
-	ct('===', elm.getAttribute('style'), 'display:none;')
+	ct('===', elm.getAttribute('style'), 'display: none;')
 })
 ct('el-html text nodes', function() {
 	var elm = el('div', 'one', [2, 'three'])
