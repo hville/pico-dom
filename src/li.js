@@ -3,7 +3,7 @@ var creator = require('./util/creator'),
 		element = require('./el/element'),
 		ns = require('./util/namespaces'),
 		ENV = require('./util/root'),
-		ctyp = require('./util/typ'),
+		ctyp = require('./util/ctyp'),
 		store = require('./co/store')
 
 var preset = creator(function(sel, cfg, cnt) {
@@ -24,7 +24,7 @@ module.exports = li
  */
 function List(factory, dKey) {
 	this.dataKey = !dKey ? getIndex
-		: ctyp(dKey) === Function ? dKey
+		: ctyp(dKey, Function) ? dKey
 		: function(v) { return v[dKey] }
 
 	// lookup maps to locate existing component and delete extra ones

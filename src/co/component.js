@@ -1,6 +1,6 @@
 var decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
-		ctyp = require('../util/typ'),
+		ctyp = require('../util/ctyp'),
 		reduce = require('../util/reduce'),
 		store = require('./store')
 
@@ -37,7 +37,7 @@ Component.prototype = {
 				}
 				break
 			case 1:
-				if (ctyp(typ) === Object) reduce(typ, addListener, this)
+				if (ctyp(typ, Object)) reduce(typ, addListener, this)
 				else return handlers[typ]
 		}
 		return Object.keys(handlers)

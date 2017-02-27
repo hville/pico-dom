@@ -1,4 +1,4 @@
-var typ = require('./typ'),
+var ctyp = require('./ctyp'),
 		reduce = require('./reduce')
 
 module.exports = function creator(constructor) {
@@ -12,7 +12,7 @@ module.exports = function creator(constructor) {
 	}
 }
 function argument(arg, options, content) {
-	switch(typ(arg)) {
+	switch(ctyp(arg)) {
 		case Object:
 			merge(options, arg)
 			break
@@ -41,7 +41,7 @@ function assign(tgt, val, key) {
 	return tgt
 }
 function submerge(tgt, src) {
-	switch(typ(src)) {
+	switch(ctyp(src)) {
 		case Array: return flatConcat(tgt || [], src)
 		case Object: return reduce(src, assign, tgt || {})
 		case undefined: return tgt

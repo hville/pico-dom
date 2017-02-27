@@ -1,6 +1,6 @@
 var reduce = require('../util/reduce'),
 		ns = require('../util/namespaces'),
-		typ = require('../util/typ')
+		ctyp = require('../util/ctyp')
 
 module.exports = {
 	attrs: function attrs(elm, val) {
@@ -11,7 +11,7 @@ module.exports = {
 	},
 	style: function props(elm, val) {
 		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html
-		switch (typ(val)) {
+		switch (ctyp(val)) {
 			case String:
 				if (isNS) setAttr(elm, val, 'style')
 				else elm.style.cssText = val

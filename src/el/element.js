@@ -1,6 +1,6 @@
 var ENV = require('../util/root'),
 		NS = require('../util/namespaces'),
-		typ = require('../util/typ'),
+		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
 		text = require('../text')
@@ -16,7 +16,7 @@ var rRE =/[\"\']+/g, ///[\s\"\']+/g,
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var styp = typ(selector)
+	var styp = ctyp(selector)
 
 	var node = styp === ENV.Node ? decorate(selector, options, decorators)
 		: styp === Function ? selector(options)
@@ -26,11 +26,11 @@ module.exports = function element(selector, options, children) {
 		: fromString(selector, options)
 	if (!node) throw Error('invalid selector: ' + typeof selector)
 
-	var childQty = children.length
+	var childQty = children.length,
+			isText = childQty === 1 && ctyp(children[0], String, Number)
+
 	if (childQty) {
-		if (childQty === 1 && typ(children[0]) === String && !node.textContent) {
-			node.textContent = children[0]
-		}
+		if (isText && !node.hasChildNodes()) node.textContent = ''+children[0]
 		else for (var i=0; i<childQty; ++i) {
 			var cnt = getChild(children[i])
 			if (cnt) {
@@ -42,7 +42,7 @@ module.exports = function element(selector, options, children) {
 	return node
 }
 function getChild(itm) {
-	switch (typ(itm)) {
+	switch (ctyp(itm)) {
 		case Function: return getChild(itm())
 		case Number: return text(''+itm)
 		case String: return itm === '' ? null : text(itm)
