@@ -2,7 +2,7 @@ var ENV = require('../env'),
 		NS = require('../namespaces'),
 		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),
-		decorators = require('../decorators')
+		decorators = require('./decorators')
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g

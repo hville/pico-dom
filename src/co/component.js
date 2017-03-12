@@ -1,5 +1,5 @@
 var decorate = require('../util/decorate'),
-		decorators = require('../decorators'),
+		decorators = require('./decorators'),
 		ctyp = require('../util/ctyp'),
 		reduce = require('../util/reduce'),
 		mapEC = require('./mapec')
