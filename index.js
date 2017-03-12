@@ -4,11 +4,9 @@ var ns = require('./src/util/namespaces'),
 		li = require('./src/li'),
 		ENV = require('./src/env')
 
-module.exports = {
-	el: el,
-	co: co,
-	li: li,
-	ns: ns,
-	get window() { return ENV.window },
-	set window(win) { ENV.window = win }
-}
+ENV.el = el
+ENV.co = co
+ENV.li = li
+ENV.ns = ns
+
+module.exports = ENV

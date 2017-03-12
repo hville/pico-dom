@@ -80,10 +80,10 @@ for example, the following are equivalent:
 * the same logic applies for `co` and `li` (`co.svg`, `li.preset`, ...)
 
 
-#### Element Factory
+#### Node Factory
 
 * `var element = el(selector[, ...options][, ...children])`
-* element is a normal `DOM Element`
+* element is a normal `DOM Node` (Element or Text)
 
 arguments  | Type                                    | Example
 :--------  | :---                                    | :----
@@ -95,6 +95,8 @@ arguments  | Type                                    | Example
 `.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
 `children` | `factory`, `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
+Using `#` as a selector will generate a textNode (e.g. `el('#', 'someText')`)
+
 
 #### Component Factory
 
@@ -103,7 +105,8 @@ arguments  | Type                                    | Example
   * `.node` the associated node
   * `.update(...)` the function to trigger changes based on external data
   * `.moveto(parentNode|null[, before])` to move the component.
-  * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `ondata` property set to `updateChildren`. If `ondata` is specified, children must be manually notified.
+  * `.textContent(text)` helper function to efficiently and safely change the node text
+  * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `ondata` property set to `updateChildren`. If `ondata` is specified, children must be manually called.
 
 arguments    | Type                                      | Example
 :--------    | :---                                      | :----

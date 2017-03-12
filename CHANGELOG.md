@@ -16,6 +16,10 @@
   - decorators,
   - namespaces
 TODO change env to window get/set??
+pico.window = window vs pico.setWindow()
+  - allows to use it/share it
+  - getter/setter in pico
+
 
 ## [0.8.0] - 2017-02-26
 ### Changed

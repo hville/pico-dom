@@ -2,11 +2,14 @@ var ENV = require('../env'),
 		NS = require('../util/namespaces'),
 		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators'),
-		text = require('../text')
+		decorators = require('./decorators')
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
+
+function text(string) {
+	return ENV.document.createTextNode(string)
+}
 
 /**
  * Parse a CSS-style selector string and return a new Element

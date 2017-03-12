@@ -1,14 +1,18 @@
-var WIN = typeof window === 'undefined' ? null : window
 var ENV = {
-	document: null,
-	Node: null,
-	get window() { return WIN },
-	set window(win) {
-		WIN = win
-		ENV.document = win && win.document
-		ENV.Node = win && win.Node
-	}
+	get document() { return init().document },
+	get Node() { return init().Node },
+	get window() { return init().window },
+	set window(win) { setWindow(win) }
 }
-ENV.window = WIN
-
+function init() {
+	if (typeof window !== 'undefined') return setWindow(window)
+	throw Error('window must first be defined (global or module property)')
+}
+function setWindow(win) {
+	return Object.defineProperties(ENV, {
+		document: {value: win.document},
+		Node: {value: win.Node},
+		window: {value: win}
+	})
+}
 module.exports = ENV
