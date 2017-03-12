@@ -3,13 +3,13 @@ var reduce = require('../util/reduce'),
 		ctyp = require('../util/ctyp')
 
 module.exports = {
-	attrs: function attrs(elm, val) {
+	attrs: function(elm, val) {
 		return val ? reduce(val, setAttr, elm) : elm
 	},
-	props: function props(elm, val) {
+	props: function(elm, val) {
 		return val ? reduce(val, setProp, elm) : elm
 	},
-	style: function props(elm, val) {
+	style: function(elm, val) {
 		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html
 		switch (ctyp(val)) {
 			case String:
@@ -22,6 +22,13 @@ module.exports = {
 				return elm
 		}
 		throw Error('invalid attribute: style:' + typeof val)
+	},
+	class: function(elm, val) {
+		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html,
+				typ = ctyp(val),
+				txt = typ === String ? val : typ === Array ? val.join(' ') : undefined
+		if (!txt) throw Error('invalid attribute: style:' + typeof val)
+		return isNS ? setAttr(elm, txt, 'class') : setProp(elm, txt, 'className')
 	}
 }
 function setAttr(elm, val, key) {
