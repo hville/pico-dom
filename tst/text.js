@@ -1,7 +1,7 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		tx = require('../src/text'),
-		ENV = require('../src/util/root'),
+		ENV = require('../src/env'),
 		el = require('../src/el')
 
 ENV.window = jsdom().defaultView

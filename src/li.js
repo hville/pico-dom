@@ -2,7 +2,7 @@ var creator = require('./util/creator'),
 		Component = require('./co/component'),
 		element = require('./el/element'),
 		ns = require('./util/namespaces'),
-		ENV = require('./util/root'),
+		ENV = require('./env'),
 		ctyp = require('./util/ctyp'),
 		store = require('./co/store')
 

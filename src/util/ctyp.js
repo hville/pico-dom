@@ -1,4 +1,4 @@
-var ENV = require('./root')
+var ENV = require('../env')
 
 module.exports = function ctyp(t) {
 	var constructor = t == null ? t //eslint-disable-line eqeqeq

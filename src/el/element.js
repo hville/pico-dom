@@ -1,4 +1,4 @@
-var ENV = require('../util/root'),
+var ENV = require('../env'),
 		NS = require('../util/namespaces'),
 		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),

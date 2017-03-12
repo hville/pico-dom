@@ -11,6 +11,11 @@
 - new class decorator
 - component.textcontent
 - security: all text injections through DOM API textContent and nodeValue
+- rethink exports:
+  - Environment|global|root,
+  - decorators,
+  - namespaces
+TODO change env to window get/set??
 
 ## [0.8.0] - 2017-02-26
 ### Changed
