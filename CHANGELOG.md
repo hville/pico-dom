@@ -7,19 +7,18 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-- clarity node decoration rules for existing children (`el(node, ...)`)
-- new class decorator
-- component.textcontent
-- security: all text injections through DOM API textContent and nodeValue
-- rethink exports:
-  - Environment|global|root,
-  - decorators,
-  - namespaces
-TODO change env to window get/set??
-pico.window = window vs pico.setWindow()
-  - allows to use it/share it
-  - getter/setter in pico
 
+## [0.9.0] - 2017-03-12
+### Changed
+- Major API change: `.setWindow(window)` replaced `.window = window` to facilitate re-use for full application testing
+- `ns` renamed to `namespaces` for clarity
+
+### Added
+- `component.textContent(text)` utility to avoid the `node.firstChild.nodeValue` boilerplate
+- new `class` decorator
+
+### Fixed
+- documentation for textNodes and commentNodes
 
 ## [0.8.0] - 2017-02-26
 ### Changed

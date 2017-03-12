@@ -41,25 +41,28 @@ table.moveto(document.body)
 * All ES5 and HTML5 to avoid transpiling and facilitate compatibility
 * no virtual DOM, all operations are done on actual nodes
 * under 3kb gzip, no dependencies
+* all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 
 ### Limitations
 
 * still in early trial phase. proof of concept only
 * currently only available as a common JS module (i.e. `require('pico-dom')`)
 
+
 ### Inspiration
 
-Some ideas taken from `snabbdom` (configurable decorators), `redom` (no virtual dom, lists) and `mithril`.
+Some ideas taken from `snabbdom` (configurable decorators), `redom` (no virtual dom, lists).
 
 
 ## API
 
-### Hyperscript Functions
+* `el`: Hyperscript function to generate a TextNode, HTMLElement, SVGElement or other namespace Element
+* `co`: Hyperscript function to generate a component with custom behavious and lifecycle events
+* `li`: Hyperscript function to generate a list of components derived from an array of values
+* `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
+* `window`: Getter-Setter to optionally set a custom `window` object for testing or server use
 
-Three types of *hyperscript* function
-* `el`: to generate HTML or Namespaced Elements
-* `co`: to generate components with custom behavious and lifecycle events
-* `li`: to generate a list of components derived from an array of values
+### Hyperscript Functions
 
 Functions    | Type                                       | Example
 :--------    | :---                                       | :----
@@ -80,7 +83,7 @@ for example, the following are equivalent:
 * the same logic applies for `co` and `li` (`co.svg`, `li.preset`, ...)
 
 
-#### Node Factory
+#### Element Factory
 
 * `var element = el(selector[, ...options][, ...children])`
 * element is a normal `DOM Node` (Element or Text)
@@ -90,12 +93,15 @@ arguments  | Type                                    | Example
 `selector` | `string`, `factory` or `Node`           | `svg:circle[style=font-size:150%;color:blue]`
 `options`  | `Object` {attrs, props, style, xmlns}   | element's attributes, properties and style
 `.attrs`   | `Object` ...any key-value pair          | `{id: 'myID'}`
+`.class`   | `String | Array`                        | `['.button', customClass]`
 `.props`   | `Object` ...any key-value pair          | `{tabIndex: 2}`
-`.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
 `.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
+`.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
 `children` | `factory`, `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
-Using `#` as a selector will generate a textNode (e.g. `el('#', 'someText')`)
+Using `#` and `!` as a selector will generate a textNode or commentNode:
+* `el('#', 'this is a text node')`
+* `el('!', 'this is a comment node')`
 
 
 #### Component Factory
@@ -117,6 +123,7 @@ arguments    | Type                                      | Example
 `.onmove`    | `(oldParent, newParent) => element`       | `function(o,n) { if (!n) console.log('dismounted') }`
 `.on`        | `Object` ...any key-value pair            | `{click: function() { this.node.textContent = 'clicked' }}`
 
+
 #### List Factory
 
 * `var list = co(selector[, ...options][, ...children])`
@@ -131,17 +138,13 @@ arguments    | Type                                      | Example
     * string example: `{dataKey: 'uid'}`
     * funtion example: `{dataKey: function(v,i) { return v.uid }}`
 
+
 ### Additional utilities
 
-* `text`: to generate a text node (`text(mytext)` is equivalent to `el('#','mytext'`)
-* `ns`: configurable namspaces. `html` and `svg` are already defined, others can be added
-* `setWindow`: configurable global environment to facilitate testing or server generation
-
-Utility      | Type                                      | Example
-:--------    | :---                                      | :----
-`.text`      | `string` => `TextNode`                    | `var textNode = text('mytext')`
-`.ns`        | `Object {prefix: namespace}`              | `ns.svg = 'http://www.w3.org/2000/svg'}`
-`.setWindow` | `window` => `void`                        | eg. `setWindow(jsdom.jsdom().defaultView)`
+Utility       | Type                                  | Example
+:--------     | :---                                  | :----
+`.namespaces` | `Object {prefix: namespace}`          | `namespaces.svg = 'http://www.w3.org/2000/svg'}`
+`.window`     | `Object` configurable global `window` | `window = jsdom.jsdom().defaultView`
 
 
 ## License
