@@ -1,8 +1,8 @@
 var decorate = require('../util/decorate'),
-		decorators = require('./decorators'),
+		decorators = require('../decorators'),
 		ctyp = require('../util/ctyp'),
 		reduce = require('../util/reduce'),
-		store = require('./store')
+		mapEC = require('./mapec')
 
 module.exports = Component
 
@@ -15,7 +15,7 @@ function Component(node, config) {
 	this.node = node
 	this._eventHandlers = {}
 	decorate(this, config, decorators)
-	store(node, this)
+	mapEC(node, this)
 	if (this.oninit) this.oninit(config)
 }
 Component.prototype = {
@@ -76,7 +76,7 @@ function addListener(ctx, val, key) {
 function updateChildren() {
 	var ptr = this.node.firstChild
 	while (ptr) {
-		var extra = store(ptr)
+		var extra = mapEC(ptr)
 		if (extra) {
 			extra.ondata.apply(extra, arguments)
 			ptr = (extra.footer || ptr).nextSibling

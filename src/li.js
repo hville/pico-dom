@@ -1,10 +1,10 @@
 var creator = require('./util/creator'),
 		Component = require('./co/component'),
 		element = require('./el/element'),
-		ns = require('./util/namespaces'),
+		ns = require('./namespaces'),
 		ENV = require('./env'),
 		ctyp = require('./util/ctyp'),
-		store = require('./co/store')
+		mapEC = require('./co/mapec')
 
 var preset = creator(function(sel, cfg, cnt) {
 	var ref = element(sel, cfg, cnt)
@@ -35,8 +35,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = ENV.document.createComment('^')
 	this.footer = ENV.document.createComment('$')
-	store(this.header, this)
-	store(this.footer, this)
+	mapEC(this.header, this)
+	mapEC(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -110,18 +110,18 @@ function cloneTree(model) {
 	else if (model.factory) {
 		clone = new List(model.factory, model.dataKey)
 		modelC = null
-		store(clone.footer, clone)
-		store(clone.header, clone)
+		mapEC(clone.footer, clone)
+		mapEC(clone.header, clone)
 	}
 	else {
 		clone = new Component(model.node.cloneNode(false), model)
 		modelC = model.node.firstChild
-		store(clone.node, clone)
+		mapEC(clone.node, clone)
 	}
 
 	// recursively clone children
 	while(modelC) {
-		modelC = store(modelC) || modelC
+		modelC = mapEC(modelC) || modelC
 		var parent = clone.node || clone,
 				cloneC = cloneTree(modelC)
 		if (cloneC.nodeType) {

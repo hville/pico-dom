@@ -1,6 +1,6 @@
 var creator = require('./util/creator'),
 		element = require('./el/element'),
-		ns = require('./util/namespaces'),
+		ns = require('./namespaces'),
 		Component = require('./co/component')
 
 var preset = creator(function(sel, cfg, cnt) {
