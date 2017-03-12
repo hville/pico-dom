@@ -8,6 +8,9 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 - clarity node decoration rules for existing children (`el(node, ...)`)
+- new class decorator
+- component.textcontent
+- security: all text injections through DOM API textContent and nodeValue
 
 ## [0.8.0] - 2017-02-26
 ### Changed
