@@ -63,12 +63,10 @@ Component.prototype = {
 	},
 	get textContent() { return this.node.textContent },
 	set textContent(text) {
-		var node = this.node
-		if (node.textContent !== text) {
-			var child = node.firstChild
-			if (child && !child.nextSibling) child.nodeValue = text
-			else node.textContent = text
-		}
+		var node = this.node,
+				child = node.firstChild
+		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
+		else node.textContent = text
 	}
 }
 function addListener(ctx, val, key) {
