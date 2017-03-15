@@ -24,17 +24,17 @@ ct('list-simple', function() {
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
 			el = comp.node
-	comp.ondata([1,2,3])
+	comp.update([1,2,3])
 	ct('===', concatData(el), '^123$')
-	comp.ondata([4,3,1,2])
+	comp.update([4,3,1,2])
 	ct('===', concatData(el), '^4312$')
-	comp.ondata([1,5,3])
+	comp.update([1,5,3])
 	ct('===', concatData(el), '^153$')
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis),
 			el = comp.node
-	comp.ondata([1,2,3])
+	comp.update([1,2,3])
 	ct('===', concatData(el), '^123$^123$^123$')
 })
 ct('list-complex', function() {
@@ -48,7 +48,7 @@ ct('list-complex', function() {
 	})
 	var coObj = co('tr#myid0', {}, liFac),
 			coEl = coObj.node
-	coObj.ondata([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
+	coObj.update([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
 	ct('===', concatData(coEl), '^onetwotwe$')
 })
 ct('sequence in nested lists', function() {
@@ -60,7 +60,7 @@ ct('sequence in nested lists', function() {
 		li('p', li('span', {ondata: edit}))
 	)
 	var matEl = matCo.node
-	matCo.ondata([[11,12,13],[21,22,23],[31,32,33]])
+	matCo.update([[11,12,13],[21,22,23],[31,32,33]])
 	ct('===', matEl.children.length, 3)
 	ct('===', matEl.children[0].children.length, 3)
 	ct('===', matEl.children[1].children.length, 3)

@@ -109,10 +109,11 @@ Using `#` and `!` as a selector will generate a textNode or commentNode:
 * `var component = co(selector[, ...options][, ...children])`
 * a component as an element and associated behaviours
   * `.node` the associated node
-  * `.update(...)` the function to trigger changes based on external data
+  * `.update(...) => this` the function to trigger changes based on external data
   * `.moveto(parentNode|null[, before])` to move the component.
   * `.textContent(text)` helper function to efficiently and safely change the node text
   * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `ondata` property set to `updateChildren`. If `ondata` is specified, children must be manually called.
+  * `.clone() => new instance`
 
 arguments    | Type                                      | Example
 :--------    | :---                                      | :----
@@ -128,7 +129,7 @@ arguments    | Type                                      | Example
 
 * `var list = co(selector[, ...options][, ...children])`
 * a list is just a component that gets repeated on update to match a given array of values
-* `list.update(array)` triggers multiple components `component.update(value, index, array`
+* `list.update(array) => this` triggers multiple components `component.update(value, index, array`
 * lists can be nested or stacked
   * nested: `co('body', li('tr', li('td', {ondata: function(v) { td.textContent = v }})))`
   * stacked: `co('tr', li('td', cellType1), li('td', cellType2))`
@@ -137,7 +138,7 @@ arguments    | Type                                      | Example
   * if a `string` or a `function` is provided list items will be swapped to match the new data ordering
     * string example: `{dataKey: 'uid'}`
     * funtion example: `{dataKey: function(v,i) { return v.uid }}`
-
+* `.clone() => new instance`
 
 ### Additional utilities
 

@@ -25,7 +25,7 @@ ct('co - simple', function() {
 ct('co - full', function() {
 	var c = bodyTdInputFac({props: {id: 'xyz'}}),
 			el = c.node
-	c.ondata('abc')
+	c.update('abc')
 	// initial element
 	ct('===', el.nodeName.toLowerCase(), 'input')
 	ct('===', el.classList.contains('tdinput'), true)
@@ -46,7 +46,7 @@ var cell = co('td', [
 ])
 ct('co - mixed content', function() {
 	var el = cell.node
-	cell.ondata('def')
+	cell.update('def')
 	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)
 	//console.log(typ)
 	// initial element

@@ -4,11 +4,15 @@ var creator = require('./util/creator'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
 		ctyp = require('./util/ctyp'),
-		mapEC = require('./co/mapec')
+		mapEC = require('./co/mapec'),
+		cloneChildren = require('./util/clone-child')
 
 var preset = creator(function(sel, cfg, cnt) {
 	var ref = element(sel, cfg, cnt)
-	return new List(function() { return new Component(cloneTree(ref), cfg) }, cfg.dataKey)
+	function factory() {
+		return new Component(cloneChildren(ref.cloneNode(false), ref.firstChild), cfg)
+	}
+	return new List(factory, cfg.dataKey)
 })
 
 var li = preset()
@@ -40,6 +44,12 @@ function List(factory, dKey) {
 }
 List.prototype = {
 	constructor: List,
+	clone: function clone() {
+		var newlist = new List(this.factory, this.dataKey)
+		mapEC(newlist.footer, newlist)
+		mapEC(newlist.header, newlist)
+		return newlist
+	},
 	moveto: function moveto(parent, before) {
 		var item = this.footer,
 				head = this.header
@@ -60,7 +70,7 @@ List.prototype = {
 		if (head !== before) before = parent.insertBefore(head, before)
 		return before //last insertedChild || first fragmentElement
 	},
-	ondata: function ondata(arr) {
+	update: function update(arr) {
 		var mapKC = this.mapKC,
 				mapNK = this.mapNK,
 				getK = this.dataKey,
@@ -93,49 +103,9 @@ List.prototype = {
 			drop = before
 		}
 
-		// return last inserted item
-		return foot
+		return this
 	}
 }
 function getIndex(v,i) {
 	return i
-}
-function cloneTree(model) {
-	var clone, modelC
-	// clone the model as it is: Element, Component or List
-	if (model.nodeType) {
-		clone = model.cloneNode(false)
-		modelC = model.firstChild
-	}
-	else if (model.factory) {
-		clone = new List(model.factory, model.dataKey)
-		modelC = null
-		mapEC(clone.footer, clone)
-		mapEC(clone.header, clone)
-	}
-	else {
-		clone = new Component(model.node.cloneNode(false), model)
-		modelC = model.node.firstChild
-		mapEC(clone.node, clone)
-	}
-
-	// recursively clone children
-	while(modelC) {
-		modelC = mapEC(modelC) || modelC
-		var parent = clone.node || clone,
-				cloneC = cloneTree(modelC)
-		if (cloneC.nodeType) {
-			parent.appendChild(cloneC)
-			modelC = modelC.nextSibling
-		}
-		else if (cloneC.factory) {
-			cloneC.moveto(parent)
-			modelC = modelC.footer.nextSibling
-		}
-		else {
-			cloneC.moveto(parent)
-			modelC = modelC.node.nextSibling
-		}
-	}
-	return clone
 }

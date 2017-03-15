@@ -8,6 +8,15 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
+## [0.10.0] - 2017-03-15
+### Added
+- `component.clone() => newComponent`
+- `list.clone() => newList`
+
+### Fixed
+- `component.update(...) => this`
+- `list.update(...) => this`
+
 ## [0.9.0] - 2017-03-12
 ### Changed
 - Major API change: `.setWindow(window)` replaced `.window = window` to facilitate re-use for full application testing
