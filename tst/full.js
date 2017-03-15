@@ -3,7 +3,8 @@ var jsdom = require('jsdom').jsdom,
 		pico = require('../')
 
 var li = pico.li,
-		co = pico.co
+		co = pico.co,
+		el = pico.el
 
 pico.window = jsdom().defaultView
 
@@ -24,19 +25,19 @@ ct('list-simple', function() {
 	var l0 = lis[0]
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
-			el = comp.node
+			elm = comp.node
 	comp.update([1,2,3])
-	ct('===', concatData(el), '^123$')
+	ct('===', concatData(elm), '^123$')
 	comp.update([4,3,1,2])
-	ct('===', concatData(el), '^4312$')
+	ct('===', concatData(elm), '^4312$')
 	comp.update([1,5,3])
-	ct('===', concatData(el), '^153$')
+	ct('===', concatData(elm), '^153$')
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis),
-			el = comp.node
+			elm = comp.node
 	comp.update([1,2,3])
-	ct('===', concatData(el), '^123$^123$^123$')
+	ct('===', concatData(elm), '^123$^123$^123$')
 })
 ct('list-complex', function() {
 	//list update through parent update
@@ -66,4 +67,13 @@ ct('sequence in nested lists', function() {
 	ct('===', matEl.children[0].children.length, 3)
 	ct('===', matEl.children[1].children.length, 3)
 	ct('===', matEl.children[2].children.length, 3)
+})
+ct('list-without component', function() {
+	var comp = co('div', li('div', el('h0', 0), el('h1', 1)))
+	comp.update([1,2,3])
+	ct('===', concatData(comp.node), '^010101$')
+})
+ct('list-without parent', function() {
+	var comp = co('div', li('div', el('h0', 0), el('h1', 1)).update([1,2,3]))
+	ct('===', concatData(comp.node), '^010101$')
 })

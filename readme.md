@@ -111,7 +111,7 @@ Using `#` and `!` as a selector will generate a textNode or commentNode:
   * `.node` the associated node
   * `.update(...) => this` the function to trigger changes based on external data
   * `.moveto(parentNode|null[, before])` to move the component.
-  * `.textContent(text)` helper function to efficiently and safely change the node text
+  * `.textContent` helper getter/setter to efficiently and safely change the node text
   * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `ondata` property set to `updateChildren`. If `ondata` is specified, children must be manually called.
   * `.clone() => new instance`
 

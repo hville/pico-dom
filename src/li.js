@@ -71,6 +71,7 @@ List.prototype = {
 		return before //last insertedChild || first fragmentElement
 	},
 	update: function update(arr) {
+		if (!this.header.parentNode) this.moveto(ENV.document.createDocumentFragment())
 		var mapKC = this.mapKC,
 				mapNK = this.mapNK,
 				getK = this.dataKey,

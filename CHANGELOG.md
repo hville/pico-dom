@@ -7,8 +7,9 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+TODO: list can't be updated on declaration since parent does not exits (fragment?)
 
-## [0.10.0] - 2017-03-15
+## [0.11.0] - 2017-03-15
 ### Added
 - `component.clone() => newComponent`
 - `list.clone() => newList`
@@ -16,6 +17,8 @@
 ### Fixed
 - `component.update(...) => this`
 - `list.update(...) => this`
+- documentation for `component.textContent`
+- document fragment to update unmounted list
 
 ## [0.9.0] - 2017-03-12
 ### Changed
