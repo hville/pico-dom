@@ -70,8 +70,7 @@ Component.prototype = {
 		if (this.onmove) this.onmove(oldParent, parent)
 		return node
 	},
-	get textContent() { return this.node.textContent },
-	set textContent(text) {
+	setText: function setText(text) {
 		var node = this.node,
 				child = node.firstChild
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
