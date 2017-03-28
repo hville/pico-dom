@@ -1,9 +1,9 @@
 var decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
-		ctyp = require('../util/ctyp'),
-		reduce = require('../util/reduce'),
 		mapEC = require('../env').extra,
 		cloneChildren = require('../util/clone-child')
+
+var componentEventOptions = {capture: true, passive:true}
 
 module.exports = Component
 
@@ -30,26 +30,13 @@ Component.prototype = {
 		return cloneCo
 	},
 	// to add event listeners binded to this context
-	on: function on(typ, fcn) {
-		var el = this.node,
-				handlers = this._eventHandlers,
-				options = {capture: true, passive:true}
-		switch (arguments.length) {
-			case 2:
-				if (!fcn) {
-					delete handlers[typ]
-					el.removeEventListener(typ, this, options)
-				}
-				else {
-					handlers[typ] = fcn
-					el.addEventListener(typ, this, options)
-				}
-				break
-			case 1:
-				if (ctyp(typ, Object)) reduce(typ, addListener, this)
-				else return handlers[typ]
-		}
-		return Object.keys(handlers)
+	setEvent: function setEvent(name, handler) {
+		this._eventHandlers[name] = handler
+		this.node.addEventListener(name, this, componentEventOptions)
+	},
+	delEvent: function delEvent(name) {
+		delete this._eventHandlers[name]
+		this.node.removeEventListener(name, this, componentEventOptions)
 	},
 	// standard property called by window on event, binded to co
 	handleEvent: function handleEvent(evt) {
@@ -76,10 +63,6 @@ Component.prototype = {
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
 		else node.textContent = text
 	}
-}
-function addListener(ctx, val, key) {
-	ctx.on(key, val)
-	return this
 }
 function updateChildren() {
 	var ptr = this.node.firstChild

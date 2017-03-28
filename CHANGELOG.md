@@ -7,14 +7,13 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-
 TODO: Experiment with less magic
-* replace on(?,?) with events.set()|get()
 
 ## [0.12.0] - 2017-03-28
 ### Changed
 - replaced `component.textContent` getter/setter with `component.setText()`
 - simplified internal component map
+- simplified internal event handling `on(...)` to `setEvent(n,f)` and `delEvent(n)`
 
 ## [0.11.0] - 2017-03-15
 ### Added

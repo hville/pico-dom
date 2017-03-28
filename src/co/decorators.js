@@ -1,3 +1,5 @@
+var reduce = require('../util/reduce')
+
 module.exports = {
 	oninit: lifecycle,
 	ondata: lifecycle,
@@ -10,6 +12,10 @@ function lifecycle(ctx, fcn, key) {
 	return ctx
 }
 function addEventListeners(ctx, obj) {
-	ctx.on(obj)
+	reduce(obj, setEvt, ctx)
+	return ctx
+}
+function setEvt(ctx, fcn, key) {
+	ctx.setEvent(key, fcn)
 	return ctx
 }
