@@ -45,9 +45,12 @@ ct('el-html text content', function() {
 	ct('===', elm.children.length, 0)
 })
 ct('el-html falsy children', function() {
-	var elm = el('div', '', 0, null, [undefined, 0])
-	ct('===', elm.childNodes.length, 2)
-	ct('===', elm.childNodes[1].textContent, '0')
+	var elm0 = el('div', '', 0, null, [undefined, 0])
+	ct('===', elm0.childNodes.length, 3)
+	ct('===', elm0.childNodes[1].textContent, '0')
+	var elm1 = el('div', '', null, [undefined])
+	ct('===', elm1.childNodes.length, 1)
+	ct('===', elm1.textContent, '')
 })
 ct('el-mixed nested namespace', function() {
 	var elm = el('div', el.svg('svg'), el('p', 'text'))

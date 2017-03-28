@@ -1,9 +1,7 @@
 var ENV = require('../env'),
 		NS = require('../namespaces'),
-		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators'),
-		text = require('../text')
+		decorators = require('./decorators')
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
@@ -16,33 +14,18 @@ var rRE =/[\"\']+/g, ///[\s\"\']+/g,
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var node = getNode(selector, options),
-			childQty = children.length
-	if (childQty) {
-		if (childQty === 1 && typeof children[0] === 'string' && !node.hasChildNodes()) {
-			node.textContent = ''+children[0]
-		}
-		else for (var i=0; i<childQty; ++i) {
-			var cnt = getChild(children[i])
-			if (cnt) {
-				if (cnt.moveto) cnt.moveto(node)
-				else node.appendChild(cnt)
-			}
-		}
-	}
+	var node = getNode(selector, options)
+	children.forEach(addChild, node)
 	return node
+}
+function addChild(child) {
+	if (child.moveto) child.moveto(this)
+	else this.appendChild(child)
 }
 function getNode(selector, options) {
 	if (typeof selector === 'string') return fromString(selector, options||{attrs:{}})
 	if (selector.nodeType) return decorate(selector, options, decorators)
 	throw Error('invalid selector: ' + typeof selector)
-}
-function getChild(itm) {
-	switch (ctyp(itm)) {
-		case Number: return text(''+itm)
-		case String: return itm === '' ? null : text(itm)
-		default: return itm
-	}
 }
 function fromString(selector, options) {
 	var matches = selector.replace(rRE, '').match(mRE)

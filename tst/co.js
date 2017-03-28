@@ -39,12 +39,11 @@ ct('co - full', function() {
 	ct('===', el.value, 'click')
 	ct('===', el.tabIndex, 11)
 })
-
-var cell = co('td', [
-	bodyTdInputFac(),
-	bodyTdInputFac()
-])
 ct('co - mixed content', function() {
+	var cell = co('td', [
+		bodyTdInputFac(),
+		bodyTdInputFac()
+	])
 	var el = cell.node
 	cell.update('def')
 	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)

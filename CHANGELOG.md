@@ -7,7 +7,7 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-TODO: Experiment with less magic
+TODO: Reduce ctyp magic, clarify moveTo arguments, ...
 
 ## [0.12.0] - 2017-03-28
 ### Changed
