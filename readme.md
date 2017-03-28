@@ -93,7 +93,7 @@ arguments  | Type                                    | Example
 `selector` | `string`, `factory` or `Node`           | `svg:circle[style=font-size:150%;color:blue]`
 `options`  | `Object` {attrs, props, style, xmlns}   | element's attributes, properties and style
 `.attrs`   | `Object` ...any key-value pair          | `{id: 'myID'}`
-`.class`   | `String | Array`                        | `['.button', customClass]`
+`.class`   | `String`                                | `'button customClass'`
 `.props`   | `Object` ...any key-value pair          | `{tabIndex: 2}`
 `.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
 `.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`

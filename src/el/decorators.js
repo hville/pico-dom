@@ -23,11 +23,8 @@ module.exports = {
 		}
 		throw Error('invalid attribute: style:' + typeof val)
 	},
-	class: function(elm, val, key) {
-		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html,
-				typ = ctyp(val),
-				txt = typ === String ? val : typ === Array ? val.join(' ') : undefined
-		if (!txt) throw Error('invalid attribute: style:' + typeof val)
+	class: function(elm, txt, key) {
+		var isNS = !elm.namespaceURI || elm.namespaceURI === ns.html
 		return isNS ? setAttr(elm, txt, key) : setProp(elm, txt, 'className')
 	}
 }
