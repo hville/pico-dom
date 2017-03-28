@@ -41,8 +41,8 @@ ct('co - full', function() {
 })
 
 var cell = co('td', [
-	bodyTdInputFac,
-	bodyTdInputFac
+	bodyTdInputFac(),
+	bodyTdInputFac()
 ])
 ct('co - mixed content', function() {
 	var el = cell.node

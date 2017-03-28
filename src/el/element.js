@@ -13,7 +13,7 @@ function text(string) {
 
 /**
  * Parse a CSS-style selector string and return a new Element
- * @param {Object|Function|String} selector - css like selector string
+ * @param {Object|String} selector - css like selector string
  * @param {Object} [options] - The existing definition to be augmented
  * @param {Array} [children] - Element children Nodes,Factory,Text
  * @returns {Object} - The parsed element definition [sel,att]
@@ -22,7 +22,6 @@ module.exports = function element(selector, options, children) {
 	var styp = ctyp(selector)
 
 	var node = styp === ENV.Node ? decorate(selector, options, decorators)
-		: styp === Function ? selector(options)
 		: styp !== String ? null
 		: selector === '#' ? text('')
 		: selector === '!' ? ENV.document.createComment('')
@@ -46,7 +45,6 @@ module.exports = function element(selector, options, children) {
 }
 function getChild(itm) {
 	switch (ctyp(itm)) {
-		case Function: return getChild(itm())
 		case Number: return text(''+itm)
 		case String: return itm === '' ? null : text(itm)
 		default: return itm

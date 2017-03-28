@@ -90,14 +90,14 @@ for example, the following are equivalent:
 
 arguments  | Type                                    | Example
 :--------  | :---                                    | :----
-`selector` | `string`, `factory` or `Node`           | `svg:circle[style=font-size:150%;color:blue]`
+`selector` | `string`, or `Node`                     | `svg:circle[style=font-size:150%;color:blue]`
 `options`  | `Object` {attrs, props, style, xmlns}   | element's attributes, properties and style
 `.attrs`   | `Object` ...any key-value pair          | `{id: 'myID'}`
 `.class`   | `String`                                | `'button customClass'`
 `.props`   | `Object` ...any key-value pair          | `{tabIndex: 2}`
 `.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
 `.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
-`children` | `factory`, `string`, `Node` or `Array`  | element child Nodes, Components of Lists
+`children` | `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
 Other decorators can be added manually (eg. style, class, dataSet, ...)
 
@@ -119,7 +119,7 @@ Using `#` and `!` as a selector will generate a textNode or commentNode:
 
 arguments    | Type                                      | Example
 :--------    | :---                                      | :----
-`selector`   | `string`, `factory` or `Node`             | same as for `el()`
+`selector`   | `string` or `Node`                        | same as for `el()`
 `options`    | `Object` {...lifecycle, on}               | same as for `el()` with additional options
 `.oninit`    | `options => void`                         | `function() { this.moveto(document.body) }`
 `.ondata`    | `(...any) => element`                     | `function(v) { this.node.textContent = v }`
