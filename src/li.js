@@ -3,7 +3,6 @@ var creator = require('./util/creator'),
 		element = require('./el/element'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
-		ctyp = require('./util/ctyp'),
 		cloneChildren = require('./util/clone-child')
 
 var mapEC = ENV.extra
@@ -29,7 +28,7 @@ module.exports = li
  */
 function List(factory, dKey) {
 	this.dataKey = !dKey ? getIndex
-		: ctyp(dKey, Function) ? dKey
+		: typeof dKey === 'function' ? dKey
 		: function(v) { return v[dKey] }
 
 	// lookup maps to locate existing component and delete extra ones
