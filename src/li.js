@@ -51,6 +51,12 @@ List.prototype = {
 		mapEC.set(newlist.header, newlist)
 		return newlist
 	},
+	/**
+	* @function moveto
+	* @param  {Object} parent parentNode
+	* @param  {Object} [before] nextSibling
+	* @return {Object} header
+	*/
 	moveto: function moveto(parent, before) {
 		var item = this.footer,
 				head = this.header
