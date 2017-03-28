@@ -2,7 +2,7 @@
 
 # pico-dom
 
-*minimalist hyperscript-based DOM tree **element**, **component** and **list** functions with svg, namespace and W3 selector support*
+*minimalist hyperscript-based DOM tree **element**, **component** and **list** functions with svg, namespace and W3 selector support, all in 2kb gzip, no dependencies*
 
 • [Example](#example) • [Features](#features) • [API](#api) • [License](#license)
 

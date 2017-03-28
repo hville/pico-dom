@@ -46,10 +46,7 @@ function List(factory, dKey) {
 List.prototype = {
 	constructor: List,
 	clone: function clone() {
-		var newlist = new List(this.factory, this.dataKey)
-		mapEC.set(newlist.footer, newlist)
-		mapEC.set(newlist.header, newlist)
-		return newlist
+		return new List(this.factory, this.dataKey)
 	},
 	/**
 	* @function moveto

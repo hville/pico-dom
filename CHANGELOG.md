@@ -9,7 +9,7 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 TODO: Reduce ctyp magic, clarify moveTo arguments, ...
 
-## [0.12.0] - 2017-03-28
+## [0.13.0] - 2017-03-28
 ### Changed
 - replaced `component.textContent` getter/setter with `component.setText()`
 - simplified internal component map
