@@ -4,7 +4,8 @@ var creator = require('./util/creator'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
 		cloneChildren = require('./util/clone-child'),
-		comment = require('./comment')
+		comment = require('./comment'),
+		fragment = require('./fragment')
 
 var mapEC = ENV.extra
 
@@ -75,7 +76,7 @@ List.prototype = {
 		return before //last insertedChild || first fragmentElement
 	},
 	update: function update(arr) {
-		if (!this.header.parentNode) this.moveto(ENV.document.createDocumentFragment())
+		if (!this.header.parentNode) this.moveto(fragment())
 		var mapKC = this.mapKC,
 				mapNK = this.mapNK,
 				getK = this.dataKey,
