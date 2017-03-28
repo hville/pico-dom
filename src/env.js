@@ -1,6 +1,5 @@
 var ENV = {
 	get document() { return init().document },
-	get Node() { return init().Node },
 	get window() { return init().window },
 	set window(win) { setWindow(win) },
 	extra: new WeakMap()
@@ -12,7 +11,6 @@ function init() {
 function setWindow(win) {
 	return Object.defineProperties(ENV, {
 		document: {value: win.document},
-		Node: {value: win.Node},
 		window: {value: win}
 	})
 }

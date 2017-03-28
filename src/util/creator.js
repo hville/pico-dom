@@ -1,6 +1,5 @@
 var reduce = require('./reduce'),
-		text = require('../text'),
-		ENV = require('../env')
+		text = require('../text')
 
 module.exports = function creator(constructor) {
 	return function create(defaults) {
@@ -56,6 +55,5 @@ function submerge(tgt, src) {
 }
 function ctyp(t) {
 	return t == null ? t //eslint-disable-line eqeqeq
-		: (t.nodeName && t.nodeType && t.cloneNode) ? ENV.Node
 		: t.constructor || Object
 }
