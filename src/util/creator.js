@@ -21,6 +21,9 @@ function argument(arg, options, content) {
 			break
 		case null: case undefined:
 			break
+		case Number:
+			content.push(''+arg)
+			break
 		default:
 			content.push(arg)
 			break

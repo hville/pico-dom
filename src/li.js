@@ -3,7 +3,8 @@ var creator = require('./util/creator'),
 		element = require('./el/element'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
-		cloneChildren = require('./util/clone-child')
+		cloneChildren = require('./util/clone-child'),
+		comment = require('./comment')
 
 var mapEC = ENV.extra
 
@@ -37,8 +38,8 @@ function List(factory, dKey) {
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
-	this.header = ENV.document.createComment('^')
-	this.footer = ENV.document.createComment('$')
+	this.header = comment('^')
+	this.footer = comment('$')
 	mapEC.set(this.header, this)
 	mapEC.set(this.footer, this)
 }

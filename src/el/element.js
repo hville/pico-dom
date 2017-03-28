@@ -2,14 +2,11 @@ var ENV = require('../env'),
 		NS = require('../namespaces'),
 		ctyp = require('../util/ctyp'),
 		decorate = require('../util/decorate'),
-		decorators = require('./decorators')
+		decorators = require('./decorators'),
+		text = require('../text')
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
-
-function text(string) {
-	return ENV.document.createTextNode(string)
-}
 
 /**
  * Parse a CSS-style selector string and return a new Element
@@ -19,20 +16,12 @@ function text(string) {
  * @returns {Object} - The parsed element definition [sel,att]
  */
 module.exports = function element(selector, options, children) {
-	var styp = ctyp(selector)
-
-	var node = styp === ENV.Node ? decorate(selector, options, decorators)
-		: styp !== String ? null
-		: selector === '#' ? text('')
-		: selector === '!' ? ENV.document.createComment('')
-		: fromString(selector, options)
-	if (!node) throw Error('invalid selector: ' + typeof selector)
-
-	var childQty = children.length,
-			isText = childQty === 1 && ctyp(children[0], String, Number)
-
+	var node = getNode(selector, options),
+			childQty = children.length
 	if (childQty) {
-		if (isText && !node.hasChildNodes()) node.textContent = ''+children[0]
+		if (childQty === 1 && typeof children[0] === 'string' && !node.hasChildNodes()) {
+			node.textContent = ''+children[0]
+		}
 		else for (var i=0; i<childQty; ++i) {
 			var cnt = getChild(children[i])
 			if (cnt) {
@@ -42,6 +31,11 @@ module.exports = function element(selector, options, children) {
 		}
 	}
 	return node
+}
+function getNode(selector, options) {
+	if (typeof selector === 'string') return fromString(selector, options||{attrs:{}})
+	if (selector.nodeType) return decorate(selector, options, decorators)
+	throw Error('invalid selector: ' + typeof selector)
 }
 function getChild(itm) {
 	switch (ctyp(itm)) {
@@ -53,8 +47,7 @@ function getChild(itm) {
 function fromString(selector, options) {
 	var matches = selector.replace(rRE, '').match(mRE)
 	if (!matches) throw Error('invalid selector: '+selector)
-	if (!options) options = {attrs:{}}
-	else if (!options.attrs) options.attrs = {}
+	if (!options.attrs) options.attrs = {}
 	matches.reduce(parse, options)
 	var doc = ENV.document,
 			tag = options.tagName || 'div',

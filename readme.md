@@ -69,6 +69,9 @@ Functions    | Type                                       | Example
 `.el`        | `(selector[, ...elConfig])` => `Element`   | `el('p', {style: {color:'blue'}}, '1'))`
 `.co`        | `(selector[, ...coConfig])` => `Component` | `co('p', {ondata: setText}))`
 `.li`        | `(selector[, ...liConfig])` => `List`      | `li('li', {ondata: setIndex}))`
+`.cm`        | `(text)` => `CommentNode`                  |
+`.tx`        | `(text)` => `TextNode`                     |
+
 only the selector is required, remaining arguments can be in any order
 
 each *hyperscript* function has 2 additional properties:
@@ -100,11 +103,6 @@ arguments  | Type                                    | Example
 `children` | `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
 Other decorators can be added manually (eg. style, class, dataSet, ...)
-
-Using `#` and `!` as a selector will generate a textNode or commentNode:
-* `el('#', 'this is a text node')`
-* `el('!', 'this is a comment node')`
-
 
 #### Component Factory
 
