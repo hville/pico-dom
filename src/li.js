@@ -4,8 +4,9 @@ var creator = require('./util/creator'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
 		ctyp = require('./util/ctyp'),
-		mapEC = require('./co/mapec'),
 		cloneChildren = require('./util/clone-child')
+
+var mapEC = ENV.extra
 
 var preset = creator(function(sel, cfg, cnt) {
 	var ref = element(sel, cfg, cnt)
@@ -39,15 +40,15 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = ENV.document.createComment('^')
 	this.footer = ENV.document.createComment('$')
-	mapEC(this.header, this)
-	mapEC(this.footer, this)
+	mapEC.set(this.header, this)
+	mapEC.set(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
 	clone: function clone() {
 		var newlist = new List(this.factory, this.dataKey)
-		mapEC(newlist.footer, newlist)
-		mapEC(newlist.header, newlist)
+		mapEC.set(newlist.footer, newlist)
+		mapEC.set(newlist.header, newlist)
 		return newlist
 	},
 	moveto: function moveto(parent, before) {

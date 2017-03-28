@@ -7,7 +7,9 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-TODO: list can't be updated on declaration since parent does not exits (fragment?)
+TODO: Experiment with less magic
+* replace on(?,?) with events.set()|get()
+* replace textContent getter|setter with setText()
 
 ## [0.11.0] - 2017-03-15
 ### Added

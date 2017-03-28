@@ -2,11 +2,12 @@ var ENV = {
 	get document() { return init().document },
 	get Node() { return init().Node },
 	get window() { return init().window },
-	set window(win) { setWindow(win) }
+	set window(win) { setWindow(win) },
+	extra: new WeakMap()
 }
 function init() {
 	if (typeof window !== 'undefined') return setWindow(window)
-	throw Error('window must first be defined (global or module property)')
+	throw Error('undefined window global (global or module property)')
 }
 function setWindow(win) {
 	return Object.defineProperties(ENV, {

@@ -2,7 +2,7 @@ var decorate = require('../util/decorate'),
 		decorators = require('./decorators'),
 		ctyp = require('../util/ctyp'),
 		reduce = require('../util/reduce'),
-		mapEC = require('./mapec'),
+		mapEC = require('../env').extra,
 		cloneChildren = require('../util/clone-child')
 
 module.exports = Component
@@ -16,7 +16,7 @@ function Component(node, config) {
 	this.node = node
 	this._eventHandlers = {}
 	decorate(this, config, decorators)
-	mapEC(node, this)
+	mapEC.set(node, this)
 	if (this.oninit) this.oninit(config)
 }
 Component.prototype = {
@@ -26,7 +26,8 @@ Component.prototype = {
 				targetNode = sourceNode.cloneNode(false),
 				cloneCo = new Component(targetNode, this)
 		cloneChildren(targetNode, sourceNode.firstChild)
-		return mapEC(targetNode, cloneCo)
+		mapEC.set(targetNode, cloneCo)
+		return cloneCo
 	},
 	// to add event listeners binded to this context
 	on: function on(typ, fcn) {
@@ -84,7 +85,7 @@ function addListener(ctx, val, key) {
 function updateChildren() {
 	var ptr = this.node.firstChild
 	while (ptr) {
-		var extra = mapEC(ptr)
+		var extra = mapEC.get(ptr)
 		if (extra) {
 			extra.update.apply(extra, arguments)
 			ptr = (extra.footer || ptr).nextSibling
