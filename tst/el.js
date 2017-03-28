@@ -122,12 +122,12 @@ ct('el-element namespace', function() {
 ct('el-styles', function() { //font-weight: bold; color: red; font-size:150%;
 	var el0 = el.svg('circle[style=font-size:150%;color:blue;]'),
 			el1 = el('svg:circle[style=font-size:150%;color:blue]'),
-			el2 = el.svg('circle', {style: {'font-size':'150%', color:'blue'}}),
-			el3 = el('div', {style: {'font-size':'150%', color:'blue'}})
+			el2 = el.svg('circle', {attrs: {style: 'font-size:150%; color:blue'}}),
+			el3 = el('div', {attrs: {style: 'font-size:150%; color:blue'}})
 	ct('===', el0.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
 	ct('===', el1.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue')
-	ct('===', el2.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
-	ct('===', el3.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue;')
+	ct('===', el2.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue')
+	ct('===', el3.getAttribute('style').replace(/\s/g, ''), 'font-size:150%;color:blue')
 })
 ct.skip('el-attribute namespace, ie: xmlns:xlink', function() {
 	var el0 = el.svg('circle[xmlns:xlink="http://www.w3.org/1999/xlink"]'),
