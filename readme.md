@@ -99,6 +99,8 @@ arguments  | Type                                    | Example
 `.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
 `children` | `factory`, `string`, `Node` or `Array`  | element child Nodes, Components of Lists
 
+Other decorators can be added manually (eg. style, class, dataSet, ...)
+
 Using `#` and `!` as a selector will generate a textNode or commentNode:
 * `el('#', 'this is a text node')`
 * `el('!', 'this is a comment node')`

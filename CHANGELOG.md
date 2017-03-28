@@ -14,6 +14,7 @@ TODO: Experiment with less magic
 - replaced `component.textContent` getter/setter with `component.setText()`
 - simplified internal component map
 - simplified internal event handling `on(...)` to `setEvent(n,f)` and `delEvent(n)`
+- removed non essential decorators. `class` and `style` decorators must be added manually
 
 ## [0.11.0] - 2017-03-15
 ### Added
