@@ -7,11 +7,15 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-TODO: Reduce ctyp magic, clarify moveTo arguments, ...
 
-move to null
-li fragment magic
-seperrate fragment helper
+## [0.14.0] - 2017-03-28
+### Changed
+- removed the list fragment magic. list must now be manually mounted before update
+
+### Added
+- `list.clear([after])`
+- `list.moveto(null)` and `component.moveto(null)`
+- `fragment()` => documentFragment
 
 ## [0.13.0] - 2017-03-28
 ### Changed
