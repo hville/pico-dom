@@ -53,7 +53,8 @@ Component.prototype = {
 	moveto: function moveto(parent, before) {
 		var node = this.node,
 				oldParent = node.parentNode
-		parent.insertBefore(node, before || null)
+		if (parent) parent.insertBefore(node, before || null)
+		else if (oldParent) oldParent.removeChild(node)
 		if (this.onmove) this.onmove(oldParent, parent)
 		return node
 	},

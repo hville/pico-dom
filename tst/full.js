@@ -4,7 +4,8 @@ var jsdom = require('jsdom').jsdom,
 
 var li = pico.li,
 		co = pico.co,
-		el = pico.el
+		el = pico.el,
+		fr = pico.fr
 
 pico.window = jsdom().defaultView
 
@@ -15,13 +16,14 @@ function concatData(e) {
 var coOptions = { ondata: function(v) {
 	this.node.textContent = v
 }}
-var lis = [
-	li('div', coOptions),
-	li('span', coOptions),
-	li('p', coOptions)
-]
 
 ct('list-simple', function() {
+	var lis = [
+		li('div', coOptions),
+		li('span', coOptions),
+		li('p', coOptions)
+	]
+
 	var l0 = lis[0]
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
@@ -34,6 +36,12 @@ ct('list-simple', function() {
 	ct('===', concatData(elm), '^153$')
 })
 ct('list-stacked', function() {
+	var lis = [
+		li('div', coOptions),
+		li('span', coOptions),
+		li('p', coOptions)
+	]
+
 	var comp = co('div#myid', lis),
 			elm = comp.node
 	comp.update([1,2,3])
@@ -74,6 +82,8 @@ ct('list-without component', function() {
 	ct('===', concatData(comp.node), '^010101$')
 })
 ct('list-without parent', function() {
-	var comp = co('div', li('div', el('h0', 0), el('h1', 1)).update([1,2,3]))
-	ct('===', concatData(comp.node), '^010101$')
+	ct('catch', function() {li('div', el('h0', 0), el('h1', 1)).update([1,2,3])}, /parentNode/, 'disalow list updates without parentNode')
+	ct('===',
+		concatData(co(fr(), li('div', el('h0', 0), el('h1', 1))).update([1,2,3]).node),
+		'^010101$')
 })

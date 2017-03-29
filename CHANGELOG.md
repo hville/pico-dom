@@ -9,6 +9,10 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 TODO: Reduce ctyp magic, clarify moveTo arguments, ...
 
+move to null
+li fragment magic
+seperrate fragment helper
+
 ## [0.13.0] - 2017-03-28
 ### Changed
 - replaced `component.textContent` getter/setter with `component.setText()`

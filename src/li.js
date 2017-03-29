@@ -4,8 +4,7 @@ var creator = require('./util/creator'),
 		ns = require('./namespaces'),
 		ENV = require('./env'),
 		cloneChildren = require('./util/clone-child'),
-		comment = require('./comment'),
-		fragment = require('./fragment')
+		comment = require('./comment')
 
 var mapEC = ENV.extra
 
@@ -34,8 +33,8 @@ function List(factory, dKey) {
 		: function(v) { return v[dKey] }
 
 	// lookup maps to locate existing component and delete extra ones
-	this.mapKC = new Map() // dataKey => Context
-	this.mapNK = new WeakMap() // node => dataKey
+	this.mapKC = new Map() // dataKey => component, for updating
+	this.mapNK = new WeakMap() // node => dataKey, for deleting KC entries...
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
@@ -56,32 +55,44 @@ List.prototype = {
 	* @return {Object} header
 	*/
 	moveto: function moveto(parent, before) {
-		var item = this.footer,
+		var foot = this.footer,
 				head = this.header
-		if (!item.parentNode) {
+		// clear the list if no parent
+		if (!parent) {
+			this.clear()
+			var oldParent = head.parentNode
+			if (oldParent) {
+				oldParent.removeChild(head)
+				oldParent.removeChild(foot)
+			}
+			return this
+		}
+		// list without parent are empty
+		if (!head.parentNode) {
 			parent.appendChild(head)
-			parent.appendChild(item)
+			parent.appendChild(foot)
 			return head
 		}
-		var next = item.previousSibling
-		if (item !== before) before = parent.insertBefore(item, before||null)
-		while (before !== head) {
-			item = next
+		// insert from footer to header to avoid repaint if all in right place
+		var next = foot.previousSibling
+		if (foot !== before) before = parent.insertBefore(foot, before||null)
+		while (next !== head) {
+			var item = next
 			next = item.previousSibling
-			var ctx = this.mapKC.get(this.mapNK.get(item))
+			var ctx = mapEC.get(item)
 			if (ctx) before = ctx.moveto(parent, before)
-			else if (item !== before) before = parent.insertBefore(item, before)
 		}
 		if (head !== before) before = parent.insertBefore(head, before)
 		return before //last insertedChild || first fragmentElement
 	},
 	update: function update(arr) {
-		if (!this.header.parentNode) this.moveto(fragment())
+		var head = this.header,
+				parent = head.parentNode
+		if (!parent) throw Error('list.updates requires a parentNode')
 		var mapKC = this.mapKC,
 				mapNK = this.mapNK,
 				getK = this.dataKey,
-				before = this.header.nextSibling,
-				parent = before.parentNode
+				before = head.nextSibling
 
 		for (var i=0; i<arr.length; ++i) {
 			var val = arr[i],
@@ -99,16 +110,29 @@ List.prototype = {
 		}
 
 		// de-reference leftover items
+		return this.clear(before.previousSibling)
+	},
+	/**
+	* @function clear
+	* @param  {Object} [after] optional Element pointer
+	* @return {Object} list instance
+	*/
+	clear: function clear(after) {
 		var foot = this.footer,
-				drop = before
-		while (drop !== foot) {
-			before = drop.nextSibling
+				parent = foot.parentNode
+		// list without parent are empty
+		if (!parent) return this
+
+		var mapKC = this.mapKC,
+				mapNK = this.mapNK,
+				stop = after || this.header,
+				drop = foot
+
+		while ((drop = foot.previousSibling) !== stop) {
 			mapKC.delete(mapNK.get(drop))
 			mapNK.delete(drop)
 			parent.removeChild(drop)
-			drop = before
 		}
-
 		return this
 	}
 }

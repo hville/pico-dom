@@ -30,6 +30,10 @@ ct('list-simple', function() {
 	ct('===', concatData(el), '^4312$')
 	comp.update([1,5,3])
 	ct('===', concatData(el), '^153$')
+	ct('===', l0.clear(), l0)
+	ct('===', concatData(el), '^$')
+	ct('===', l0.moveto(null), l0)
+	ct('===', concatData(el), '')
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', lis),

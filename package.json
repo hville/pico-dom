@@ -15,7 +15,7 @@
   "main": "./index.js",
   "dependencies": {},
   "devDependencies": {
-    "cotest": "^2.0.2"
+    "cotest": "^2.1.0"
   },
   "scripts": {
     "test": "cotest tst",
