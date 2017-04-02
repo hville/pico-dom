@@ -1,4 +1,4 @@
-var reduce = require('../util/reduce')
+var reduce = require('./util/reduce')
 
 module.exports = {
 	attrs: function(elm, val) {

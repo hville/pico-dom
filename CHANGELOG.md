@@ -7,7 +7,15 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+
+## [0.15.0] - 2017-04-02
+### Changed
+- change all method names to full names (element, component, fragment, text, comment)
+- list signature changed to (component|factory, dataKey)
+- component option `ondata` changed to `update`
+- component option `oninit` changed to `init`
 - Internal list component to key reference (property instead of weakmap)
+- Removed the custom component decorators
 
 ## [0.14.0] - 2017-03-28
 ### Changed

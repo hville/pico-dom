@@ -1,4 +1,4 @@
-var Component = require('./co/component'),
+var Component = require('./component'),
 		ENV = require('./env'),
 		comment = require('./comment')
 

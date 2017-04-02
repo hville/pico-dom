@@ -1,7 +1,7 @@
 var creator = require('./util/creator'),
-		element = require('./el/element'),
+		element = require('./element'),
 		ns = require('./namespaces'),
-		Component = require('./co/component')
+		Component = require('./component')
 
 var preset = creator(function(sel, cfg, cnt) {
 	return new Component(element(sel, cfg, cnt), cfg)

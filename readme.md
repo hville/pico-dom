@@ -63,8 +63,9 @@ table.moveto(document.body)
   * `text`: Hyperscript function to generate TextNodes
   * `comment`: Hyperscript function to generate commentNodes
   * `component`: Hyperscript function to generate a component with custom behavious and lifecycle events
-* dynamic list helper
+* dynamic list helpers
   * `list`: dynamic repeats and reshuffles of components to match an array of values
+  * `fragment`: creates a document fragment
 * testing and configuration helpers
   * `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
   * `window`: Getter-Setter to optionally set a custom `window` object for testing or server use

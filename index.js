@@ -1,11 +1,11 @@
 var ENV = require('./src/env')
 
-ENV.el = require('./src/el')
-ENV.co = require('./src/co')
-ENV.li = require('./src/li')
-ENV.tx = require('./src/text')
-ENV.cm = require('./src/comment')
-ENV.fr = require('./src/fragment')
+ENV.element = require('./src/el')
+ENV.component = require('./src/co')
+ENV.list = require('./src/list')
+ENV.text = require('./src/text')
+ENV.comment = require('./src/comment')
+ENV.fragment = require('./src/fragment')
 ENV.namespaces = require('./src/namespaces')
 
 module.exports = ENV

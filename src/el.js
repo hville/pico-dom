@@ -1,5 +1,5 @@
 var creator = require('./util/creator'),
-		element = require('./el/element'),
+		element = require('./element'),
 		ns = require('./namespaces')
 
 var preset = creator(element)

@@ -3,9 +3,9 @@ var jsdom = require('jsdom').jsdom,
 		pico = require('../')
 
 var li = pico.list,
-		co = pico.co,
-		el = pico.el,
-		fr = pico.fr
+		co = pico.component,
+		el = pico.element,
+		fr = pico.fragment
 
 pico.window = jsdom().defaultView
 

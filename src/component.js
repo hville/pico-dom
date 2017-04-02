@@ -1,7 +1,6 @@
-var decorate = require('../util/decorate'),
-		decorators = require('./decorators'),
-		mapEC = require('../env').extra,
-		cloneChildren = require('../util/clone-child')
+var reduce = require('./util/reduce'),
+		mapEC = require('./env').extra,
+		cloneChildren = require('./util/clone-child')
 
 var componentEventOptions = {capture: true, passive:true}
 
@@ -15,9 +14,17 @@ module.exports = Component
 function Component(node, config) {
 	this.node = node
 	this._eventHandlers = {}
-	decorate(this, config, decorators)
+	// decorate
+	this.init = config && config.init
+	this.update = (config && config.update) || updateChildren
+	this.onmove = config && config.onmove
+	if (config) {
+		var eventHandlers = config.on || config._eventHandlers
+		if (eventHandlers) addEventListeners(this, eventHandlers)
+	}
+	// register and init
 	mapEC.set(node, this)
-	if (this.oninit) this.oninit(config)
+	if (this.init) this.init()
 }
 Component.prototype = {
 	constructor: Component,
@@ -44,12 +51,7 @@ Component.prototype = {
 		evt.stopPropagation()
 		fcn.call(this, evt)
 	},
-	ondata: updateChildren,
 	updateChildren: updateChildren,
-	update: function() {
-		this.ondata.apply(this, arguments)
-		return this
-	},
 	moveto: function moveto(parent, before) {
 		var node = this.node,
 				oldParent = node.parentNode
@@ -75,4 +77,13 @@ function updateChildren() {
 		}
 		else ptr = ptr.nextSibling
 	}
+	return this
+}
+function addEventListeners(ctx, obj) {
+	reduce(obj, setEvt, ctx)
+	return ctx
+}
+function setEvt(ctx, fcn, key) {
+	ctx.setEvent(key, fcn)
+	return ctx
 }

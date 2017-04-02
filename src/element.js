@@ -1,7 +1,7 @@
-var ENV = require('../env'),
-		NS = require('../namespaces'),
-		decorate = require('../util/decorate'),
-		decorators = require('./decorators')
+var ENV = require('./env'),
+		NS = require('./namespaces'),
+		decorators = require('./decorators'),
+		reduce = require('./util/reduce')
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
@@ -69,4 +69,10 @@ function parse(def, txt) {
 			}
 	}
 	return def
+}
+function decorate(elem, opts, decs) {
+	return !opts ? elem : reduce(decs, applyItem, elem, opts)
+}
+function applyItem(elm, dec, key) {
+	return this[key] ? dec(elm, this[key], key) : elm
 }
