@@ -86,6 +86,7 @@ List.prototype = {
 	},
 	update: function update(arr) {
 		var head = this.header,
+				foot = this.footer,
 				parent = head.parentNode
 		if (!parent) throw Error('list.updates requires a parentNode')
 		var mapKC = this.mapKC,
@@ -101,9 +102,18 @@ List.prototype = {
 				itm = this.factory(val, key, arr)
 				itm.key = key
 				mapKC.set(key, itm)
+				parent.insertBefore(itm.node, before)
 			}
-			if (before !== itm.node) parent.insertBefore(itm.node, before)
-			before = itm.node.nextSibling
+			else if (itm.node === before) {
+				before = itm.node.nextSibling
+			}
+			else if (itm.node === before.nextSibling) {
+				parent.insertBefore(before, foot)
+				before = itm.node.nextSibling
+			}
+			else {
+				parent.insertBefore(itm.node, before)
+			}
 			itm.update(val, key, arr)
 		}
 
