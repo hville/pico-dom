@@ -7,6 +7,7 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+- Internal list component to key reference (property instead of weakmap)
 
 ## [0.14.0] - 2017-03-28
 ### Changed

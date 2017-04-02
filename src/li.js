@@ -9,7 +9,7 @@ var creator = require('./util/creator'),
 var mapEC = ENV.extra
 
 var preset = creator(function(sel, cfg, cnt) {
-	var ref = element(sel, cfg, cnt)
+	var ref = element(sel, cfg, cnt) //TODO only accept Component OR Factory
 	function factory() {
 		return new Component(cloneChildren(ref.cloneNode(false), ref.firstChild), cfg)
 	}
@@ -34,7 +34,6 @@ function List(factory, dKey) {
 
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKC = new Map() // dataKey => component, for updating
-	this.mapNK = new WeakMap() // node => dataKey, for deleting KC entries...
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
@@ -90,7 +89,6 @@ List.prototype = {
 				parent = head.parentNode
 		if (!parent) throw Error('list.updates requires a parentNode')
 		var mapKC = this.mapKC,
-				mapNK = this.mapNK,
 				getK = this.dataKey,
 				before = head.nextSibling
 
@@ -101,7 +99,7 @@ List.prototype = {
 			var itm = mapKC.get(key)
 			if (!itm) {
 				itm = this.factory()
-				mapNK.set(itm.node, key)
+				itm.key = key
 				mapKC.set(key, itm)
 			}
 			if (before !== itm.node) parent.insertBefore(itm.node, before)
@@ -124,13 +122,11 @@ List.prototype = {
 		if (!parent) return this
 
 		var mapKC = this.mapKC,
-				mapNK = this.mapNK,
 				stop = after || this.header,
 				drop = foot
 
 		while ((drop = foot.previousSibling) !== stop) {
-			mapKC.delete(mapNK.get(drop))
-			mapNK.delete(drop)
+			mapKC.delete(mapEC.get(drop).key)
 			parent.removeChild(drop)
 		}
 		return this
