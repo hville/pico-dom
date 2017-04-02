@@ -2,7 +2,7 @@ var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
 		pico = require('../')
 
-var li = pico.li,
+var li = pico.list,
 		co = pico.co,
 		el = pico.el,
 		fr = pico.fr
@@ -19,9 +19,9 @@ var coOptions = { ondata: function(v) {
 
 ct('list-simple', function() {
 	var lis = [
-		li('div', coOptions),
-		li('span', coOptions),
-		li('p', coOptions)
+		li(co('div', coOptions)),
+		li(co('span', coOptions)),
+		li(co('p', coOptions))
 	]
 
 	var l0 = lis[0]
@@ -37,9 +37,9 @@ ct('list-simple', function() {
 })
 ct('list-stacked', function() {
 	var lis = [
-		li('div', coOptions),
-		li('span', coOptions),
-		li('p', coOptions)
+		li(co('div', coOptions)),
+		li(co('span', coOptions)),
+		li(co('p', coOptions))
 	]
 
 	var comp = co('div#myid', lis),
@@ -49,13 +49,12 @@ ct('list-stacked', function() {
 })
 ct('list-complex', function() {
 	//list update through parent update
-	var liFac = li('td', {
+	var liFac = li(co('td', {
 		ondata: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
-		},
-		dataKey: 'k'
-	})
+		}
+	}), 'k')
 	var coObj = co('tr#myid0', {}, liFac),
 			coEl = coObj.node
 	coObj.update([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
@@ -67,7 +66,7 @@ ct('sequence in nested lists', function() {
 		this.node.tabIndex = i
 	}
 	var matCo = co('div', {},
-		li('p', li('span', {ondata: edit}))
+		li(co('p', li(co('span', {ondata: edit}))))
 	)
 	var matEl = matCo.node
 	matCo.update([[11,12,13],[21,22,23],[31,32,33]])
@@ -77,13 +76,13 @@ ct('sequence in nested lists', function() {
 	ct('===', matEl.children[2].children.length, 3)
 })
 ct('list-without component', function() {
-	var comp = co('div', li('div', el('h0', 0), el('h1', 1)))
+	var comp = co('div', li(co('div', el('h0', 0), el('h1', 1))))
 	comp.update([1,2,3])
 	ct('===', concatData(comp.node), '^010101$')
 })
 ct('list-without parent', function() {
-	ct('catch', function() {li('div', el('h0', 0), el('h1', 1)).update([1,2,3])}, /parentNode/, 'disalow list updates without parentNode')
+	ct('catch', function() {li(co('div', el('h0', 0), el('h1', 1))).update([1,2,3])}, /parentNode/, 'disalow list updates without parentNode')
 	ct('===',
-		concatData(co(fr(), li('div', el('h0', 0), el('h1', 1))).update([1,2,3]).node),
+		concatData(co(fr(), li(co('div', el('h0', 0), el('h1', 1)))).update([1,2,3]).node),
 		'^010101$')
 })

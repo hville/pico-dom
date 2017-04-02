@@ -1,6 +1,6 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		li = require('../src/li'),
+		li = require('../src/list'),
 		co = require('../src/co'),
 		ENV = require('../src/env')
 
@@ -14,9 +14,9 @@ var coOptions = { ondata: function(v) {
 	this.node.textContent = v
 }}
 var lis = [
-	li('div', coOptions),
-	li('span', coOptions),
-	li('p', coOptions)
+	li(co('div', coOptions)),
+	li(co('span', coOptions)),
+	li(co('p', coOptions))
 ]
 
 ct('list-simple', function() {
@@ -43,13 +43,12 @@ ct('list-stacked', function() {
 })
 ct('list-complex', function() {
 	//list update through parent update
-	var liFac = li('td', {
+	var liFac = li(co('td', {
 		ondata: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
-		},
-		dataKey: 'k'
-	})
+		}
+	}), 'k')
 	var coObj = co('tr#myid0', {}, liFac),
 			coEl = coObj.node
 	coObj.update([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
@@ -61,7 +60,9 @@ ct('sequence in nested lists', function() {
 		this.node.tabIndex = i
 	}
 	var matCo = co('div', {},
-		li('p', li('span', {ondata: edit}))
+		li(co('p',
+			li(co('span', {ondata: edit}))
+		))
 	)
 	var matEl = matCo.node
 	matCo.update([[11,12,13],[21,22,23],[31,32,33]])

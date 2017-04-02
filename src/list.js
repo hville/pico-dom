@@ -1,26 +1,26 @@
-var creator = require('./util/creator'),
-		Component = require('./co/component'),
-		element = require('./el/element'),
-		ns = require('./namespaces'),
+var Component = require('./co/component'),
 		ENV = require('./env'),
-		cloneChildren = require('./util/clone-child'),
 		comment = require('./comment')
 
 var mapEC = ENV.extra
 
-var preset = creator(function(sel, cfg, cnt) {
-	var ref = element(sel, cfg, cnt) //TODO only accept Component OR Factory
-	function factory() {
-		return new Component(cloneChildren(ref.cloneNode(false), ref.firstChild), cfg)
+function createFactory(instance) {
+	return function() {
+		var comp = instance.clone()
+		//comp.update(d,i,a) ??TODO
+		return comp
 	}
-	return new List(factory, cfg.dataKey)
-})
-
-var li = preset()
-li.svg = preset({xmlns: ns.svg})
-li.preset = preset
-
-module.exports = li
+}
+module.exports = function list(model, dataKey) {
+	switch (model.constructor) {
+		case Function:
+			return new List(model, dataKey)
+		case Component: case List:
+			return new List(createFactory(model), dataKey)
+		default:
+			throw Error('invalid list model:' + typeof model)
+	}
+}
 
 /**
  * @constructor
@@ -98,7 +98,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = this.factory()
+				itm = this.factory(val, key, arr)
 				itm.key = key
 				mapKC.set(key, itm)
 			}
