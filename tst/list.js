@@ -10,7 +10,7 @@ function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
 	return str
 }
-var coOptions = { ondata: function(v) {
+var coOptions = { update: function(v) {
 	this.node.textContent = v
 }}
 var lis = [
@@ -44,7 +44,7 @@ ct('list-stacked', function() {
 ct('list-complex', function() {
 	//list update through parent update
 	var liFac = li(co('td', {
-		ondata: function(v,i) {
+		update: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
 		}
@@ -61,7 +61,7 @@ ct('sequence in nested lists', function() {
 	}
 	var matCo = co('div', {},
 		li(co('p',
-			li(co('span', {ondata: edit}))
+			li(co('span', {update: edit}))
 		))
 	)
 	var matEl = matCo.node

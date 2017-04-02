@@ -10,9 +10,9 @@
 
 ```javascript
 var pico = require('pico-dom')
-var co = pico.co,
-    li = pico.li,
-    el = pico.el
+var co = pico.component,
+    li = pico.list,
+    el = pico.element
 
 var table = co('table', [
   el('caption', 'data-matrix')
@@ -20,7 +20,7 @@ var table = co('table', [
     li('tr',
       co('td', el.svg('svg', svgIcon)),
       li('td', {
-        co('input', {ondata: function(val, pos) { this.node.value = val }}
+        co('input', {update: function(val, pos) { this.node.value = val }}
       })
     )
   ),
@@ -49,58 +49,65 @@ table.moveto(document.body)
 * currently only available as a common JS module (i.e. `require('pico-dom')`)
 
 
-### Inspiration
+### Inspiration and Design Goals
 
-Some ideas taken from `snabbdom` (configurable decorators), `redom` (no virtual dom, lists).
+* strictly DOM element creation and manipulation (no router or store)
+* minimal intermediate object. Structure is held by the DOM itself
+* Some ideas taken from `snabbdom` (configurable decorators), `redom` (no virtual dom, lists).
 
 
 ## API
 
-* `el`: Hyperscript function to generate a TextNode, HTMLElement, SVGElement or other namespace Element
-* `co`: Hyperscript function to generate a component with custom behavious and lifecycle events
-* `li`: Hyperscript function to generate a list of components derived from an array of values
-* `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
-* `window`: Getter-Setter to optionally set a custom `window` object for testing or server use
+* hyperscript functions
+  * `element`: Hyperscript function to generate HTMLElements, SVGElements or other namespaced Elements
+  * `text`: Hyperscript function to generate TextNodes
+  * `comment`: Hyperscript function to generate commentNodes
+  * `component`: Hyperscript function to generate a component with custom behavious and lifecycle events
+* dynamic list helper
+  * `list`: dynamic repeats and reshuffles of components to match an array of values
+* testing and configuration helpers
+  * `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
+  * `window`: Getter-Setter to optionally set a custom `window` object for testing or server use
 
 ### Hyperscript Functions
 
-Functions    | Type                                       | Example
-:--------    | :---                                       | :----
-`.el`        | `(selector[, ...elConfig])` => `Element`   | `el('p', {style: {color:'blue'}}, '1'))`
-`.co`        | `(selector[, ...coConfig])` => `Component` | `co('p', {ondata: setText}))`
-`.li`        | `(selector[, ...liConfig])` => `List`      | `li('li', {ondata: setIndex}))`
-`.cm`        | `(text)` => `CommentNode`                  |
-`.tx`        | `(text)` => `TextNode`                     |
+* Element `pico.element(selector[, ...elConfig])`
+  * example: `el('p', {style: {color:'blue'}}, '1'))`
+* TextNode `pico.text(text)`
+* CommentNode `pico.comment(text)`
+* Component `pico.component(selector[, ...coConfig])`
+  * example: `co('p', {update: setText}))`
 
 only the selector is required, remaining arguments can be in any order
 
-each *hyperscript* function has 2 additional properties:
-* `.preset` to create a new function with preset defaults. (e.g `el.svg = el.preset({xmlns: ns.svg})`)
+The `element` and `component` *hyperscript* functions have 2 additional properties:
+* `.preset` to create a new function with preset defaults
+  * example: `createSpecial = element.preset({xmlns: specialNamespace})`
 * `.svg` same *hyperscript* function with the svg namespace preset
+  * internaly: `element.svg = element.preset({xmlns: ns.svg})`
+  * internaly: `component.svg = component.preset({xmlns: ns.svg})`
+
 
 for example, the following are equivalent:
 * `el.svg('circle')` (Internally, `el.svg = el.preset({xmlns: ns.svg})`)
 * `el('svg:circle')`
 * `el('circle', {xmlns: ns.svg})`
 * `el.preset({xmlns: ns.svg})('circle')`
-* the same logic applies for `co` and `li` (`co.svg`, `li.preset`, ...)
+* the same logic applies for `component` (`co.svg`, ...)
 
 
 #### Element Factory
 
 * `var element = el(selector[, ...options][, ...children])`
 * element is a normal `DOM Node` (Element or Text)
-
-arguments  | Type                                    | Example
-:--------  | :---                                    | :----
-`selector` | `string`, or `Node`                     | `svg:circle[style=font-size:150%;color:blue]`
-`options`  | `Object` {attrs, props, style, xmlns}   | element's attributes, properties and style
-`.attrs`   | `Object` ...any key-value pair          | `{id: 'myID'}`
-`.class`   | `String`                                | `'button customClass'`
-`.props`   | `Object` ...any key-value pair          | `{tabIndex: 2}`
-`.style`   | `Object|String` string of key-values    | `{color:'blue'}` or `font-size:150%;color:blue`
-`.xmlns`   | `Object` ...any key-value pair          | `{xmlns: ns.svg}`
-`children` | `string`, `Node` or `Array`  | element child Nodes, Components of Lists
+* String|Element `selector`
+  * If an Element is provided, it is simply decorated with new attributes, properties and children
+  * string example: `svg:circle[style=font-size:150%;color:blue]`
+* Object `options` {attrs, props, xmlns}
+  * xmlns: custom namespace for new elements
+  * props & attrs: key:val pairs to add attributes and properties to a new or existing element
+* String|Node|Array|Component|List `children`
+  * adds children to the new or existing element
 
 Other decorators can be added manually (eg. style, class, dataSet, ...)
 
@@ -112,23 +119,25 @@ Other decorators can be added manually (eg. style, class, dataSet, ...)
   * `.update(...) => this` the function to trigger changes based on external data
   * `.moveto(parentNode|null[, before])` to move the component.
   * `.setText(text)` helper efficiently and safely change the node text
-  * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `ondata` property set to `updateChildren`. If `ondata` is specified, children must be manually called.
+  * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `update` property set to `updateChildren`. If `update` is specified, children updates must be manually called.
   * `.clone() => new instance`
 
-arguments    | Type                                      | Example
-:--------    | :---                                      | :----
-`selector`   | `string` or `Node`                        | same as for `el()`
-`options`    | `Object` {...lifecycle, on}               | same as for `el()` with additional options
-`.oninit`    | `options => void`                         | `function() { this.moveto(document.body) }`
-`.ondata`    | `(...any) => element`                     | `function(v) { this.node.textContent = v }`
-`.onmove`    | `(oldParent, newParent) => element`       | `function(o,n) { if (!n) console.log('dismounted') }`
-`.on`        | `Object` ...any key-value pair            | `{click: function() { this.node.textContent = 'clicked' }}`
+arguments
+* String|Node `selector`: same as for `element`
+* Object `options`: same as for `element` with additional optinos:
+  * void `.init()`
+    * example: `{init: function() { this.moveto(document.body) }}`
+  * element `.update(...any)`
+    * example `{update: function(v) { this.node.textContent = v }}`
+  * element `.onmove(oldParent, newParent)`
+    * example: `function(o,n) { if (!n) console.log('dismounted') }`
+  * Object `.on` any eventName:eventListener pairs
+    * example: `{on: {click: function() { this.node.textContent = 'clicked' }}}`
 
 
-#### List Factory
+#### Lists
 
-* `var list = co(selector[, ...options][, ...children])`
-* a list is just a component that gets repeated on update to match a given array of values
+* a list is just a component or component factory that gets repeated on update to match a given array of values
   * `.header` the associated positionning header commentNode
   * `.header` the associated positionning footer commentNode
   * `.update(array) => this` triggers multiple components `component.update(value, index, array`
@@ -136,21 +145,19 @@ arguments    | Type                                      | Example
   * `.clear([after])`
   * `.clone() => new instance`
 * lists can be nested or stacked
-  * nested: `co('body', li('tr', li('td', {ondata: function(v) { td.textContent = v }})))`
-  * stacked: `co('tr', li('td', cellType1), li('td', cellType2))`
-* list takes on additional `dataKey` option (eg. `{dataKey: 'uid'}`)
+* list takes on additional `dataKey` argument
   * if omitted, list items are never swapped but just updated with the new value
   * if a `string` or a `function` is provided list items will be swapped to match the new data ordering
-    * string example: `{dataKey: 'uid'}`
-    * funtion example: `{dataKey: function(v,i) { return v.uid }}`
+    * string example: `list(myfactory, 'uid')`
+    * funtion example: `list(myfactory, function(v,i) { return v.uid })`
 
 
 ### Additional utilities
 
-Utility       | Type                                  | Example
-:--------     | :---                                  | :----
-`.namespaces` | `Object {prefix: namespace}`          | `namespaces.svg = 'http://www.w3.org/2000/svg'}`
-`.window`     | `Object` configurable global `window` | `window = jsdom.jsdom().defaultView`
+* Object `.namespaces`: name:url list of available namespaces
+  * example `namespaces.svg = 'http://www.w3.org/2000/svg'}`
+* Object `.window`: configurable global `window` for testing or server use
+  * example `pico.window = jsdom.jsdom().defaultView`
 
 
 ## License

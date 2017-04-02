@@ -13,7 +13,7 @@ function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
 	return str
 }
-var coOptions = { ondata: function(v) {
+var coOptions = { update: function(v) {
 	this.node.textContent = v
 }}
 
@@ -50,7 +50,7 @@ ct('list-stacked', function() {
 ct('list-complex', function() {
 	//list update through parent update
 	var liFac = li(co('td', {
-		ondata: function(v,i) {
+		update: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
 		}
@@ -66,7 +66,7 @@ ct('sequence in nested lists', function() {
 		this.node.tabIndex = i
 	}
 	var matCo = co('div', {},
-		li(co('p', li(co('span', {ondata: edit}))))
+		li(co('p', li(co('span', {update: edit}))))
 	)
 	var matEl = matCo.node
 	matCo.update([[11,12,13],[21,22,23],[31,32,33]])
@@ -83,6 +83,9 @@ ct('list-without component', function() {
 ct('list-without parent', function() {
 	ct('catch', function() {li(co('div', el('h0', 0), el('h1', 1))).update([1,2,3])}, /parentNode/, 'disalow list updates without parentNode')
 	ct('===',
-		concatData(co(fr(), li(co('div', el('h0', 0), el('h1', 1)))).update([1,2,3]).node),
+		concatData(
+			co(fr(),
+				li(co('div', el('h0', 0), el('h1', 1)))
+			).update([1,2,3]).node),
 		'^010101$')
 })

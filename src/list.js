@@ -104,7 +104,7 @@ List.prototype = {
 			}
 			if (before !== itm.node) parent.insertBefore(itm.node, before)
 			before = itm.node.nextSibling
-			itm.ondata(val, key, arr)
+			itm.update(val, key, arr)
 		}
 
 		// de-reference leftover items

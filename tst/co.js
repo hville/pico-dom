@@ -7,9 +7,9 @@ ENV.window = jsdom().defaultView
 
 var bodyTdInputFac = function(cfg) {
 	return co('input.tdinput', cfg, {
-		oninit: function() {
-			var updateChildren = this.ondata
-			this.ondata = function(v) { this.node.value = v; updateChildren.call(this, v) }
+		update: function(v) {
+			this.node.value = v
+			this.updateChildren(v)
 		},
 		props: {tabIndex: 1},
 		on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
