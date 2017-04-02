@@ -4,16 +4,16 @@ var reduce = require('./reduce'),
 module.exports = function creator(constructor) {
 	return function create(defaults) {
 		return function define(selector) {
-			var options = mergeOptions({}, defaults),
+			var options = defaults || null,
 					content = []
-			for (var i=1; i<arguments.length; ++i) argument(arguments[i], options, content)
+			for (var i=1; i<arguments.length; ++i) {
+				var arg = arguments[i]
+				if (arg && arg.constructor === Object) options = options ? mergeOptions(options, arg) : arg
+				else mergeChildren.call(content, arg)
+			}
 			return constructor(selector, options, content)
 		}
 	}
-}
-function argument(arg, options, content) {
-	if (arg && arg.constructor === Object) mergeOptions(options, arg)
-	else mergeChildren.call(content, arg)
 }
 function mergeChildren(arg) {
 	if (arg != null) switch(ctyp(arg)) { //eslint-disable-line eqeqeq
