@@ -3,7 +3,7 @@ var ENV = {
 	get document() { return init().document },
 	get window() { return init().window },
 	set window(win) { setWindow(win) },
-	extra: new WeakMap()
+	extra: getWeak()
 }
 function init() {
 	if (typeof window !== 'undefined') return setWindow(window)
