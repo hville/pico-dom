@@ -3,8 +3,8 @@ var creator = require('./util/creator'),
 		ns = require('./namespaces'),
 		Component = require('./component')
 
-var preset = creator(function(sel, cfg, cnt) {
-	return new Component(element(sel, cfg, cnt), cfg)
+var preset = creator(function(sel, cfgs, cnts) {
+	return new Component(element(sel, cfgs, cnts), cfgs)
 })
 
 var co = preset()

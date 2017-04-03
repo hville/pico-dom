@@ -9,18 +9,22 @@ module.exports = Component
 /**
  * @constructor
  * @param {Object} node - DOM node
- * @param {Object} [config] - configuration
+ * @param {Object} [configs] - configuration
  */
-function Component(node, config) {
+function Component(node, configs) {
 	this.node = node
 	this._eventHandlers = {}
+	this.update = updateChildren
+
 	// decorate
-	this.init = config && config.init
-	this.update = (config && config.update) || updateChildren
-	this.onmove = config && config.onmove
-	if (config) {
-		var eventHandlers = config.on || config._eventHandlers
-		if (eventHandlers) addEventListeners(this, eventHandlers)
+	if (configs) for (var i=0; i<configs.length; ++i) {
+		var cfg = configs[i]
+		if (cfg.key) this.key = cfg.key
+		if (cfg.init) this.init = cfg.init
+		if (cfg.update) this.update = cfg.update
+		if (cfg.onmove) this.onmove = cfg.onmove
+		if (cfg.on) addEventListeners(this, cfg.on)
+		if (cfg._eventHandlers) addEventListeners(this, cfg._eventHandlers) //for cloning self
 	}
 	// register and init
 	mapEC.set(node, this)
@@ -28,10 +32,10 @@ function Component(node, config) {
 }
 Component.prototype = {
 	constructor: Component,
-	clone: function clone() {
+	clone: function clone(cfg) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false),
-				cloneCo = new Component(targetNode, this)
+				cloneCo = new Component(targetNode, cfg ? [this, cfg] : [this])
 		cloneChildren(targetNode, sourceNode.firstChild)
 		mapEC.set(targetNode, cloneCo)
 		return cloneCo
