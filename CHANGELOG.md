@@ -8,6 +8,11 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
+## [0.16.0] - 2017-04-03
+### Changed
+- list.update performance improvement
+- internal array of options instead of merging objects
+
 ## [0.15.0] - 2017-04-02
 ### Changed
 - change all method names to full names (element, component, fragment, text, comment)
