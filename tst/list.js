@@ -12,17 +12,13 @@ function concatData(e) {
 }
 var coOptions = {
 	extra: {
-		update: function(v, i) {console.log('undating', v, i, this.node.parentNode.childNodes.length);this.node.textContent = v}
+		update: function(v,i) {this.node.textContent = v}
 	}
 }
-var lis = [
-	li(co('div', coOptions)),
-	li(co('span', coOptions)),
-	li(co('p', coOptions))
-]
 
-ct.only('list-simple', function() {
+ct('list-simple', function() {
 	var l0 = li(co('div', coOptions))
+	//var l0 = li(function() {return co('div', coOptions)})
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
 			el = comp.node
@@ -38,7 +34,11 @@ ct.only('list-simple', function() {
 	ct('===', concatData(el), '')
 })
 ct('list-stacked', function() {
-	var comp = co('div#myid', lis),
+	var comp = co('div#myid', [
+				li(co('div', coOptions)),
+				li(co('span', coOptions)),
+				li(co('p', coOptions))
+			]),
 			el = comp.node
 	comp.update([1,2,3])
 	ct('===', concatData(el), '^123$^123$^123$')

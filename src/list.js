@@ -98,14 +98,10 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				console.log('BeforeCreate ParentChilds:', parent.childNodes.length-2)
-				itm = this.factory(val, key, arr)
+				itm = this.factory({key: key})
 				if (itm.key !== key) itm.key = key
-				console.log('List headMounted:', head.parentNode === parent, 'footMounted', foot.parentNode === parent, 'beforeMounted', before.parentNode === parent)
-				console.log('Created Key:', key, 'Index:', i, 'Tag:', itm.node.tagName, 'Unmounted:', !itm.parentNode,'ParentChilds:', parent.childNodes.length-2)
 				mapKC.set(key, itm)
-				console.log('res',parent.insertBefore(itm.node, before))
-				console.log('Item Mounted', itm.node.parentNode===parent, 'before', itm.node.nextSibling===before, 'ParentChilds:', parent.childNodes.length-2)
+				parent.insertBefore(itm.node, before)
 			}
 			else if (itm.node === before) {
 				before = itm.node.nextSibling
