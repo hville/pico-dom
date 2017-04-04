@@ -24,28 +24,8 @@ Component.prototype = {
 	clone: function clone(input) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false)
-<<<<<<< HEAD
-		cloneChildren(targetNode, sourceNode.firstChild)
-		return new Component(targetNode, cfg ? [this, cfg] : [this])
-	},
-	// to add event listeners binded to this context
-	setEvent: function setEvent(name, handler) {
-		this._eventHandlers[name] = handler
-		this.node.addEventListener(name, this, componentEventOptions)
-	},
-	delEvent: function delEvent(name) {
-		delete this._eventHandlers[name]
-		this.node.removeEventListener(name, this, componentEventOptions)
-	},
-	// standard property called by window on event, binded to co
-	handleEvent: function handleEvent(evt) {
-		var fcn = this._eventHandlers[evt.type]
-		evt.stopPropagation()
-		fcn.call(this, evt)
-=======
 		cloneChildren(targetNode, sourceNode.firstChild, input)
 		return new Component(targetNode, this, input)
->>>>>>> extra
 	},
 	updateChildren: updateChildren,
 	moveto: function moveto(parent, before) {
