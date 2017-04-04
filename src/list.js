@@ -1,12 +1,12 @@
 var Component = require('./component'),
 		ENV = require('./env'),
-		comment = require('./comment')
+		comment = require('./env').comment
 
 var mapEC = ENV.extra
 
 function createFactory(instance) {
-	return function(cfg) {
-		var comp = instance.clone(cfg)
+	return function(input) {
+		var comp = instance.clone(input)
 		return comp
 	}
 }
@@ -98,10 +98,14 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = this.factory({key: key})
+				console.log('BeforeCreate ParentChilds:', parent.childNodes.length-2)
+				itm = this.factory(val, key, arr)
 				if (itm.key !== key) itm.key = key
+				console.log('List headMounted:', head.parentNode === parent, 'footMounted', foot.parentNode === parent, 'beforeMounted', before.parentNode === parent)
+				console.log('Created Key:', key, 'Index:', i, 'Tag:', itm.node.tagName, 'Unmounted:', !itm.parentNode,'ParentChilds:', parent.childNodes.length-2)
 				mapKC.set(key, itm)
-				parent.insertBefore(itm.node, before)
+				console.log('res',parent.insertBefore(itm.node, before))
+				console.log('Item Mounted', itm.node.parentNode===parent, 'before', itm.node.nextSibling===before, 'ParentChilds:', parent.childNodes.length-2)
 			}
 			else if (itm.node === before) {
 				before = itm.node.nextSibling

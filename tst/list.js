@@ -10,26 +10,28 @@ function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
 	return str
 }
-var coOptions = { update: function(v) {
-	this.node.textContent = v
-}}
+var coOptions = {
+	extra: {
+		update: function(v, i) {console.log('undating', v, i, this.node.parentNode.childNodes.length);this.node.textContent = v}
+	}
+}
 var lis = [
 	li(co('div', coOptions)),
 	li(co('span', coOptions)),
 	li(co('p', coOptions))
 ]
 
-ct('list-simple', function() {
-	var l0 = lis[0]
+ct.only('list-simple', function() {
+	var l0 = li(co('div', coOptions))
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
 			el = comp.node
 	comp.update([1,2,3])
-	ct('===', concatData(el), '^123$')
+	ct('===', concatData(el), '^123$')//3
 	comp.update([4,3,1,2])
-	ct('===', concatData(el), '^4312$')
+	ct('===', concatData(el), '^4312$')//2
 	comp.update([1,5,3])
-	ct('===', concatData(el), '^153$')
+	ct('===', concatData(el), '^153$')//3
 	ct('===', l0.clear(), l0)
 	ct('===', concatData(el), '^$')
 	ct('===', l0.moveto(null), l0)

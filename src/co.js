@@ -1,10 +1,10 @@
 var creator = require('./util/creator'),
-		element = require('./element'),
-		ns = require('./namespaces'),
+		decorate = require('./decorate'),
+		ns = require('./env').namespaces,
 		Component = require('./component')
 
-var preset = creator(function(sel, cfgs, cnts) {
-	return new Component(element(sel, cfgs, cnts), cfgs)
+var preset = creator(function(elm, cfg, cnt) {
+	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 })
 
 var co = preset()

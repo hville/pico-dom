@@ -7,12 +7,21 @@ ENV.window = jsdom().defaultView
 
 var bodyTdInputFac = function(cfg) {
 	return co('input.tdinput', cfg, {
-		update: function(v) {
-			this.node.value = v
-			this.updateChildren(v)
+		extra: {
+			update: function(v) {
+				this.node.value = v
+				this.updateChildren(v)
+			},
+			handleEvent: function(e) {
+				this.node.value = 'click'; e.target.tabIndex = 11
+			},
+			init: function() {
+				this.node.addEventListener('click', this, false)
+			}
 		},
-		props: {tabIndex: 1},
-		on: {click: function(e) { this.node.value = 'click'; e.target.tabIndex = 11}}
+		props: {
+			tabIndex: 1
+		}
 	})
 }
 ct('co - simple', function() {
