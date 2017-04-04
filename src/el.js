@@ -1,8 +1,8 @@
 var creator = require('./util/creator'),
-		element = require('./element'),
-		ns = require('./namespaces')
+		decorate = require('./decorate'),
+		ns = require('./env').namespaces
 
-var preset = creator(element)
+var preset = creator(decorate)
 
 var el = preset()
 el.svg = preset({xmlns: ns.svg})

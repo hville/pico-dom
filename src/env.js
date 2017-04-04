@@ -3,7 +3,20 @@ var ENV = {
 	get document() { return init().document },
 	get window() { return init().window },
 	set window(win) { setWindow(win) },
-	extra: getWeak()
+	extra: getWeak(),
+	namespaces: {
+		html: 'http://www.w3.org/1999/xhtml',
+		svg : 'http://www.w3.org/2000/svg'
+	},
+	text: function text(string) {
+		return ENV.document.createTextNode(string)
+	},
+	fragment: function fragment() {
+		return ENV.document.createDocumentFragment()
+	},
+	comment: function comment(string) {
+		return ENV.document.createComment(string)
+	}
 }
 function init() {
 	if (typeof window !== 'undefined') return setWindow(window)

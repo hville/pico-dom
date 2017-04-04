@@ -13,9 +13,9 @@ function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
 	return str
 }
-var coOptions = { update: function(v) {
+var coOptions = { extra: {update: function(v) {
 	this.node.textContent = v
-}}
+}}}
 
 ct('list-simple', function() {
 	var lis = [
@@ -49,12 +49,12 @@ ct('list-stacked', function() {
 })
 ct('list-complex', function() {
 	//list update through parent update
-	var liFac = li(co('td', {
+	var liFac = li(co('td', { extra: {
 		update: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
 		}
-	}), 'k')
+	}}), 'k')
 	var coObj = co('tr#myid0', {}, liFac),
 			coEl = coObj.node
 	coObj.update([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)

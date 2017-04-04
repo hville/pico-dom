@@ -1,40 +1,30 @@
-var reduce = require('./util/reduce'),
-		mapEC = require('./env').extra,
+var mapEC = require('./env').extra,
 		cloneChildren = require('./util/clone-child')
-
-var componentEventOptions = {capture: true, passive:true}
 
 module.exports = Component
 
 /**
  * @constructor
  * @param {Object} node - DOM node
- * @param {Object} [configs] - configuration
+ * @param {Object} [extra] - configuration
+ * @param {Object} [input] - init value
  */
-function Component(node, configs) {
-	this.node = node
-	this._eventHandlers = {}
+function Component(node, extra, input) {
 	this.update = updateChildren
+	//decorate: key, init, update, onmove, handleEvents...
+	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]]
 
-	// decorate
-	if (configs) for (var i=0; i<configs.length; ++i) {
-		var cfg = configs[i]
-		if (cfg.key) this.key = cfg.key
-		if (cfg.init) this.init = cfg.init
-		if (cfg.update) this.update = cfg.update
-		if (cfg.onmove) this.onmove = cfg.onmove
-		if (cfg.on) addEventListeners(this, cfg.on)
-		if (cfg._eventHandlers) addEventListeners(this, cfg._eventHandlers) //for cloning self
-	}
 	// register and init
+	this.node = node
 	mapEC.set(node, this)
-	if (this.init) this.init()
+	if (this.init) this.init(input)
 }
 Component.prototype = {
 	constructor: Component,
-	clone: function clone(cfg) {
+	clone: function clone(input) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false)
+<<<<<<< HEAD
 		cloneChildren(targetNode, sourceNode.firstChild)
 		return new Component(targetNode, cfg ? [this, cfg] : [this])
 	},
@@ -52,6 +42,10 @@ Component.prototype = {
 		var fcn = this._eventHandlers[evt.type]
 		evt.stopPropagation()
 		fcn.call(this, evt)
+=======
+		cloneChildren(targetNode, sourceNode.firstChild, input)
+		return new Component(targetNode, this, input)
+>>>>>>> extra
 	},
 	updateChildren: updateChildren,
 	moveto: function moveto(parent, before) {
@@ -80,12 +74,4 @@ function updateChildren() {
 		else ptr = ptr.nextSibling
 	}
 	return this
-}
-function addEventListeners(ctx, obj) {
-	reduce(obj, setEvt, ctx)
-	return ctx
-}
-function setEvt(ctx, fcn, key) {
-	ctx.setEvent(key, fcn)
-	return ctx
 }
