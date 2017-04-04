@@ -34,11 +34,9 @@ Component.prototype = {
 	constructor: Component,
 	clone: function clone(cfg) {
 		var sourceNode = this.node,
-				targetNode = sourceNode.cloneNode(false),
-				cloneCo = new Component(targetNode, cfg ? [this, cfg] : [this])
+				targetNode = sourceNode.cloneNode(false)
 		cloneChildren(targetNode, sourceNode.firstChild)
-		mapEC.set(targetNode, cloneCo)
-		return cloneCo
+		return new Component(targetNode, cfg ? [this, cfg] : [this])
 	},
 	// to add event listeners binded to this context
 	setEvent: function setEvent(name, handler) {
