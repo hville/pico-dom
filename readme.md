@@ -10,37 +10,40 @@
 
 ```javascript
 var pico = require('pico-dom')
-var co = pico.component,
-    li = pico.list,
-    el = pico.element
+var el = pico.element,
+    co = pico.component,
+    list = pico.list
 
 var table = co('table', [
-  el('caption', 'data-matrix')
+  el('caption', 'data-matrix'),
   co('tbody',
-    li('tr',
-      co('td', el.svg('svg', svgIcon)),
-      li('td', {
-        co('input', {update: function(val, pos) { this.node.value = val }}
-      })
-    )
-  ),
+    list(co('tr',
+      co('td', el.svg('svg', svgIcon)), // title column
+      list(co('td',
+        co('input', {
+          extra: {
+            update: function(val, pos) { this.node.value = val }
+          }
+        })
+      ))
+      co('td', el.svg('svg', svgIcon)), // summary column
+    ))
+  )
 ])
 table.update([['Jane', 'Roe'], ['John', 'Doe']])
-table.moveto(document.body)
+el(document.body, table)
 ```
 
 ## Features
 
-* dynamic list and nested lists
+* dynamic lists and nested lists
 * namespaced tag and namespaced attribute support
 * svg namespace and utility functions pre-defined
 * w3 string selector API, including attributes
 * element decorators for element properties and attributes
 * ability to inject a `document API` for server and/or testing (e.g. `jsdom`)
-* factories with preset defaults to facilitate the creation of components
-* All ES5 and HTML5 to avoid transpiling and facilitate compatibility
 * no virtual DOM, all operations are done on actual nodes
-* under 3kb gzip, no dependencies
+* around 2.3kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 
 ### Limitations
@@ -53,13 +56,15 @@ table.moveto(document.body)
 
 * strictly DOM element creation and manipulation (no router or store)
 * minimal intermediate object. Structure is held by the DOM itself
-
+* minimal memory profile for mobile use
 
 ## API
 
 ### Elements
-* `element(selector[, ...elConfig])`: Hyperscript function to generate HTMLElements, SVGElements or other namespaced Elements
-  * example: `pico.element('p', {attrs: {style: 'color:blue'}}, '1'))`
+
+Typical hyperscript API `element(selector[, ...configurations][, ...children])` to generate HTMLElements, SVGElements or other namespaced Elements
+
+example: `pico.element('p', {attrs: {style: 'color:blue'}}, '1'))`
 
 If an Element is provided as a selector, it is simply decorated as-is with additional attributes, properties and/or children.
 
@@ -77,27 +82,33 @@ The function has 2 additional properties:
   * internaly: `element.svg = element.preset({xmlns: ns.svg})`
 
 #### Component Factory
-* `component(selector[, ...coConfig])`: Hyperscript function to generate a component with custom behavious and lifecycle events
-  * example: `pico.component('p', {update: setText}))`
 
-A component is an Element wrapped in a container object with additional properties and methods:
+A component is just an additional context tied to an element (via WeakMap) to attach additional properties, methods and lifecycle events. The component hyperscript works the same way as the element function (`component(selector[, ...configurations][, ...children])`). The component context is defined with the additional `extra` decorator.
+
+```javascript
+co('button[type=button].btn#fire', {
+  props: {
+    onclick: clickHandler
+  },
+  extra: {
+    update: function(val) { this.node.textContent = val }
+  }
+}
+```
+
+A component has the following properties and methods:
 * `.node` the associated node
-* `.key` optional key for identification or list sorting
 * `.update(...) => this` the function to trigger changes based on external data
 * `.moveto(parentNode|null[, before])` to move|mount|unmount the component
 * `.setText(text)` helper efficiently and safely change the node text
 * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `update` property set to `updateChildren`. If `update` is specified, children updates must be manually called.
 * `.clone([cfg]) => new instance` to clone a component and underlying tree with optional additional configuration
+* `.key` optional key for identification or list sorting
 
-The arguments are the same as when creating elements but with the following additional configuration options:
-* `.init()`
-  * example: `{init: function() { this.moveto(document.body) }}`
-* `.update(...any)`
-  * example `{update: function(v) { this.node.textContent = v }}`
-* `.onmove(oldParent, newParent)`
-  * example: `{onmove: function(o,n) { if (!n) console.log('dismounted') }`
-* `.on` any eventName:eventListener pairs
-  * example: `{on: {click: function() { this.node.textContent = 'clicked' }}}`
+Lifecycle functions
+* `.init()` on object creation
+* `.update(...any)` when new data is available
+* `.onmove(oldParent, newParent)` when the component is moved or removed
 
 
 ### DOM helpers
@@ -142,8 +153,6 @@ SVG and/or other namespaces are supported. For example, the following are equiva
   * example `namespaces.svg = 'http://www.w3.org/2000/svg'}`
 * `window`: Getter-Setter to optionally set a custom `window` object for testing or server use
   * example `pico.window = jsdom.jsdom().defaultView`
-
-
 
 ## License
 

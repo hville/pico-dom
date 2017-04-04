@@ -8,10 +8,10 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
-## [0.17.0] - 2017-04-03
+## [0.18.0] - 2017-04-04
 ### Changed
+- all component decorators grouped under the `extra` decorator
 - list.update performance improvement
-- internal array of options instead of merging objects
 - minimal WeakMap polyfill for older browsers
 
 ## [0.15.0] - 2017-04-02
