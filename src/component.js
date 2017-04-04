@@ -1,6 +1,5 @@
 var mapEC = require('./env').extra,
-		cloneChildren = require('./util/clone-child'),
-		ENV = require('./env')
+		cloneChildren = require('./util/clone-child')
 
 module.exports = Component
 
@@ -11,21 +10,22 @@ module.exports = Component
  * @param {Object} [input] - init value
  */
 function Component(node, extra, input) {
-	this.node = node
 	this.update = updateChildren
-	//decorate: key, init, update, onmove, handleEvents
+	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]]
+
 	// register and init
+	this.node = node
 	mapEC.set(node, this)
 	if (this.init) this.init(input)
 }
 Component.prototype = {
 	constructor: Component,
-	clone: function clone() {
+	clone: function clone(input) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false)
-		cloneChildren(targetNode, sourceNode.firstChild)
-		return new Component(targetNode, this)
+		cloneChildren(targetNode, sourceNode.firstChild, input)
+		return new Component(targetNode, this, input)
 	},
 	updateChildren: updateChildren,
 	moveto: function moveto(parent, before) {

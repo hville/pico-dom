@@ -63,3 +63,24 @@ ct('co - mixed content', function() {
 	ct('===', el.childNodes.item(0).value, 'def')
 	ct('===', el.childNodes.item(1).value, 'def')
 })
+ct('co - cloning', function() {
+	var model = co('td', [
+		bodyTdInputFac(),
+		bodyTdInputFac()
+	])
+	var cell = model.clone()
+	var el = cell.node
+	cell.update('def')
+	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)
+	//console.log(typ)
+	// initial element
+	ct('!==', cell, model)
+	ct('!==', cell.node, model.node)
+	ct('===', cell.update, model.update)
+	ct('===', cell.handleEvent, model.handleEvent)
+	ct('===', cell.init, model.init)
+	ct('===', el.nodeName.toLowerCase(), 'td')
+	// view inputs
+	ct('===', el.childNodes.item(0) && el.childNodes.item(0).value, 'def')
+	ct('===', el.childNodes.item(1) && el.childNodes.item(1).value, 'def')
+})

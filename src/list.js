@@ -98,7 +98,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = this.factory({key: key})
+				itm = this.factory(val)
 				if (itm.key !== key) itm.key = key
 				mapKC.set(key, itm)
 				parent.insertBefore(itm.node, before)
@@ -135,8 +135,9 @@ List.prototype = {
 				drop = foot
 
 		while ((drop = foot.previousSibling) !== stop) {
-			mapKC.delete(mapEC.get(drop).key)
-			parent.removeChild(drop)
+			var extra = mapEC.get(drop)
+			mapKC.delete(extra.key)
+			extra.moveto(null)
 		}
 		return this
 	}
