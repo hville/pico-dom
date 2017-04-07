@@ -101,17 +101,17 @@ List.prototype = {
 				itm = this.factory(val)
 				if (itm.key !== key) itm.key = key
 				mapKC.set(key, itm)
-				parent.insertBefore(itm.node, before)
+				parent.insertBefore(itm.node, before) // new item: insertion
 			}
-			else if (itm.node === before) {
+			else if (itm.node === before) { // right position, move on
 				before = itm.node.nextSibling
 			}
-			else if (itm.node === before.nextSibling) {
+			else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
 				parent.insertBefore(before, foot)
 				before = itm.node.nextSibling
 			}
 			else {
-				parent.insertBefore(itm.node, before)
+				parent.insertBefore(itm.node, before) //move existing node back
 			}
 			itm.update(val, i, arr)
 		}
