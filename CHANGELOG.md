@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+- list.factory({key: key}); Component(node, cfg0, cfg1, ...); this.init()
+- list.factory(k, i); Component(node, cfg, k, i); this.init(k, i)
+- list(Element)
+- findNode( node => Bool, thisArg)=>node; findExtra( extra => Bool, thisArg)=>extra
+- getKey(v,i,a) //add array
+- expose Component and List
 
 ## [0.18.0] - 2017-04-04
 ### Changed
