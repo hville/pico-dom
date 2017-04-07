@@ -93,7 +93,7 @@ List.prototype = {
 
 		for (var i=0; i<arr.length; ++i) {
 			var val = arr[i],
-					key = getK(val, i)
+					key = getK(val, i, arr)
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {

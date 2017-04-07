@@ -12,11 +12,12 @@
 - list(Element)
 - findNode( node => Bool, thisArg)=>node; findExtra( extra => Bool, thisArg)=>extra
 - getKey(v,i,a) //add array
-- expose Component and List
 
 ## [0.19.0] - 2017-04-07
 ### Changed
 - build system to ES5 modules with CJS and Browser Exports
+- expose Component and List
+- list.dataKey(v,i,a) instead of list.dataKey(v,i)
 
 ## [0.18.0] - 2017-04-04
 ### Changed
