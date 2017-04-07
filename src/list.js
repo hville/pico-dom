@@ -3,8 +3,8 @@ import {comment} from './nodes'
 import EXTRA from './extra'
 
 function createFactory(instance) {
-	return function(input) {
-		var comp = instance.clone(input)
+	return function(k, i) {
+		var comp = instance.clone(k, i)
 		return comp
 	}
 }
@@ -97,7 +97,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key)
 			if (!itm) {
-				itm = this.factory(val)
+				itm = this.factory(key, i)
 				if (itm.key !== key) itm.key = key
 				mapKC.set(key, itm)
 				parent.insertBefore(itm.node, before) // new item: insertion

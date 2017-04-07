@@ -9,23 +9,24 @@ export default Component
  * @param {Object} [extra] - configuration
  * @param {Object} [input] - init value
  */
-function Component(node, extra, input) {
+function Component(node, extra, key, idx) {
 	this.update = updateChildren
 	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]]
+	if (key !== void 0) this.key = key
 
 	// register and init
 	this.node = node
 	EXTRA.set(node, this)
-	if (this.init) this.init(input)
+	if (this.init) this.init(key, idx)
 }
 Component.prototype = {
 	constructor: Component,
-	clone: function clone(input) {
+	clone: function clone(k, i) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false)
-		cloneChildren(targetNode, sourceNode.firstChild, input)
-		return new Component(targetNode, this, input)
+		cloneChildren(targetNode, sourceNode.firstChild)
+		return new Component(targetNode, this, k, i)
 	},
 	updateChildren: updateChildren,
 	moveto: function moveto(parent, before) {

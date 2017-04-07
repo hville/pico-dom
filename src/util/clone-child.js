@@ -1,15 +1,15 @@
 import EXTRA from '../extra'
 
-export default function cloneChildren(targetParent, sourceChild, input) {
+export default function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
 	var	sourceItem = EXTRA.get(sourceChild),
 			sourceNext = sourceChild.nextSibling
 	if (!sourceItem) {
-		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild, input))
+		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild))
 	}
 	else {
-		sourceItem.clone(input).moveto(targetParent)
+		sourceItem.clone().moveto(targetParent)
 		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling
 	}
-	return cloneChildren(targetParent, sourceNext, input)
+	return cloneChildren(targetParent, sourceNext)
 }
