@@ -1,8 +1,8 @@
-var mapEC = require('../env').extra
+import EXTRA from '../extra'
 
-module.exports = function cloneChildren(targetParent, sourceChild, input) {
+export default function cloneChildren(targetParent, sourceChild, input) {
 	if (sourceChild === null) return targetParent
-	var	sourceItem = mapEC.get(sourceChild),
+	var	sourceItem = EXTRA.get(sourceChild),
 			sourceNext = sourceChild.nextSibling
 	if (!sourceItem) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild, input))

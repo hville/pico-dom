@@ -1,6 +1,6 @@
-var reduce = require('./util/reduce')
+import reduce from './util/reduce'
 
-module.exports = {
+export default {
 	attrs: function(elm, val) {
 		return val ? reduce(val, setAttr, elm) : elm
 	},

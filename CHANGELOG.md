@@ -14,6 +14,10 @@
 - getKey(v,i,a) //add array
 - expose Component and List
 
+## [0.19.0] - 2017-04-07
+### Changed
+- build system to ES5 modules with CJS and Browser Exports
+
 ## [0.18.0] - 2017-04-04
 ### Changed
 - all component decorators grouped under the `extra` decorator

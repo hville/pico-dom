@@ -1,7 +1,7 @@
-var mapEC = require('./env').extra,
-		cloneChildren = require('./util/clone-child')
+import EXTRA from './extra'
+import cloneChildren from './util/clone-child'
 
-module.exports = Component
+export default Component
 
 /**
  * @constructor
@@ -16,7 +16,7 @@ function Component(node, extra, input) {
 
 	// register and init
 	this.node = node
-	mapEC.set(node, this)
+	EXTRA.set(node, this)
 	if (this.init) this.init(input)
 }
 Component.prototype = {
@@ -46,7 +46,7 @@ Component.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild
 	while (ptr) {
-		var extra = mapEC.get(ptr)
+		var extra = EXTRA.get(ptr)
 		if (extra) {
 			extra.update.apply(extra, arguments)
 			ptr = (extra.footer || ptr).nextSibling

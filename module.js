@@ -1,6 +1,4 @@
 /* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */
-'use strict';
-
 var ENV$1 = {
 	get document() { return init().document },
 	get window() { return init().window },
@@ -429,4 +427,4 @@ ENV$1.component = co;
 // List
 ENV$1.list = list;
 
-module.exports = ENV$1;
+export default ENV$1;

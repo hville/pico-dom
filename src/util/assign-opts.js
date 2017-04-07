@@ -1,4 +1,4 @@
-module.exports = function assignOpts(tgt, src) {
+export default function assignOpts(tgt, src) {
 	if (src) for (var i=0, ks=Object.keys(src); i<ks.length; ++i) {
 		var opt = ks[i]
 		switch (opt) {

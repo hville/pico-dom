@@ -1,12 +1,12 @@
-var ENV = require('../env'),
-		text = require('../env').text,
-		assignOpts = require('./assign-opts'),
-		NS = require('../env').namespaces
+import ENV from '../env'
+import NS from '../namespaces'
+import assignOpts from './assign-opts'
+import {text} from '../nodes'
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
-module.exports = function creator(factory) {
+export default function creator(factory) {
 	return function(defaults) {
 		return function define(selector) {
 			// Options precedence: defaults < selector < options[0] < options[1] ...

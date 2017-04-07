@@ -1,8 +1,6 @@
-var Component = require('./component'),
-		ENV = require('./env'),
-		comment = require('./env').comment
-
-var mapEC = ENV.extra
+import Component from './component'
+import {comment} from './nodes'
+import EXTRA from './extra'
 
 function createFactory(instance) {
 	return function(input) {
@@ -10,7 +8,8 @@ function createFactory(instance) {
 		return comp
 	}
 }
-module.exports = function list(model, dataKey) {
+
+export default function list(model, dataKey) {
 	switch (model.constructor) {
 		case Function:
 			return new List(model, dataKey)
@@ -38,8 +37,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = comment('^')
 	this.footer = comment('$')
-	mapEC.set(this.header, this)
-	mapEC.set(this.footer, this)
+	EXTRA.set(this.header, this)
+	EXTRA.set(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -77,7 +76,7 @@ List.prototype = {
 		while (next !== head) {
 			var item = next
 			next = item.previousSibling
-			var ctx = mapEC.get(item)
+			var ctx = EXTRA.get(item)
 			if (ctx) before = ctx.moveto(parent, before)
 		}
 		if (head !== before) before = parent.insertBefore(head, before)
@@ -135,7 +134,7 @@ List.prototype = {
 				drop = foot
 
 		while ((drop = foot.previousSibling) !== stop) {
-			var extra = mapEC.get(drop)
+			var extra = EXTRA.get(drop)
 			mapKC.delete(extra.key)
 			extra.moveto(null)
 		}

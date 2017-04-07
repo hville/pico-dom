@@ -1,4 +1,5 @@
 /* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */
+var picoDOM = (function () {
 'use strict';
 
 var ENV$1 = {
@@ -429,4 +430,6 @@ ENV$1.component = co;
 // List
 ENV$1.list = list;
 
-module.exports = ENV$1;
+return ENV$1;
+
+}());
