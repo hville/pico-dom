@@ -7,7 +7,8 @@ export default Component
  * @constructor
  * @param {Object} node - DOM node
  * @param {Object} [extra] - configuration
- * @param {Object} [input] - init value
+ * @param {*} [key] - optional data key
+ * @param {number} [idx] - optional position index
  */
 function Component(node, extra, key, idx) {
 	this.update = updateChildren

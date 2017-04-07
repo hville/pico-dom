@@ -45,11 +45,10 @@ el(document.body, table)
 * no virtual DOM, all operations are done on actual nodes
 * around 2.3kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
+* available in CommonJS, ES6 modules and browser versions
 
 ### Limitations
 
-* still in early trial phase. proof of concept only
-* currently only available as a common JS module (i.e. `require('pico-dom')`)
 * All in ES5 with a bare-bone WeakMaps get/set replacement for browsers below IE11 and Android 5.0. Should work on all browsers but not tested.
 
 ### Inspiration and Design Goals
