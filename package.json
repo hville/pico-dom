@@ -1,9 +1,9 @@
 {
   "name": "pico-dom",
   "version": "0.19.0",
-  "main": "./index.js",
-  "module": "./module.js",
-  "browser": "./browser.js",
+  "main": "./dist/index.js",
+  "module": "./dist/module.js",
+  "browser": "./dist/browser.js",
   "description": "small DOM component system",
   "keywords": [
     "component",
@@ -23,12 +23,12 @@
     "test": "cotest tst",
     "gzip": "node -e \"fs.writeFileSync(process.argv[2], zlib.gzipSync(fs.readFileSync(process.argv[1])))\"",
 
-    "build:module": "rollup -o module.js -f es -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
-    "build:main": "rollup -o index.js -f cjs --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
-    "build:browser": "rollup -o browser.js -f iife -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
+    "build:module": "rollup -o ./dist/module.js -f es -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
+    "build:main": "rollup -o ./dist/index.js -f cjs --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
+    "build:browser": "rollup -o ./dist/browser.js -f iife -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
 
-    "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true browser.js > browser.min.js",
-    "build:gzip": "npm run gzip -- iife.min.js iife.gzip",
+    "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
+    "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gzip",
 
     "prepublish": "npm run build:main && npm test && npm run build:module && npm run build:browser && npm run build:min"
   },

@@ -1,6 +1,6 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		pico = require('../index.js')
+		pico = require('../dist/index.js')
 
 var el = pico.element
 

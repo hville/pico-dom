@@ -191,43 +191,45 @@ var EXTRA = typeof WeakMap !== 'undefined' ? new WeakMap() : {
 	get: function(node) { return node._$comp_ }
 };
 
-function cloneChildren(targetParent, sourceChild, input) {
+function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
 	var	sourceItem = EXTRA.get(sourceChild),
 			sourceNext = sourceChild.nextSibling;
 	if (!sourceItem) {
-		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild, input));
+		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
 	}
 	else {
-		sourceItem.clone(input).moveto(targetParent);
+		sourceItem.clone().moveto(targetParent);
 		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling;
 	}
-	return cloneChildren(targetParent, sourceNext, input)
+	return cloneChildren(targetParent, sourceNext)
 }
 
 /**
  * @constructor
  * @param {Object} node - DOM node
  * @param {Object} [extra] - configuration
- * @param {Object} [input] - init value
+ * @param {*} [key] - optional data key
+ * @param {number} [idx] - optional position index
  */
-function Component$1(node, extra, input) {
+function Component$1(node, extra, key, idx) {
 	this.update = updateChildren;
 	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]];
+	if (key !== void 0) this.key = key;
 
 	// register and init
 	this.node = node;
 	EXTRA.set(node, this);
-	if (this.init) this.init(input);
+	if (this.init) this.init(key, idx);
 }
 Component$1.prototype = {
 	constructor: Component$1,
-	clone: function clone(input) {
+	clone: function clone(k, i) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false);
-		cloneChildren(targetNode, sourceNode.firstChild, input);
-		return new Component$1(targetNode, this, input)
+		cloneChildren(targetNode, sourceNode.firstChild);
+		return new Component$1(targetNode, this, k, i)
 	},
 	updateChildren: updateChildren,
 	moveto: function moveto(parent, before) {
@@ -267,8 +269,8 @@ co.svg = preset$1({xmlns: ns.svg});
 co.preset = preset$1;
 
 function createFactory(instance) {
-	return function(input) {
-		var comp = instance.clone(input);
+	return function(k, i) {
+		var comp = instance.clone(k, i);
 		return comp
 	}
 }
@@ -357,11 +359,11 @@ List.prototype = {
 
 		for (var i=0; i<arr.length; ++i) {
 			var val = arr[i],
-					key = getK(val, i);
+					key = getK(val, i, arr);
 			// find item, create Item if it does not exits
 			var itm = mapKC.get(key);
 			if (!itm) {
-				itm = this.factory(val);
+				itm = this.factory(key, i);
 				if (itm.key !== key) itm.key = key;
 				mapKC.set(key, itm);
 				parent.insertBefore(itm.node, before); // new item: insertion
