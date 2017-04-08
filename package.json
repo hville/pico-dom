@@ -22,6 +22,7 @@
   "scripts": {
     "test": "cotest tst",
     "gzip": "node -e \"fs.writeFileSync(process.argv[2], zlib.gzipSync(fs.readFileSync(process.argv[1])))\"",
+    "docs": "jsdoc2md --no-gfm ./src/*.js > api.md",
 
     "build:module": "rollup -o ./dist/module.js -f es -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
     "build:main": "rollup -o ./dist/index.js -f cjs --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
@@ -30,7 +31,7 @@
     "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
     "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gzip",
 
-    "prepublish": "npm run build:main && npm test && npm run build:module && npm run build:browser && npm run build:min"
+    "prepublish": "npm run build:main && npm test && npm run docs && npm run build:module && npm run build:browser && npm run build:min"
   },
   "repository": {
     "type": "git",
