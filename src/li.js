@@ -8,6 +8,12 @@ function createFactory(instance) {
 	}
 }
 
+/**
+* @function list
+* @param  {List|Component|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
 export default function list(model, dataKey) {
 	switch (model.constructor) {
 		case Function:

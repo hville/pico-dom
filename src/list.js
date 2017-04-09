@@ -26,14 +26,20 @@ function List(factory, dKey) {
 List.prototype = {
 	constructor: List,
 	dataKey: function dataKey(v,i) { return i },
+
+	/**
+	* @function clone
+	* @return {!List} new List
+	*/
 	clone: function clone() {
 		return new List(this.factory, this.dataKey)
 	},
+
 	/**
 	* @function moveTo
 	* @param  {Object} parent parentNode
 	* @param  {Object} [before] nextSibling
-	* @return {Object} header
+	* @return {!List} this
 	*/
 	moveTo: function moveTo(parent, before) {
 		var foot = this.footer,
@@ -76,6 +82,12 @@ List.prototype = {
 
 		return this
 	},
+
+	/**
+	* @function update
+	* @param  {Array} [arr] optional Element pointer
+	* @return {!List} list instance
+	*/
 	update: function update(arr) {
 		var head = this.header,
 				foot = this.footer,
@@ -112,10 +124,11 @@ List.prototype = {
 		// de-reference leftover items
 		return this.removeChildren(before.previousSibling)
 	},
+
 	/**
 	* @function removeChildren
 	* @param  {Object} [after] optional Element pointer
-	* @return {Object} list instance
+	* @return {!List} list instance
 	*/
 	removeChildren: function removeChildren(after) {
 		var foot = this.footer,

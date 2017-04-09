@@ -3,6 +3,11 @@ import decorate from './decorate'
 import ns from './namespaces'
 import Component from './component'
 
+/**
+* @function preset
+* @param  {Object} defaults preloaded component defaults
+* @return {Function(string|Object, ...*):!Component} component hyperscript function
+*/
 var preset = creator(function(elm, cfg, cnt) {
 	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 })
