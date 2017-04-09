@@ -39,7 +39,7 @@ List.prototype = {
 				head = this.header
 		// clear the list if no parent
 		if (!parent) {
-			this.clear()
+			this.removeChildren()
 			var oldParent = head.parentNode
 			if (oldParent) {
 				oldParent.removeChild(head)
@@ -99,14 +99,14 @@ List.prototype = {
 		}
 
 		// de-reference leftover items
-		return this.clear(before.previousSibling)
+		return this.removeChildren(before.previousSibling)
 	},
 	/**
-	* @function clear
+	* @function removeChildren
 	* @param  {Object} [after] optional Element pointer
 	* @return {Object} list instance
 	*/
-	clear: function clear(after) {
+	removeChildren: function removeChildren(after) {
 		var foot = this.footer,
 				parent = foot.parentNode
 		// list without parent are empty

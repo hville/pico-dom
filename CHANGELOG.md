@@ -7,7 +7,11 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-~~list(Element)~~
+- list(Element)
+- expose List
+- moveto renamed to moveTo
+- clear renamed to removeChildren
+
 ~~findNode( node => Bool, thisArg)=>node; findExtra( extra => Bool, thisArg)=>extra~~
 - fix | standardize moveto return value (node or extra?)
 - component.clear(after) || component.clearChildren(after)

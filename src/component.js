@@ -30,7 +30,7 @@ Component.prototype = {
 		return new Component(targetNode, this, k, i)
 	},
 	updateChildren: updateChildren,
-	moveto: function moveto(parent, before) {
+	moveTo: function moveTo(parent, before) {
 		var node = this.node,
 				oldParent = node.parentNode
 		if (parent) parent.insertBefore(node, before || null)
@@ -43,6 +43,17 @@ Component.prototype = {
 				child = node.firstChild
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
 		else node.textContent = text
+	},
+	removeChildren: function removeChildren(after) {
+		var last = parent.lastChild
+
+		while (last && last != after) { //eslint-disable-line eqeqeq
+			var extra = EXTRA.get(last)
+			if (extra) extra.moveTo(null)
+			else parent.removeChild(last)
+			last = parent.lastChild
+		}
+		return this
 	}
 }
 function updateChildren() {

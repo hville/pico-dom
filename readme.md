@@ -125,8 +125,8 @@ A list is a component or component factory that gets repeated on update to match
 * `.header` the associated positionning header commentNode
 * `.header` the associated positionning footer commentNode
 * `.update(array) => this` triggers multiple components `component.update(value, index, array)`
-* `.moveto(parentNode|null[, before])` to move the list and all content
-* `.clear([after])`
+* `.moveTo(parentNode|null[, before])` to move the list and all content
+* `.removeChildren([after])`
 * `.clone() => new instance`
 
 * lists can be nested or stacked
