@@ -31,7 +31,7 @@ ct('list-simple', function() {
 	ct('===', concatData(el), '^153$')//3
 	ct('===', l0.clear(), l0)
 	ct('===', concatData(el), '^$')
-	ct('===', l0.moveto(null), l0)
+	ct('===', l0.moveTo(null), l0)
 	ct('===', concatData(el), '')
 })
 ct('list-stacked', function() {
