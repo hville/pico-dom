@@ -10,9 +10,9 @@
 ## Functions
 
 <dl>
-<dt><a href="#moveto">moveto(parent, [before])</a> ⇒ <code>Object</code></dt>
+<dt><a href="#moveTo">moveTo(parent, [before])</a> ⇒ <code>Object</code></dt>
 <dd></dd>
-<dt><a href="#clear">clear([after])</a> ⇒ <code>Object</code></dt>
+<dt><a href="#removeChildren">removeChildren([after])</a> ⇒ <code>Object</code></dt>
 <dd></dd>
 </dl>
 
@@ -68,9 +68,9 @@
     </tr>  </tbody>
 </table>
 
-<a name="moveto"></a>
+<a name="moveTo"></a>
 
-## moveto(parent, [before]) ⇒ <code>Object</code>
+## moveTo(parent, [before]) ⇒ <code>Object</code>
 **Kind**: global function  
 **Returns**: <code>Object</code> - header  
 <table>
@@ -89,9 +89,9 @@
     </tr>  </tbody>
 </table>
 
-<a name="clear"></a>
+<a name="removeChildren"></a>
 
-## clear([after]) ⇒ <code>Object</code>
+## removeChildren([after]) ⇒ <code>Object</code>
 **Kind**: global function  
 **Returns**: <code>Object</code> - list instance  
 <table>

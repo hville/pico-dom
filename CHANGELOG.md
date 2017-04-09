@@ -11,10 +11,8 @@
 - expose List
 - moveto renamed to moveTo
 - clear renamed to removeChildren
-
-~~findNode( node => Bool, thisArg)=>node; findExtra( extra => Bool, thisArg)=>extra~~
-- fix | standardize moveto return value (node or extra?)
-- component.clear(after) || component.clearChildren(after)
+- fix Component and List methods to all return this instead of node
+- ~~[?] find(test, after) => node~~
 
 ## [0.19.0] - 2017-04-07
 ### Changed
