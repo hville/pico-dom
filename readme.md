@@ -98,7 +98,7 @@ co('button[type=button].btn#fire', {
 A component has the following properties and methods:
 * `.node` the associated node
 * `.update(...) => this` the function to trigger changes based on external data
-* `.moveto(parentNode|null[, before])` to move|mount|unmount the component
+* `.moveTo(parentNode|null[, before])` to move|mount|unmount the component
 * `.setText(text)` helper efficiently and safely change the node text
 * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `update` property set to `updateChildren`. If `update` is specified, children updates must be manually called.
 * `.clone([cfg]) => new instance` to clone a component and underlying tree with optional additional configuration
