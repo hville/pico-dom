@@ -7,7 +7,6 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-- list(Element)
 - expose List
 - moveto renamed to moveTo
 - clear renamed to removeChildren

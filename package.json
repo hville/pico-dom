@@ -1,6 +1,6 @@
 {
   "name": "pico-dom",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "main": "./dist/index.js",
   "module": "./dist/module.js",
   "browser": "./dist/browser.js",
@@ -20,7 +20,7 @@
     "cotest": "^2.1.0"
   },
   "scripts": {
-    "test": "cotest tst",
+    "test": "npm run build:main && cotest tst",
     "gzip": "node -e \"fs.writeFileSync(process.argv[2], zlib.gzipSync(fs.readFileSync(process.argv[1])))\"",
     "docs": "jsdoc2md --no-gfm ./src/*.js > api.md",
 
@@ -31,7 +31,7 @@
     "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
     "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gzip",
 
-    "prepublish": "npm run build:main && npm test && npm run docs && npm run build:module && npm run build:browser && npm run build:min"
+    "prepublish": "npm test && npm run docs && npm run build:module && npm run build:browser && npm run build:min"
   },
   "repository": {
     "type": "git",

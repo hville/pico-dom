@@ -20,12 +20,28 @@ var ns = {
 	svg:  'http://www.w3.org/2000/svg'
 };
 
+/**
+* @function text
+* @param  {string} string textNode data
+* @return {!Object} textNode
+*/
 function text(string) {
 	return ENV$1.document.createTextNode(string)
 }
+
+/**
+* @function fragment
+* @return {!Object} documentFragment
+*/
 function fragment() {
 	return ENV$1.document.createDocumentFragment()
 }
+
+/**
+* @function comment
+* @param  {string} string commentNode data
+* @return {!Object} commentNode
+*/
 function comment(string) {
 	return ENV$1.document.createComment(string)
 }
@@ -159,10 +175,10 @@ function parse(def, txt) {
 
 /**
  * Parse a CSS-style selector string and return a new Element
- * @param {Object} element - css like selector string
+ * @param {!Object} element - element to be decorated
  * @param {Object} config - The existing definition to be augmented
  * @param {Array} [children] - Element children Nodes,Factory,Text
- * @returns {Object} - The parsed element definition [sel,att]
+ * @returns {!Object} - The parsed element definition [sel,att]
  */
 function decorate(element, config, children) {
 	// properties and attributes
@@ -174,7 +190,7 @@ function decorate(element, config, children) {
 	// children
 	for (var j=0; j<children.length; ++j) {
 		var child = children[j];
-		if (child.moveto) child.moveto(element);
+		if (child.moveTo) child.moveTo(element);
 		else element.appendChild(child);
 	}
 	return element
@@ -199,7 +215,7 @@ function cloneChildren(targetParent, sourceChild) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
 	}
 	else {
-		sourceItem.clone().moveto(targetParent);
+		sourceItem.clone().moveTo(targetParent);
 		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling;
 	}
 	return cloneChildren(targetParent, sourceNext)
@@ -213,7 +229,6 @@ function cloneChildren(targetParent, sourceChild) {
  * @param {number} [idx] - optional position index
  */
 function Component$1(node, extra, key, idx) {
-	this.update = updateChildren;
 	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]];
 	if (key !== void 0) this.key = key;
@@ -223,30 +238,77 @@ function Component$1(node, extra, key, idx) {
 	EXTRA.set(node, this);
 	if (this.init) this.init(key, idx);
 }
+
 Component$1.prototype = {
 	constructor: Component$1,
-	clone: function clone(k, i) {
+
+	/**
+	* @function clone
+	* @param {*} [key] - optional key
+	* @param {number} [idx] - optional position index
+	* @return {!Component} new Component
+	*/
+	clone: function clone(key, idx) {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false);
 		cloneChildren(targetNode, sourceNode.firstChild);
-		return new Component$1(targetNode, this, k, i)
+		return new Component$1(targetNode, this, key, idx)
 	},
+
+	update: updateChildren,
 	updateChildren: updateChildren,
-	moveto: function moveto(parent, before) {
+
+	/**
+	* @function moveTo
+	* @param  {Object} parent parentNode
+	* @param  {Object} [before] nextSibling
+	* @return {!Component} this
+	*/
+	moveTo: function moveTo(parent, before) {
 		var node = this.node,
 				oldParent = node.parentNode;
 		if (parent) parent.insertBefore(node, before || null);
 		else if (oldParent) oldParent.removeChild(node);
 		if (this.onmove) this.onmove(oldParent, parent);
-		return node
+		return this
 	},
+
+	/**
+	* @function setText
+	* @param  {string} text textNode data
+	* @return {!Component} this
+	*/
 	setText: function setText(text) {
 		var node = this.node,
 				child = node.firstChild;
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text;
 		else node.textContent = text;
+		return this
+	},
+
+	/**
+	* @function removeChildren
+	* @param  {Object} [after] optional last node to be kept
+	* @return {!Component} this
+	*/
+	removeChildren: function removeChildren(after) {
+		var last = parent.lastChild;
+
+		while (last && last != after) { //eslint-disable-line eqeqeq
+			var extra = EXTRA.get(last);
+			if (extra) extra.moveTo(null);
+			else parent.removeChild(last);
+			last = parent.lastChild;
+		}
+		return this
 	}
 };
+
+/**
+* @function updateChildren
+* @param  {...*} optional arguments
+* @return {!Component} list instance
+*/
 function updateChildren() {
 	var ptr = this.node.firstChild;
 	while (ptr) {
@@ -260,6 +322,11 @@ function updateChildren() {
 	return this
 }
 
+/**
+* @function preset
+* @param  {Object} defaults preloaded component defaults
+* @return {Function(string|Object, ...*):!Component} component hyperscript function
+*/
 var preset$1 = creator(function(elm, cfg, cnt) {
 	return new Component$1(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 });
@@ -268,33 +335,15 @@ var co = preset$1();
 co.svg = preset$1({xmlns: ns.svg});
 co.preset = preset$1;
 
-function createFactory(instance) {
-	return function(k, i) {
-		var comp = instance.clone(k, i);
-		return comp
-	}
-}
-
-function list(model, dataKey) {
-	switch (model.constructor) {
-		case Function:
-			return new List(model, dataKey)
-		case Component$1: case List:
-			return new List(createFactory(model), dataKey)
-		default:
-			throw Error('invalid list model:' + typeof model)
-	}
-}
-
 /**
  * @constructor
  * @param {Function} factory - component generating function
  * @param {*} dKey - data key
  */
-function List(factory, dKey) {
-	this.dataKey = !dKey ? getIndex
-		: typeof dKey === 'function' ? dKey
-		: function(v) { return v[dKey] };
+function List$1(factory, dKey) {
+	if (dKey !== undefined) {
+		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
+	}
 
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKC = new Map(); // dataKey => component, for updating
@@ -306,48 +355,71 @@ function List(factory, dKey) {
 	EXTRA.set(this.header, this);
 	EXTRA.set(this.footer, this);
 }
-List.prototype = {
-	constructor: List,
-	clone: function clone() {
-		return new List(this.factory, this.dataKey)
-	},
+List$1.prototype = {
+	constructor: List$1,
+	dataKey: function dataKey(v,i) { return i },
+
 	/**
-	* @function moveto
+	* @function clone
+	* @return {!List} new List
+	*/
+	clone: function clone() {
+		return new List$1(this.factory, this.dataKey)
+	},
+
+	/**
+	* @function moveTo
 	* @param  {Object} parent parentNode
 	* @param  {Object} [before] nextSibling
-	* @return {Object} header
+	* @return {!List} this
 	*/
-	moveto: function moveto(parent, before) {
+	moveTo: function moveTo(parent, before) {
 		var foot = this.footer,
-				head = this.header;
-		// clear the list if no parent
-		if (!parent) {
-			this.clear();
-			var oldParent = head.parentNode;
-			if (oldParent) {
-				oldParent.removeChild(head);
-				oldParent.removeChild(foot);
-			}
-			return this
-		}
-		// list without parent are empty
-		if (!head.parentNode) {
+				head = this.header,
+				oldParent = head.parentNode;
+
+		//nothing to do
+		if (!oldParent && !parent) return this
+		if ((oldParent === parent) && (before === foot || before === foot.nextSibling)) return this
+
+		// list without parent are empty, just move the ends
+		if (!oldParent) {
 			parent.appendChild(head);
 			parent.appendChild(foot);
-			return head
+			return this
 		}
-		// insert from footer to header to avoid repaint if all in right place
-		var next = foot.previousSibling;
-		if (foot !== before) before = parent.insertBefore(foot, before||null);
-		while (next !== head) {
+
+		// clear the list if dismounted (newParent === null)
+		if (!parent) {
+			this.removeChildren();
+			oldParent.removeChild(head);
+			oldParent.removeChild(foot);
+			return this
+		}
+
+		// insert || append
+		var next = head.nextSibling;
+		if (!before) before = null;
+
+		parent.insertBefore(head, before);
+		while(next !== foot) {
 			var item = next;
-			next = item.previousSibling;
+			next = item.nextSibling;
+
 			var ctx = EXTRA.get(item);
-			if (ctx) before = ctx.moveto(parent, before);
+			if (ctx) ctx.moveTo(parent, before);
+			else parent.insertBefore(item, before);
 		}
-		if (head !== before) before = parent.insertBefore(head, before);
-		return before //last insertedChild || first fragmentElement
+		parent.insertBefore(foot, before);
+
+		return this
 	},
+
+	/**
+	* @function update
+	* @param  {Array} [arr] optional Element pointer
+	* @return {!List} list instance
+	*/
 	update: function update(arr) {
 		var head = this.header,
 				foot = this.footer,
@@ -378,18 +450,19 @@ List.prototype = {
 			else {
 				parent.insertBefore(itm.node, before); //move existing node back
 			}
-			itm.update(val, i, arr);
+			if (itm.update) itm.update(val, i, arr);
 		}
 
 		// de-reference leftover items
-		return this.clear(before.previousSibling)
+		return this.removeChildren(before.previousSibling)
 	},
+
 	/**
-	* @function clear
+	* @function removeChildren
 	* @param  {Object} [after] optional Element pointer
-	* @return {Object} list instance
+	* @return {!List} list instance
 	*/
-	clear: function clear(after) {
+	removeChildren: function removeChildren(after) {
 		var foot = this.footer,
 				parent = foot.parentNode;
 		// list without parent are empty
@@ -402,13 +475,34 @@ List.prototype = {
 		while ((drop = foot.previousSibling) !== stop) {
 			var extra = EXTRA.get(drop);
 			mapKC.delete(extra.key);
-			extra.moveto(null);
+			extra.moveTo(null);
 		}
 		return this
 	}
 };
-function getIndex(v,i) {
-	return i
+
+function createFactory(instance) {
+	return function(k, i) {
+		var comp = instance.clone(k, i);
+		return comp
+	}
+}
+
+/**
+* @function list
+* @param  {List|Component|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
+function list(model, dataKey) {
+	switch (model.constructor) {
+		case Function:
+			return new List$1(model, dataKey)
+		case Component$1: case List$1:
+			return new List$1(createFactory(model), dataKey)
+		default:
+			throw Error('invalid list model:' + typeof model)
+	}
 }
 
 // DOM Items
@@ -427,6 +521,7 @@ ENV$1.Component = Component$1;
 ENV$1.component = co;
 
 // List
+ENV$1.List = List$1;
 ENV$1.list = list;
 
 export default ENV$1;
