@@ -1,24 +1,7 @@
-import Component from './component'
 import {comment} from './nodes'
 import EXTRA from './extra'
 
-function createFactory(instance) {
-	return function(k, i) {
-		var comp = instance.clone(k, i)
-		return comp
-	}
-}
-
-export default function list(model, dataKey) {
-	switch (model.constructor) {
-		case Function:
-			return new List(model, dataKey)
-		case Component: case List:
-			return new List(createFactory(model), dataKey)
-		default:
-			throw Error('invalid list model:' + typeof model)
-	}
-}
+export default List
 
 /**
  * @constructor
@@ -46,12 +29,12 @@ List.prototype = {
 		return new List(this.factory, this.dataKey)
 	},
 	/**
-	* @function moveto
+	* @function moveTo
 	* @param  {Object} parent parentNode
 	* @param  {Object} [before] nextSibling
 	* @return {Object} header
 	*/
-	moveto: function moveto(parent, before) {
+	moveTo: function moveTo(parent, before) {
 		var foot = this.footer,
 				head = this.header
 		// clear the list if no parent
@@ -77,7 +60,7 @@ List.prototype = {
 			var item = next
 			next = item.previousSibling
 			var ctx = EXTRA.get(item)
-			if (ctx) before = ctx.moveto(parent, before)
+			if (ctx) before = ctx.moveTo(parent, before)
 		}
 		if (head !== before) before = parent.insertBefore(head, before)
 		return before //last insertedChild || first fragmentElement
@@ -135,8 +118,13 @@ List.prototype = {
 
 		while ((drop = foot.previousSibling) !== stop) {
 			var extra = EXTRA.get(drop)
-			mapKC.delete(extra.key)
-			extra.moveto(null)
+			if (extra) {
+				mapKC.delete(extra.key)
+				extra.moveTo(null)
+			}
+			else {
+				parent.removeChild(drop)
+			}
 		}
 		return this
 	}
