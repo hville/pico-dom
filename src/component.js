@@ -36,7 +36,7 @@ Component.prototype = {
 		if (parent) parent.insertBefore(node, before || null)
 		else if (oldParent) oldParent.removeChild(node)
 		if (this.onmove) this.onmove(oldParent, parent)
-		return node
+		return this
 	},
 	setText: function setText(text) {
 		var node = this.node,

@@ -51,7 +51,7 @@ List.prototype = {
 		if (!head.parentNode) {
 			parent.appendChild(head)
 			parent.appendChild(foot)
-			return head
+			return this
 		}
 		// insert from footer to header to avoid repaint if all in right place
 		var next = foot.previousSibling
@@ -60,10 +60,13 @@ List.prototype = {
 			var item = next
 			next = item.previousSibling
 			var ctx = EXTRA.get(item)
-			if (ctx) before = ctx.moveTo(parent, before)
+			if (ctx) {
+				ctx.moveTo(parent, before)
+				before = ctx.header || ctx.node
+			}
 		}
 		if (head !== before) before = parent.insertBefore(head, before)
-		return before //last insertedChild || first fragmentElement
+		return this
 	},
 	update: function update(arr) {
 		var head = this.header,
