@@ -9,9 +9,9 @@ export default List
  * @param {*} dKey - data key
  */
 function List(factory, dKey) {
-	this.dataKey = !dKey ? getIndex
-		: typeof dKey === 'function' ? dKey
-		: function(v) { return v[dKey] }
+	if (dKey !== undefined) {
+		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] }
+	}
 
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKC = new Map() // dataKey => component, for updating
@@ -25,6 +25,7 @@ function List(factory, dKey) {
 }
 List.prototype = {
 	constructor: List,
+	dataKey: function dataKey(v,i) { return i },
 	clone: function clone() {
 		return new List(this.factory, this.dataKey)
 	},
@@ -128,17 +129,9 @@ List.prototype = {
 
 		while ((drop = foot.previousSibling) !== stop) {
 			var extra = EXTRA.get(drop)
-			if (extra) {
-				mapKC.delete(extra.key)
-				extra.moveTo(null)
-			}
-			else {
-				parent.removeChild(drop)
-			}
+			mapKC.delete(extra.key)
+			extra.moveTo(null)
 		}
 		return this
 	}
-}
-function getIndex(v,i) {
-	return i
 }

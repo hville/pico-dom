@@ -3,9 +3,7 @@ import List from './list'
 
 function createFactory(instance) {
 	return function(k, i) {
-		var comp = instance.clone ? instance.clone(k, i)
-			: instance.clone ? instance.cloneNode()
-			: null
+		var comp = instance.clone(k, i)
 		return comp
 	}
 }
