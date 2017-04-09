@@ -25,8 +25,10 @@ picoDOM.Component = Component
 picoDOM.component = component
 
 // List
-import {default as list} from './list'
+import {default as List} from './list'
+import {default as list} from './li'
 
+picoDOM.List = List
 picoDOM.list = list
 
 export default picoDOM
