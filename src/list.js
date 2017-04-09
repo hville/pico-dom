@@ -112,7 +112,7 @@ List.prototype = {
 			else {
 				parent.insertBefore(itm.node, before) //move existing node back
 			}
-			itm.update(val, i, arr)
+			if (itm.update) itm.update(val, i, arr)
 		}
 
 		// de-reference leftover items
