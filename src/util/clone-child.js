@@ -8,7 +8,7 @@ export default function cloneChildren(targetParent, sourceChild) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild))
 	}
 	else {
-		sourceItem.clone().moveto(targetParent)
+		sourceItem.clone().moveTo(targetParent)
 		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling
 	}
 	return cloneChildren(targetParent, sourceNext)
