@@ -17,7 +17,7 @@ export default function decorate(element, config, children) {
 	// children
 	for (var j=0; j<children.length; ++j) {
 		var child = children[j]
-		if (child.moveto) child.moveto(element)
+		if (child.moveTo) child.moveTo(element)
 		else element.appendChild(child)
 	}
 	return element
