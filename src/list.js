@@ -36,36 +36,43 @@ List.prototype = {
 	*/
 	moveTo: function moveTo(parent, before) {
 		var foot = this.footer,
-				head = this.header
-		// clear the list if no parent
-		if (!parent) {
-			this.removeChildren()
-			var oldParent = head.parentNode
-			if (oldParent) {
-				oldParent.removeChild(head)
-				oldParent.removeChild(foot)
-			}
-			return this
-		}
-		// list without parent are empty
-		if (!head.parentNode) {
+				head = this.header,
+				oldParent = head.parentNode
+
+		//nothing to do
+		if (!oldParent && !parent) return this
+		if ((oldParent === parent) && (before === foot || before === foot.nextSibling)) return this
+
+		// list without parent are empty, just move the ends
+		if (!oldParent) {
 			parent.appendChild(head)
 			parent.appendChild(foot)
 			return this
 		}
-		// insert from footer to header to avoid repaint if all in right place
-		var next = foot.previousSibling
-		if (foot !== before) before = parent.insertBefore(foot, before||null)
-		while (next !== head) {
-			var item = next
-			next = item.previousSibling
-			var ctx = EXTRA.get(item)
-			if (ctx) {
-				ctx.moveTo(parent, before)
-				before = ctx.header || ctx.node
-			}
+
+		// clear the list if dismounted (newParent === null)
+		if (!parent) {
+			this.removeChildren()
+			oldParent.removeChild(head)
+			oldParent.removeChild(foot)
+			return this
 		}
-		if (head !== before) before = parent.insertBefore(head, before)
+
+		// insert || append
+		var next = head.nextSibling
+		if (!before) before = null
+
+		parent.insertBefore(head, before)
+		while(next !== foot) {
+			var item = next
+			next = item.nextSibling
+
+			var ctx = EXTRA.get(item)
+			if (ctx) ctx.moveTo(parent, before)
+			else parent.insertBefore(item, before)
+		}
+		parent.insertBefore(foot, before)
+
 		return this
 	},
 	update: function update(arr) {
