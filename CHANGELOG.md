@@ -10,6 +10,9 @@
 - ~~[?] find(test, after) => node //for cases where node.getElementsb=ByTagNames won't do~~
 - ~~[?] component.appendChild(el(...this.grandChild=xxx)) //sweet but prevents clonning~~
 - list.update = list.updateChildren
+- add docs about prior art and alternatives: redom, hyperscript snabbdom vs lists, decorators, components
+- api docs from jsdoc...
+- examples
 
 
 ## [0.20.0] - 2017-04-10
