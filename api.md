@@ -28,9 +28,9 @@
 <dd></dd>
 <dt><a href="#moveTo">moveTo(parent, [before])</a> ⇒ <code><a href="#List">List</a></code></dt>
 <dd></dd>
-<dt><a href="#update">update([arr])</a> ⇒ <code><a href="#List">List</a></code></dt>
-<dd></dd>
 <dt><a href="#removeChildren">removeChildren([after])</a> ⇒ <code><a href="#List">List</a></code></dt>
+<dd></dd>
+<dt><a href="#updateChildren">updateChildren(arr, ...optional)</a> ⇒ <code><a href="#List">List</a></code></dt>
 <dd></dd>
 <dt><a href="#text">text(string)</a> ⇒ <code>Object</code></dt>
 <dd></dd>
@@ -253,24 +253,6 @@
     </tr>  </tbody>
 </table>
 
-<a name="update"></a>
-
-## update([arr]) ⇒ <code>[List](#List)</code>
-**Kind**: global function  
-**Returns**: <code>[List](#List)</code> - list instance  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>[arr]</td><td><code>Array</code></td><td><p>optional Element pointer</p>
-</td>
-    </tr>  </tbody>
-</table>
-
 <a name="removeChildren"></a>
 
 ## removeChildren([after]) ⇒ <code>[List](#List)</code>
@@ -285,6 +267,27 @@
   <tbody>
 <tr>
     <td>[after]</td><td><code>Object</code></td><td><p>optional Element pointer</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="updateChildren"></a>
+
+## updateChildren(arr, ...optional) ⇒ <code>[List](#List)</code>
+**Kind**: global function  
+**Returns**: <code>[List](#List)</code> - list instance  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>arr</td><td><code>Array</code></td><td><p>array of values to update</p>
+</td>
+    </tr><tr>
+    <td>...optional</td><td><code>*</code></td><td><p>update arguments</p>
 </td>
     </tr>  </tbody>
 </table>

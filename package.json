@@ -31,7 +31,7 @@
     "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
     "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gzip",
 
-    "prepublish": "npm test && npm run docs && npm run build:module && npm run build:browser && npm run build:min"
+    "prepublish": "npm test && npm run build:module && npm run build:browser && npm run build:min && npm run docs"
   },
   "repository": {
     "type": "git",

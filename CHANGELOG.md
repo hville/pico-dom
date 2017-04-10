@@ -7,11 +7,19 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+- ~~[?] find(test, after) => node //for cases where node.getElementsb=ByTagNames won't do~~
+- ~~[?] component.appendChild(el(...this.grandChild=xxx)) //sweet but prevents clonning~~
+- list.update = list.updateChildren
+
+
+## [0.20.0] - 2017-04-10
+### Changed
 - expose List
 - moveto renamed to moveTo
 - clear renamed to removeChildren
+
+### Fixed
 - fix Component and List methods to all return this instead of node
-- ~~[?] find(test, after) => node~~
 
 ## [0.19.0] - 2017-04-07
 ### Changed

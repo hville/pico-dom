@@ -360,6 +360,8 @@ function List$1(factory, dKey) {
 List$1.prototype = {
 	constructor: List$1,
 	dataKey: function dataKey(v,i) { return i },
+	update: updateChildren$1,
+	updateChildren: updateChildren$1,
 
 	/**
 	* @function clone
@@ -418,48 +420,6 @@ List$1.prototype = {
 	},
 
 	/**
-	* @function update
-	* @param  {Array} [arr] optional Element pointer
-	* @return {!List} list instance
-	*/
-	update: function update(arr) {
-		var head = this.header,
-				foot = this.footer,
-				parent = head.parentNode;
-		if (!parent) throw Error('list.updates requires a parentNode')
-		var mapKC = this.mapKC,
-				getK = this.dataKey,
-				before = head.nextSibling;
-
-		for (var i=0; i<arr.length; ++i) {
-			var val = arr[i],
-					key = getK(val, i, arr);
-			// find item, create Item if it does not exits
-			var itm = mapKC.get(key);
-			if (!itm) {
-				itm = this.factory(key, i);
-				if (itm.key !== key) itm.key = key;
-				mapKC.set(key, itm);
-				parent.insertBefore(itm.node, before); // new item: insertion
-			}
-			else if (itm.node === before) { // right position, move on
-				before = itm.node.nextSibling;
-			}
-			else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
-				parent.insertBefore(before, foot);
-				before = itm.node.nextSibling;
-			}
-			else {
-				parent.insertBefore(itm.node, before); //move existing node back
-			}
-			if (itm.update) itm.update(val, i, arr);
-		}
-
-		// de-reference leftover items
-		return this.removeChildren(before.previousSibling)
-	},
-
-	/**
 	* @function removeChildren
 	* @param  {Object} [after] optional Element pointer
 	* @return {!List} list instance
@@ -482,6 +442,49 @@ List$1.prototype = {
 		return this
 	}
 };
+
+/**
+* @function updateChildren
+* @param  {Array} arr array of values to update
+* @param  {...*} optional update arguments
+* @return {!List} list instance
+*/
+function updateChildren$1(arr) {
+	var head = this.header,
+			foot = this.footer,
+			parent = head.parentNode;
+	if (!parent) throw Error('list.updates requires a parentNode')
+	var mapKC = this.mapKC,
+			getK = this.dataKey,
+			before = head.nextSibling;
+
+	for (var i=0; i<arr.length; ++i) {
+		var val = arr[i],
+				key = getK(val, i, arr);
+		// find item, create Item if it does not exits
+		var itm = mapKC.get(key);
+		if (!itm) {
+			itm = this.factory(key, i);
+			if (itm.key !== key) itm.key = key;
+			mapKC.set(key, itm);
+			parent.insertBefore(itm.node, before); // new item: insertion
+		}
+		else if (itm.node === before) { // right position, move on
+			before = itm.node.nextSibling;
+		}
+		else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
+			parent.insertBefore(before, foot);
+			before = itm.node.nextSibling;
+		}
+		else {
+			parent.insertBefore(itm.node, before); //move existing node back
+		}
+		if (itm.update) itm.update(val, i, arr);
+	}
+
+	// de-reference leftover items
+	return this.removeChildren(before.previousSibling)
+}
 
 function createFactory(instance) {
 	return function(k, i) {
