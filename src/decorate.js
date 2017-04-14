@@ -15,10 +15,6 @@ export function decorate(element, config, children) {
 		if (val) decorators[key](element, val)
 	}
 	// children
-	for (var j=0; j<children.length; ++j) {
-		var child = children[j]
-		if (child.moveTo) child.moveTo(element)
-		else element.appendChild(child)
-	}
+	if (children) decorators.children(element, children)
 	return element
 }

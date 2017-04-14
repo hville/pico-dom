@@ -155,6 +155,9 @@ var decorators = {
 	},
 	props: function(elm, val) {
 		return val ? reduce(val, setProp, elm) : elm
+	},
+	children: function(elm, arr) {
+		return arr ? arr.reduce(setChild, elm) : elm
 	}
 };
 function setAttr(elm, val, key) {
@@ -164,6 +167,11 @@ function setAttr(elm, val, key) {
 }
 function setProp(elm, val, key) {
 	if (elm[key] !== val) elm[key] = val;
+	return elm
+}
+function setChild(elm, child) {
+	if (child.moveTo) child.moveTo(elm);
+	else elm.appendChild(child);
 	return elm
 }
 
@@ -182,37 +190,31 @@ function decorate(element, config, children) {
 		if (val) decorators[key](element, val);
 	}
 	// children
-	for (var j=0; j<children.length; ++j) {
-		var child = children[j];
-		if (child.moveTo) child.moveTo(element);
-		else element.appendChild(child);
-	}
+	if (children) decorators.children(element, children);
 	return element
 }
 
-var preset = creator(decorate);
+var presetElement = creator(decorate);
 
-var createElement = preset();
-createElement.svg = preset({xmlns: namespaces.svg});
-createElement.preset = preset;
-
-var WkMap = typeof WeakMap !== 'undefined' ? WeakMap : PunyMap$1;
+var createElement = presetElement();
+createElement.svg = presetElement({xmlns: namespaces.svg});
+createElement.preset = presetElement;
 
 var counter = 0;
 
-function PunyMap$1() {
+function PunyMap() {
 	// unique key to avoid clashes between instances and other properties
 	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
 }
-PunyMap$1.prototype.get = function get(objectKey) {
+PunyMap.prototype.get = function get(objectKey) {
 	return objectKey[this._key]
 };
-PunyMap$1.prototype.set = function set(objectKey, val) {
+PunyMap.prototype.set = function set(objectKey, val) {
 	objectKey[this._key] = val;
 	return this
 };
 
-var nodeExtra = new WkMap();
+var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap;
 
 function getNode(item) {
 	return item ? item.node || item : void 0
@@ -354,13 +356,13 @@ function updateChildren() {
 * @param  {Object} defaults preloaded component defaults
 * @return {Function(string|Object, ...*):!Component} component hyperscript function
 */
-var preset$1 = creator(function(elm, cfg, cnt) {
+var preset = creator(function(elm, cfg, cnt) {
 	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 });
 
-var createComponent = preset$1();
-createComponent.svg = preset$1({xmlns: namespaces.svg});
-createComponent.preset = preset$1;
+var createComponent = preset();
+createComponent.svg = preset({xmlns: namespaces.svg});
+createComponent.preset = preset;
 
 /**
  * @constructor
@@ -535,6 +537,46 @@ function createList(model, dataKey) {
 	}
 }
 
+function Pick(path) {
+	this.path = path;
+}
+function pick() {
+	return new Pick(Array.apply(null, arguments))
+}
+
+Pick.of = Pick['fantasy-land/of'] = pick;
+
+Pick.prototype = {
+	constructor: Pick,
+	get value() {
+		return
+	},
+	key: map,
+	map: map,
+	apply: function apply(obj) {
+		var value = obj,
+				path = this.path;
+		for (var i=0; i<path.length; ++i) {
+			var step = path[i];
+			if (value.hasOwnProperty(step)) value = value[step];     // key
+			else if (typeof key === 'function') value = step(value); // map
+			// value = step.value(value)  // ap
+			// value = step(value).value  // chain
+			else return
+		}
+		return value
+	},
+	ap: function ap(pick) {
+		return new Pick(this.path.concat(pick.path))
+	},
+	chain: function chain(f) {
+		return f(this.path)
+	}
+};
+function map() {
+	return new Pick(this.path.concat.apply(this.path, arguments))
+}
+
 // DOM
 
 exports.setDefaultView = setDefaultView;
@@ -547,3 +589,4 @@ exports.getNode = getNode;
 exports.getExtra = getExtra;
 exports.createComponent = createComponent;
 exports.createList = createList;
+exports.pick = pick;

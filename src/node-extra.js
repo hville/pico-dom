@@ -1,6 +1,6 @@
-import {WkMap} from './constructors/wk-map'
+import {PunyMap} from './constructors/puny-map'
 
-var nodeExtra = new WkMap()
+var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap
 
 export function getNode(item) {
 	return item ? item.node || item : void 0

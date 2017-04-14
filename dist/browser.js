@@ -3,6 +3,10 @@
 'use strict';
 
 var defaultView = typeof window !== 'undefined' ? window : void 0;
+function setDefaultView(win) {
+	if (win) defaultView = win;
+	return defaultView
+}
 
 var namespaces = {
 	html: 'http://www.w3.org/1999/xhtml',
@@ -185,29 +189,27 @@ function decorate(element, config, children) {
 	return element
 }
 
-var preset = creator(decorate);
+var presetElement = creator(decorate);
 
-var createElement = preset();
-createElement.svg = preset({xmlns: namespaces.svg});
-createElement.preset = preset;
-
-var WkMap = typeof WeakMap !== 'undefined' ? WeakMap : PunyMap$1;
+var createElement = presetElement();
+createElement.svg = presetElement({xmlns: namespaces.svg});
+createElement.preset = presetElement;
 
 var counter = 0;
 
-function PunyMap$1() {
+function PunyMap() {
 	// unique key to avoid clashes between instances and other properties
 	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
 }
-PunyMap$1.prototype.get = function get(objectKey) {
+PunyMap.prototype.get = function get(objectKey) {
 	return objectKey[this._key]
 };
-PunyMap$1.prototype.set = function set(objectKey, val) {
+PunyMap.prototype.set = function set(objectKey, val) {
 	objectKey[this._key] = val;
 	return this
 };
 
-var nodeExtra = new WkMap();
+var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap;
 
 function getNode(item) {
 	return item ? item.node || item : void 0
@@ -349,13 +351,13 @@ function updateChildren() {
 * @param  {Object} defaults preloaded component defaults
 * @return {Function(string|Object, ...*):!Component} component hyperscript function
 */
-var preset$1 = creator(function(elm, cfg, cnt) {
+var preset = creator(function(elm, cfg, cnt) {
 	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 });
 
-var createComponent = preset$1();
-createComponent.svg = preset$1({xmlns: namespaces.svg});
-createComponent.preset = preset$1;
+var createComponent = preset();
+createComponent.svg = preset({xmlns: namespaces.svg});
+createComponent.preset = preset;
 
 /**
  * @constructor
@@ -532,7 +534,7 @@ function createList(model, dataKey) {
 
 // DOM
 
-exports.defaultView = defaultView;
+exports.setDefaultView = setDefaultView;
 exports.namespaces = namespaces;
 exports.createDocumentFragment = createDocumentFragment;
 exports.createComment = createComment;
