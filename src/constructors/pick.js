@@ -1,9 +1,12 @@
 export function Pick(path) {
 	this.path = path
 }
-Pick.of = Pick['fantasy-land/of'] = function of() {
+export function pick() {
 	return new Pick(Array.apply(null, arguments))
 }
+
+Pick.of = Pick['fantasy-land/of'] = pick
+
 Pick.prototype = {
 	constructor: Pick,
 	get value() {
