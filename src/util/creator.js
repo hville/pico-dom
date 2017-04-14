@@ -1,7 +1,7 @@
 import {defaultView} from '../default-view'
 import {namespaces} from '../namespaces'
 import {assignOpts} from './assign-opts'
-import {createTextNode} from '../create-text-node'
+import {cKind} from './c-kind'
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
@@ -31,30 +31,12 @@ export function creator(factory) {
 			// options and children
 			for (var i=1; i<arguments.length; ++i) {
 				var arg = arguments[i]
-				if (arg && arg.constructor === Object) assignOpts(options, arg)
-				else mergeChildren.call(content, arg)
+				if (cKind(arg) === Object) assignOpts(options, arg)
+				else content.push(arg)
 			}
 			return factory(elem, options, content)
 		}
 	}
-}
-function mergeChildren(arg) {
-	if (arg != null) switch(ctyp(arg)) { //eslint-disable-line eqeqeq
-		case Array:
-			arg.forEach(mergeChildren, this)
-			break
-		case Number:
-			this.push(createTextNode(''+arg))
-			break
-		case String:
-			this.push(createTextNode(arg))
-			break
-		default: this.push(arg)
-	}
-}
-function ctyp(t) {
-	return t == null ? t //eslint-disable-line eqeqeq
-		: t.constructor || Object
 }
 function parse(def, txt) {
 	var idx = -1,
