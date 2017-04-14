@@ -1,40 +1,17 @@
 /* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */
-var ENV$1 = {
-	get document() { return init().document },
-	get window() { return init().window },
-	set window(win) { setWindow(win); },
-};
-function init() {
-	if (typeof window !== 'undefined') return setWindow(window)
-	throw Error('undefined window global (global or module property)')
-}
-function setWindow(win) {
-	return Object.defineProperties(ENV$1, {
-		document: {value: win.document},
-		window: {value: win}
-	})
-}
+var defaultView = typeof window !== 'undefined' ? window : void 0;
 
-var ns = {
+var namespaces = {
 	html: 'http://www.w3.org/1999/xhtml',
 	svg:  'http://www.w3.org/2000/svg'
 };
 
 /**
-* @function text
-* @param  {string} string textNode data
-* @return {!Object} textNode
-*/
-function text(string) {
-	return ENV$1.document.createTextNode(string)
-}
-
-/**
 * @function fragment
 * @return {!Object} documentFragment
 */
-function fragment() {
-	return ENV$1.document.createDocumentFragment()
+function createDocumentFragment() {
+	return defaultView.document.createDocumentFragment()
 }
 
 /**
@@ -42,31 +19,17 @@ function fragment() {
 * @param  {string} string commentNode data
 * @return {!Object} commentNode
 */
-function comment(string) {
-	return ENV$1.document.createComment(string)
+function createComment(string) {
+	return defaultView.document.createComment(string)
 }
 
-function reduce(obj, fcn, res, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
-	return res
-}
-
-var decorators = {
-	attrs: function(elm, val) {
-		return val ? reduce(val, setAttr, elm) : elm
-	},
-	props: function(elm, val) {
-		return val ? reduce(val, setProp, elm) : elm
-	}
-};
-function setAttr(elm, val, key) {
-	if (val === false) elm.removeAttribute(key);
-	else elm.setAttribute(key, val === true ? '' : val);
-	return elm
-}
-function setProp(elm, val, key) {
-	if (elm[key] !== val) elm[key] = val;
-	return elm
+/**
+* @function text
+* @param  {string} string textNode data
+* @return {!Object} textNode
+*/
+function createTextNode(string) {
+	return defaultView.document.createTextNode(string)
 }
 
 function assignOpts(tgt, src) {
@@ -101,7 +64,7 @@ function creator(factory) {
 				var	matches = selector.replace(rRE, '').match(mRE);
 				if (!matches) throw Error('invalid selector: '+selector)
 				matches.reduce(parse, options);
-				var doc = ENV$1.document,
+				var doc = defaultView.document,
 						tag = options.tagName || 'div',
 						xns = options.xmlns;
 				elem = xns ? doc.createElementNS(xns, tag) : doc.createElement(tag);
@@ -126,10 +89,10 @@ function mergeChildren(arg) {
 			arg.forEach(mergeChildren, this);
 			break
 		case Number:
-			this.push(text(''+arg));
+			this.push(createTextNode(''+arg));
 			break
 		case String:
-			this.push(text(arg));
+			this.push(createTextNode(arg));
 			break
 		default: this.push(arg);
 	}
@@ -167,10 +130,33 @@ function parse(def, txt) {
 			if (idx === -1) def.tagName = txt;
 			else {
 				def.tagName = txt.slice(idx+1);
-				def.xmlns = ns[txt.slice(0,idx)];
+				def.xmlns = namespaces[txt.slice(0,idx)];
 			}
 	}
 	return def
+}
+
+function reduce(obj, fcn, res, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
+	return res
+}
+
+var decorators = {
+	attrs: function(elm, val) {
+		return val ? reduce(val, setAttr, elm) : elm
+	},
+	props: function(elm, val) {
+		return val ? reduce(val, setProp, elm) : elm
+	}
+};
+function setAttr(elm, val, key) {
+	if (val === false) elm.removeAttribute(key);
+	else elm.setAttribute(key, val === true ? '' : val);
+	return elm
+}
+function setProp(elm, val, key) {
+	if (elm[key] !== val) elm[key] = val;
+	return elm
 }
 
 /**
@@ -198,18 +184,51 @@ function decorate(element, config, children) {
 
 var preset = creator(decorate);
 
-var el = preset();
-el.svg = preset({xmlns: ns.svg});
-el.preset = preset;
+var createElement = preset();
+createElement.svg = preset({xmlns: namespaces.svg});
+createElement.preset = preset;
 
-var EXTRA = typeof WeakMap !== 'undefined' ? new WeakMap() : {
-	set: function(node, comp) { node._$comp_ = comp; },
-	get: function(node) { return node._$comp_ }
+var WkMap = typeof WeakMap !== 'undefined' ? WeakMap : PunyMap$1;
+
+var counter = 0;
+
+function PunyMap$1() {
+	// unique key to avoid clashes between instances and other properties
+	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
+}
+PunyMap$1.prototype.get = function get(objectKey) {
+	return objectKey[this._key]
 };
+PunyMap$1.prototype.set = function set(objectKey, val) {
+	objectKey[this._key] = val;
+	return this
+};
+
+var nodeExtra = new WkMap();
+
+function getNode(item) {
+	return item ? item.node || item : void 0
+}
+/**
+* @function getExtra
+* @param  {!Object} item node or extra
+* @param  {Function} [Extra] creates an instance if not existign
+* @return {Object} the extra node context
+*/
+function getExtra(item, Extra) {
+	if (!item) return void 0
+	var extra = item.node ? item : nodeExtra.get(item);
+	if (!extra && Extra) nodeExtra.set(item, new Extra(item));
+	return extra
+}
+function setExtra(node, extra) {
+	nodeExtra.set(node, extra);
+	return node
+}
 
 function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
-	var	sourceItem = EXTRA.get(sourceChild),
+	var	sourceItem = getExtra(sourceChild),
 			sourceNext = sourceChild.nextSibling;
 	if (!sourceItem) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
@@ -228,19 +247,19 @@ function cloneChildren(targetParent, sourceChild) {
  * @param {*} [key] - optional data key
  * @param {number} [idx] - optional position index
  */
-function Component$1(node, extra, key, idx) {
+function Component(node, extra, key, idx) {
 	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]];
 	if (key !== void 0) this.key = key;
 
 	// register and init
 	this.node = node;
-	EXTRA.set(node, this);
+	setExtra(node, this);
 	if (this.init) this.init(key, idx);
 }
 
-Component$1.prototype = {
-	constructor: Component$1,
+Component.prototype = {
+	constructor: Component,
 
 	/**
 	* @function clone
@@ -252,7 +271,7 @@ Component$1.prototype = {
 		var sourceNode = this.node,
 				targetNode = sourceNode.cloneNode(false);
 		cloneChildren(targetNode, sourceNode.firstChild);
-		return new Component$1(targetNode, this, key, idx)
+		return new Component(targetNode, this, key, idx)
 	},
 
 	update: updateChildren,
@@ -295,7 +314,7 @@ Component$1.prototype = {
 		var last = parent.lastChild;
 
 		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = EXTRA.get(last);
+			var extra = getExtra(last);
 			if (extra) extra.moveTo(null);
 			else parent.removeChild(last);
 			last = parent.lastChild;
@@ -312,7 +331,7 @@ Component$1.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild;
 	while (ptr) {
-		var extra = EXTRA.get(ptr);
+		var extra = getExtra(ptr);
 		if (extra) {
 			extra.update.apply(extra, arguments);
 			ptr = (extra.footer || ptr).nextSibling;
@@ -328,19 +347,19 @@ function updateChildren() {
 * @return {Function(string|Object, ...*):!Component} component hyperscript function
 */
 var preset$1 = creator(function(elm, cfg, cnt) {
-	return new Component$1(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
+	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
 });
 
-var co = preset$1();
-co.svg = preset$1({xmlns: ns.svg});
-co.preset = preset$1;
+var createComponent = preset$1();
+createComponent.svg = preset$1({xmlns: namespaces.svg});
+createComponent.preset = preset$1;
 
 /**
  * @constructor
  * @param {Function} factory - component generating function
  * @param {*} dKey - data key
  */
-function List$1(factory, dKey) {
+function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
@@ -350,13 +369,13 @@ function List$1(factory, dKey) {
 	this.factory = factory;
 
 	//required to keep parent ref when no children.length === 0
-	this.header = comment('^');
-	this.footer = comment('$');
-	EXTRA.set(this.header, this);
-	EXTRA.set(this.footer, this);
+	this.header = createComment('^');
+	this.footer = createComment('$');
+	setExtra(this.header, this);
+	setExtra(this.footer, this);
 }
-List$1.prototype = {
-	constructor: List$1,
+List.prototype = {
+	constructor: List,
 	dataKey: function dataKey(v,i) { return i },
 	update: updateChildren$1,
 	updateChildren: updateChildren$1,
@@ -366,7 +385,7 @@ List$1.prototype = {
 	* @return {!List} new List
 	*/
 	clone: function clone() {
-		return new List$1(this.factory, this.dataKey)
+		return new List(this.factory, this.dataKey)
 	},
 
 	/**
@@ -408,7 +427,7 @@ List$1.prototype = {
 			var item = next;
 			next = item.nextSibling;
 
-			var ctx = EXTRA.get(item);
+			var ctx = getExtra(item);
 			if (ctx) ctx.moveTo(parent, before);
 			else parent.insertBefore(item, before);
 		}
@@ -433,7 +452,7 @@ List$1.prototype = {
 				drop = foot;
 
 		while ((drop = foot.previousSibling) !== stop) {
-			var extra = EXTRA.get(drop);
+			var extra = getExtra(drop);
 			mapKC.delete(extra.key);
 			extra.moveTo(null);
 		}
@@ -497,34 +516,17 @@ function createFactory(instance) {
 * @param  {Function|string|number} [dataKey] record identifier
 * @return {!List} new List
 */
-function list(model, dataKey) {
+function createList(model, dataKey) {
 	switch (model.constructor) {
 		case Function:
-			return new List$1(model, dataKey)
-		case Component$1: case List$1:
-			return new List$1(createFactory(model), dataKey)
+			return new List(model, dataKey)
+		case Component: case List:
+			return new List(createFactory(model), dataKey)
 		default:
 			throw Error('invalid list model:' + typeof model)
 	}
 }
 
-// DOM Items
-ENV$1.namespaces = ns;
-ENV$1.fragment = fragment;
-ENV$1.text = text;
-ENV$1.comment = comment;
+// DOM
 
-// Element Items
-ENV$1.decorators = decorators;
-ENV$1.element = el;
-
-// Component Items
-ENV$1.extra = EXTRA;
-ENV$1.Component = Component$1;
-ENV$1.component = co;
-
-// List
-ENV$1.List = List$1;
-ENV$1.list = list;
-
-export default ENV$1;
+export { defaultView, namespaces, createDocumentFragment, createComment, createTextNode, createElement, getNode, getExtra, createComponent, createList };

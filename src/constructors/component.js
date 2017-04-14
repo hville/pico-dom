@@ -1,7 +1,5 @@
-import EXTRA from './extra'
-import cloneChildren from './util/clone-child'
-
-export default Component
+import {getExtra, setExtra} from '../node-extra'
+import {cloneChildren} from '../util/clone-children'
 
 /**
  * @constructor
@@ -10,14 +8,14 @@ export default Component
  * @param {*} [key] - optional data key
  * @param {number} [idx] - optional position index
  */
-function Component(node, extra, key, idx) {
+export function Component(node, extra, key, idx) {
 	//decorate: key, init, update, onmove, handleEvents...
 	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]]
 	if (key !== void 0) this.key = key
 
 	// register and init
 	this.node = node
-	EXTRA.set(node, this)
+	setExtra(node, this)
 	if (this.init) this.init(key, idx)
 }
 
@@ -77,7 +75,7 @@ Component.prototype = {
 		var last = parent.lastChild
 
 		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = EXTRA.get(last)
+			var extra = getExtra(last)
 			if (extra) extra.moveTo(null)
 			else parent.removeChild(last)
 			last = parent.lastChild
@@ -94,7 +92,7 @@ Component.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild
 	while (ptr) {
-		var extra = EXTRA.get(ptr)
+		var extra = getExtra(ptr)
 		if (extra) {
 			extra.update.apply(extra, arguments)
 			ptr = (extra.footer || ptr).nextSibling

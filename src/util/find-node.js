@@ -1,4 +1,4 @@
-export default function find(test, after) {
+export function find(test, after) {
 	var node = (after || this.node)
 	do {
 		var next = node.firstChild

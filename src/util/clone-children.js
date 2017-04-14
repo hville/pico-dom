@@ -1,8 +1,8 @@
-import EXTRA from '../extra'
+import {getExtra} from '../node-extra'
 
-export default function cloneChildren(targetParent, sourceChild) {
+export function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
-	var	sourceItem = EXTRA.get(sourceChild),
+	var	sourceItem = getExtra(sourceChild),
 			sourceNext = sourceChild.nextSibling
 	if (!sourceItem) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild))

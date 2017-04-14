@@ -1,10 +1,12 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		pico = require('../dist/index.js')
+		P = require('../dist/index.js')
 
-var el = pico.element
+var defaultView = P.setDefaultView(jsdom().defaultView)
 
-pico.window = jsdom().defaultView
+var el = P.createElement
+
+
 
 var handler = function(){}
 
@@ -14,21 +16,21 @@ ct('el-api', function() {
 })
 ct('el-html', function() {
 	var elm = el('div')
-	ct('===', elm instanceof pico.window.Node, true)
+	ct('===', elm instanceof defaultView.Node, true)
 	ct('===', typeof elm, 'object')
 	ct('===', elm.nodeName.toLowerCase(), 'div')
 })
 ct('el-svg', function() {
 	var elm = el.svg('svg')
 	ct('===', elm.nodeName.toLowerCase(), 'svg')
-	ct('!!', elm instanceof pico.window.Node)
+	ct('!!', elm instanceof defaultView.Node)
 })
 ct('el-svg attributes', function() {
 	var elm = el.svg('svg', el.svg('path[d=mypath]'))
 	ct('===', elm.nodeName.toLowerCase(), 'svg')
-	ct('!!', elm instanceof pico.window.Node)
+	ct('!!', elm instanceof defaultView.Node)
 	ct('===', elm.childNodes.length, 1)
-	ct('===', elm.firstChild instanceof pico.window.Node, true)
+	ct('===', elm.firstChild instanceof defaultView.Node, true)
 })
 ct('el-svg style attributes', function() {
 	var elm = el.svg('svg[style="display: none;"]')

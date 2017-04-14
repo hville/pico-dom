@@ -1,13 +1,15 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		pico = require('../')
+		P = require('../')
 
-var li = pico.list,
-		co = pico.component,
-		el = pico.element,
-		fr = pico.fragment
+P.setDefaultView(jsdom().defaultView)
 
-pico.window = jsdom().defaultView
+var li = P.createList,
+		co = P.createComponent,
+		el = P.createElement,
+		fr = P.createDocumentFragment
+
+
 
 function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent

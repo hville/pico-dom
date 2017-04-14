@@ -1,6 +1,6 @@
-import reduce from './util/reduce'
+import {reduce} from './util/reduce'
 
-export default {
+export var decorators = {
 	attrs: function(elm, val) {
 		return val ? reduce(val, setAttr, elm) : elm
 	},

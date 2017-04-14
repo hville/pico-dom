@@ -1,12 +1,12 @@
-import ENV from '../env'
-import NS from '../namespaces'
-import assignOpts from './assign-opts'
-import {text} from '../nodes'
+import {defaultView} from '../default-view'
+import {namespaces} from '../namespaces'
+import {assignOpts} from './assign-opts'
+import {createTextNode} from '../create-text-node'
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
 		mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g
 
-export default function creator(factory) {
+export function creator(factory) {
 	return function(defaults) {
 		return function define(selector) {
 			// Options precedence: defaults < selector < options[0] < options[1] ...
@@ -19,7 +19,7 @@ export default function creator(factory) {
 				var	matches = selector.replace(rRE, '').match(mRE)
 				if (!matches) throw Error('invalid selector: '+selector)
 				matches.reduce(parse, options)
-				var doc = ENV.document,
+				var doc = defaultView.document,
 						tag = options.tagName || 'div',
 						xns = options.xmlns
 				elem = xns ? doc.createElementNS(xns, tag) : doc.createElement(tag)
@@ -44,10 +44,10 @@ function mergeChildren(arg) {
 			arg.forEach(mergeChildren, this)
 			break
 		case Number:
-			this.push(text(''+arg))
+			this.push(createTextNode(''+arg))
 			break
 		case String:
-			this.push(text(arg))
+			this.push(createTextNode(arg))
 			break
 		default: this.push(arg)
 	}
@@ -85,7 +85,7 @@ function parse(def, txt) {
 			if (idx === -1) def.tagName = txt
 			else {
 				def.tagName = txt.slice(idx+1)
-				def.xmlns = NS[txt.slice(0,idx)]
+				def.xmlns = namespaces[txt.slice(0,idx)]
 			}
 	}
 	return def

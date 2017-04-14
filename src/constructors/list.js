@@ -1,14 +1,12 @@
-import {comment} from './nodes'
-import EXTRA from './extra'
-
-export default List
+import {createComment} from '../create-comment'
+import {setExtra, getExtra} from '../node-extra'
 
 /**
  * @constructor
  * @param {Function} factory - component generating function
  * @param {*} dKey - data key
  */
-function List(factory, dKey) {
+export function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] }
 	}
@@ -18,10 +16,10 @@ function List(factory, dKey) {
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
-	this.header = comment('^')
-	this.footer = comment('$')
-	EXTRA.set(this.header, this)
-	EXTRA.set(this.footer, this)
+	this.header = createComment('^')
+	this.footer = createComment('$')
+	setExtra(this.header, this)
+	setExtra(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -76,7 +74,7 @@ List.prototype = {
 			var item = next
 			next = item.nextSibling
 
-			var ctx = EXTRA.get(item)
+			var ctx = getExtra(item)
 			if (ctx) ctx.moveTo(parent, before)
 			else parent.insertBefore(item, before)
 		}
@@ -101,7 +99,7 @@ List.prototype = {
 				drop = foot
 
 		while ((drop = foot.previousSibling) !== stop) {
-			var extra = EXTRA.get(drop)
+			var extra = getExtra(drop)
 			mapKC.delete(extra.key)
 			extra.moveTo(null)
 		}

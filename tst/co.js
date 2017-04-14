@@ -1,10 +1,12 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		pico = require('../dist/index.js')
+		P = require('../dist/index.js')
 
-var co = pico.component
+var defaultView = P.setDefaultView(jsdom().defaultView)
 
-pico.window = jsdom().defaultView
+var co = P.createComponent
+
+
 
 var bodyTdInputFac = function(cfg) {
 	return co('input.tdinput', cfg, {
@@ -45,7 +47,7 @@ ct('co - full', function() {
 	// view inputs
 	ct('===', el.value, 'abc')
 	// events .on .handleEvent .eventHandlers
-	el.dispatchEvent(new pico.window.Event('click'))
+	el.dispatchEvent(new defaultView.Event('click'))
 	ct('===', el.value, 'click')
 	ct('===', el.tabIndex, 11)
 })

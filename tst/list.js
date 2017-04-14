@@ -1,11 +1,13 @@
 var jsdom = require('jsdom').jsdom,
 		ct = require('cotest'),
-		pico = require('../dist/index.js')
+		P = require('../dist/index.js')
 
-var li = pico.list,
-		co = pico.component
+P.setDefaultView(jsdom().defaultView)
 
-pico.window = jsdom().defaultView
+var li = P.createList,
+		co = P.createComponent
+
+
 
 function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent

@@ -9,10 +9,10 @@
 ## Example
 
 ```javascript
-var pico = require('pico-dom')
-var el = pico.element,
-    co = pico.component,
-    list = pico.list
+var p = require('pico-dom')
+var el = p.createElement,
+    co = p.createComponent,
+    list = p.createList
 
 var table = co('table', [
   el('caption', 'data-matrix'),
@@ -46,16 +46,20 @@ el(document.body, table)
 * around 2.3kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
+* All in ES5 with ES modules, CJS module and iife for browsers. Should work on mobile and old browsers (not tested).
+
 
 ### Limitations
 
-* All in ES5 with a bare-bone WeakMaps get/set replacement for browsers below IE11 and Android 5.0. Should work on all browsers but not tested.
+* still too imperative to be of use for a web application. Beware of foot-guns
 
 ### Inspiration and Design Goals
 
 * strictly DOM element creation and manipulation (no router or store)
 * minimal intermediate object. Structure is held by the DOM itself
 * minimal memory profile for mobile use
+* component system to add behaviour
+* dynamic lists similar to documentFragments
 
 ## API
 
@@ -63,7 +67,7 @@ el(document.body, table)
 
 Typical hyperscript API `element(selector[, ...configurations][, ...children])` to generate HTMLElements, SVGElements or other namespaced Elements
 
-example: `pico.element('p', {attrs: {style: 'color:blue'}}, '1'))`
+example: `p.createElement('p', {attrs: {style: 'color:blue'}}, '1'))`
 
 If an Element is provided as a selector, it is simply decorated as-is with additional attributes, properties and/or children.
 
@@ -150,8 +154,8 @@ SVG and/or other namespaces are supported. For example, the following are equiva
 ### testing and configuration helpers
 * `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
   * example `namespaces.svg = 'http://www.w3.org/2000/svg'}`
-* `window`: Getter-Setter to optionally set a custom `window` object for testing or server use
-  * example `pico.window = jsdom.jsdom().defaultView`
+* `setDefaultView`: Getter-Setter to optionally set a custom `window` object for testing or server use
+  * example `picoDOM.setDefaultView(jsdom().defaultView)`
 
 ## License
 

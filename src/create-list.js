@@ -1,5 +1,5 @@
-import Component from './component'
-import List from './list'
+import {Component} from './constructors/component'
+import {List} from './constructors/list'
 
 function createFactory(instance) {
 	return function(k, i) {
@@ -14,7 +14,7 @@ function createFactory(instance) {
 * @param  {Function|string|number} [dataKey] record identifier
 * @return {!List} new List
 */
-export default function list(model, dataKey) {
+export function createList(model, dataKey) {
 	switch (model.constructor) {
 		case Function:
 			return new List(model, dataKey)

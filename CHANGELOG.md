@@ -13,7 +13,8 @@
 - add docs about prior art and alternatives: redom, hyperscript snabbdom vs lists, decorators, components
 - api docs from jsdoc...
 - examples
-
+- match dom api names - createTextNode, createDocumentFragment, createElement, createComment
+- dom.defaultView instead of window
 
 ## [0.20.0] - 2017-04-10
 ### Changed
