@@ -156,25 +156,28 @@ function getNode(item) {
 	return item ? item.node || item : void 0
 }
 /**
-* @function getExtra
+* @function getExtras
 * @param  {!Object} item node or extra
 * @param  {Function} [Extra] creates an instance if not existign
 * @return {Object} the extra node context
 */
-function getExtra(item, Extra) {
+function getExtras(item, Extra) {
 	if (!item) return void 0
 	var extra = item.node ? item : nodeExtra.get(item);
-	if (!extra && Extra) nodeExtra.set(item, new Extra(item));
+	if (!extra && Extra) {
+		extra = new Extra(item);
+		nodeExtra.set(item, extra);
+	}
 	return extra
 }
-function setExtra(node, extra) {
+function setExtras(node, extra) {
 	nodeExtra.set(node, extra);
 	return node
 }
 
 function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
-	var	sourceItem = getExtra(sourceChild),
+	var	sourceItem = getExtras(sourceChild),
 			sourceNext = sourceChild.nextSibling;
 	if (!sourceItem) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
@@ -184,173 +187,6 @@ function cloneChildren(targetParent, sourceChild) {
 		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling;
 	}
 	return cloneChildren(targetParent, sourceNext)
-}
-
-/**
- * @constructor
- * @param {Function} factory - component generating function
- * @param {*} dKey - data key
- */
-function List(factory, dKey) {
-	if (dKey !== undefined) {
-		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
-	}
-
-	// lookup maps to locate existing component and delete extra ones
-	this.mapKC = new Map(); // dataKey => component, for updating
-	this.factory = factory;
-
-	//required to keep parent ref when no children.length === 0
-	this.header = createComment('^');
-	this.footer = createComment('$');
-	setExtra(this.header, this);
-	setExtra(this.footer, this);
-}
-List.prototype = {
-	constructor: List,
-	dataKey: function dataKey(v,i) { return i },
-	update: updateChildren$1,
-	updateChildren: updateChildren$1,
-
-	/**
-	* @function clone
-	* @return {!List} new List
-	*/
-	clone: function clone() {
-		return new List(this.factory, this.dataKey)
-	},
-
-	/**
-	* @function moveTo
-	* @param  {Object} parent parentNode
-	* @param  {Object} [before] nextSibling
-	* @return {!List} this
-	*/
-	moveTo: function moveTo(parent, before) {
-		var foot = this.footer,
-				head = this.header,
-				oldParent = head.parentNode;
-
-		//nothing to do
-		if (!oldParent && !parent) return this
-		if ((oldParent === parent) && (before === foot || before === foot.nextSibling)) return this
-
-		// list without parent are empty, just move the ends
-		if (!oldParent) {
-			parent.appendChild(head);
-			parent.appendChild(foot);
-			return this
-		}
-
-		// clear the list if dismounted (newParent === null)
-		if (!parent) {
-			this.removeChildren();
-			oldParent.removeChild(head);
-			oldParent.removeChild(foot);
-			return this
-		}
-
-		// insert || append
-		var next = head.nextSibling;
-		if (!before) before = null;
-
-		parent.insertBefore(head, before);
-		while(next !== foot) {
-			var item = next;
-			next = item.nextSibling;
-
-			var ctx = getExtra(item);
-			if (ctx) ctx.moveTo(parent, before);
-			else parent.insertBefore(item, before);
-		}
-		parent.insertBefore(foot, before);
-
-		return this
-	},
-
-	/**
-	* @function removeChildren
-	* @param  {Object} [after] optional Element pointer
-	* @return {!List} list instance
-	*/
-	removeChildren: function removeChildren(after) {
-		var foot = this.footer,
-				parent = foot.parentNode;
-		// list without parent are empty
-		if (!parent) return this
-
-		var mapKC = this.mapKC,
-				stop = after || this.header,
-				drop = foot;
-
-		while ((drop = foot.previousSibling) !== stop) {
-			var extra = getExtra(drop);
-			mapKC.delete(extra.key);
-			extra.moveTo(null);
-		}
-		return this
-	}
-};
-
-/**
-* @function updateChildren
-* @param  {Array} arr array of values to update
-* @param  {...*} optional update arguments
-* @return {!List} list instance
-*/
-function updateChildren$1(arr) {
-	var head = this.header,
-			foot = this.footer,
-			parent = head.parentNode;
-	if (!parent) throw Error('list.updates requires a parentNode')
-	var mapKC = this.mapKC,
-			getK = this.dataKey,
-			before = head.nextSibling;
-
-	for (var i=0; i<arr.length; ++i) {
-		var val = arr[i],
-				key = getK(val, i, arr);
-		// find item, create Item if it does not exits
-		var itm = mapKC.get(key);
-		if (!itm) {
-			itm = this.factory(key, i);
-			if (itm.key !== key) itm.key = key;
-			mapKC.set(key, itm);
-			parent.insertBefore(itm.node, before); // new item: insertion
-		}
-		else if (itm.node === before) { // right position, move on
-			before = itm.node.nextSibling;
-		}
-		else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
-			parent.insertBefore(before, foot);
-			before = itm.node.nextSibling;
-		}
-		else {
-			parent.insertBefore(itm.node, before); //move existing node back
-		}
-		if (itm.update) itm.update(val, i, arr);
-	}
-
-	// de-reference leftover items
-	return this.removeChildren(before.previousSibling)
-}
-
-function cloneNode(node, key, idx) {
-	var copy = node.cloneNode(false),
-			extra = getExtra(node);
-
-	// copy DOM nodes before extra behaviour
-	var nodeChild = node.firstChild;
-	while(nodeChild) {
-		copy.appendChild(cloneNode(nodeChild));
-		nodeChild = nodeChild.nextSibling;
-	}
-
-	if (extra) {
-		if (extra.header) new List(extra.factory, extra.dataKey);
-		else new Component(copy, extra, key, idx);
-	}
-	return copy
 }
 
 /**
@@ -367,7 +203,7 @@ function Component(node, extra, key, idx) {
 
 	// register and init
 	this.node = node;
-	setExtra(node, this);
+	setExtras(node, this);
 	if (this.init) this.init(key, idx);
 }
 
@@ -427,7 +263,7 @@ Component.prototype = {
 		var last = parent.lastChild;
 
 		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = getExtra(last);
+			var extra = getExtras(last);
 			if (extra) extra.moveTo(null);
 			else parent.removeChild(last);
 			last = parent.lastChild;
@@ -444,7 +280,7 @@ Component.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild;
 	while (ptr) {
-		var extra = getExtra(ptr);
+		var extra = getExtras(ptr);
 		if (extra) {
 			extra.update.apply(extra, arguments);
 			ptr = (extra.footer || ptr).nextSibling;
@@ -524,6 +360,12 @@ function setProp(elm, val, key) {
 	if (elm[key] !== val) elm[key] = val;
 	return elm
 }
+function setExtra(elm, val, key) {
+	if (val instanceof Pick) return setComponent(setExtra, elm, val, key)
+	var extras = getExtras(elm, Component);
+	extras[key] = val;
+	return elm
+}
 
 function setChild(elm, itm) {
 	if (itm instanceof Pick) throw Error('childCursor not supported')
@@ -546,7 +388,7 @@ function setChild(elm, itm) {
 }
 
 function setComponent(dec, elm, cur, key) {
-	var extra = getExtra(elm, Component);
+	var extra = getExtras(elm, Component);
 	extra.updaters.push({fcn:dec, cur:cur, key:key});
 	return dec(elm, cur.value(), key)
 }
@@ -589,6 +431,155 @@ var createComponent = preset();
 createComponent.svg = preset({xmlns: namespaces.svg});
 createComponent.preset = preset;
 
+/**
+ * @constructor
+ * @param {Function} factory - component generating function
+ * @param {*} dKey - data key
+ */
+function List(factory, dKey) {
+	if (dKey !== undefined) {
+		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
+	}
+
+	// lookup maps to locate existing component and delete extra ones
+	this.mapKC = new Map(); // dataKey => component, for updating
+	this.factory = factory;
+
+	//required to keep parent ref when no children.length === 0
+	this.header = createComment('^');
+	this.footer = createComment('$');
+	setExtras(this.header, this);
+	setExtras(this.footer, this);
+}
+List.prototype = {
+	constructor: List,
+	dataKey: function dataKey(v,i) { return i },
+	update: updateChildren$1,
+	updateChildren: updateChildren$1,
+
+	/**
+	* @function clone
+	* @return {!List} new List
+	*/
+	clone: function clone() {
+		return new List(this.factory, this.dataKey)
+	},
+
+	/**
+	* @function moveTo
+	* @param  {Object} parent parentNode
+	* @param  {Object} [before] nextSibling
+	* @return {!List} this
+	*/
+	moveTo: function moveTo(parent, before) {
+		var foot = this.footer,
+				head = this.header,
+				oldParent = head.parentNode;
+
+		//nothing to do
+		if (!oldParent && !parent) return this
+		if ((oldParent === parent) && (before === foot || before === foot.nextSibling)) return this
+
+		// list without parent are empty, just move the ends
+		if (!oldParent) {
+			parent.appendChild(head);
+			parent.appendChild(foot);
+			return this
+		}
+
+		// clear the list if dismounted (newParent === null)
+		if (!parent) {
+			this.removeChildren();
+			oldParent.removeChild(head);
+			oldParent.removeChild(foot);
+			return this
+		}
+
+		// insert || append
+		var next = head.nextSibling;
+		if (!before) before = null;
+
+		parent.insertBefore(head, before);
+		while(next !== foot) {
+			var item = next;
+			next = item.nextSibling;
+
+			var ctx = getExtras(item);
+			if (ctx) ctx.moveTo(parent, before);
+			else parent.insertBefore(item, before);
+		}
+		parent.insertBefore(foot, before);
+
+		return this
+	},
+
+	/**
+	* @function removeChildren
+	* @param  {Object} [after] optional Element pointer
+	* @return {!List} list instance
+	*/
+	removeChildren: function removeChildren(after) {
+		var foot = this.footer,
+				parent = foot.parentNode;
+		// list without parent are empty
+		if (!parent) return this
+
+		var mapKC = this.mapKC,
+				stop = after || this.header,
+				drop = foot;
+
+		while ((drop = foot.previousSibling) !== stop) {
+			var extra = getExtras(drop);
+			mapKC.delete(extra.key);
+			extra.moveTo(null);
+		}
+		return this
+	}
+};
+
+/**
+* @function updateChildren
+* @param  {Array} arr array of values to update
+* @param  {...*} optional update arguments
+* @return {!List} list instance
+*/
+function updateChildren$1(arr) {
+	var head = this.header,
+			foot = this.footer,
+			parent = head.parentNode;
+	if (!parent) throw Error('list.updates requires a parentNode')
+	var mapKC = this.mapKC,
+			getK = this.dataKey,
+			before = head.nextSibling;
+
+	for (var i=0; i<arr.length; ++i) {
+		var val = arr[i],
+				key = getK(val, i, arr);
+		// find item, create Item if it does not exits
+		var itm = mapKC.get(key);
+		if (!itm) {
+			itm = this.factory(key, i);
+			if (itm.key !== key) itm.key = key;
+			mapKC.set(key, itm);
+			parent.insertBefore(itm.node, before); // new item: insertion
+		}
+		else if (itm.node === before) { // right position, move on
+			before = itm.node.nextSibling;
+		}
+		else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
+			parent.insertBefore(before, foot);
+			before = itm.node.nextSibling;
+		}
+		else {
+			parent.insertBefore(itm.node, before); //move existing node back
+		}
+		if (itm.update) itm.update(val, i, arr);
+	}
+
+	// de-reference leftover items
+	return this.removeChildren(before.previousSibling)
+}
+
 function createFactory(instance) {
 	return function(k, i) {
 		var comp = instance.clone(k, i);
@@ -613,6 +604,31 @@ function createList(model, dataKey) {
 	}
 }
 
+function cloneNode(node, key, idx) {
+	var copy = node.cloneNode(false),
+			extra = getExtras(node);
+
+	// copy DOM nodes before extra behaviour
+	var nodeChild = node.firstChild;
+	while(nodeChild) {
+		copy.appendChild(cloneNode(nodeChild));
+		nodeChild = nodeChild.nextSibling;
+	}
+
+	if (extra) {
+		if (extra.header) new List(extra.factory, extra.dataKey);
+		else new Component(copy, extra, key, idx);
+	}
+	return copy
+}
+
+function updateNode(node, v,k,o) {
+	var extra = getExtras(node);
+	console.log(extra, extra.update);
+	if (extra && extra.update) extra.update.call(node, v,k,o);
+	return node
+}
+
 // DOM
 
 exports.setDefaultView = setDefaultView;
@@ -622,8 +638,9 @@ exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createElement = createElement;
 exports.getNode = getNode;
-exports.getExtra = getExtra;
+exports.getExtras = getExtras;
 exports.createComponent = createComponent;
 exports.createList = createList;
 exports.pick = pick;
 exports.cloneNode = cloneNode;
+exports.updateNode = updateNode;

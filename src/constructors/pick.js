@@ -27,8 +27,8 @@ Pick.prototype = {
 		}
 		return value
 	},
-	ap: function ap(pick) {
-		return new Pick(this.path.concat(pick.path))
+	ap: function ap(picker) {
+		return new Pick(this.path.concat(picker.path))
 	},
 	chain: function chain(f) {
 		return f(this.path)

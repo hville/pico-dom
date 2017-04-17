@@ -1,7 +1,7 @@
 import {reduce} from './util/reduce'
 import {Component} from './constructors/component'
 import {Pick} from './constructors/pick'
-import {getNode, getExtra, setExtra} from './node-extra'
+import {getNode, getExtras} from './node-extra'
 import {cKind} from './util/c-kind'
 import {createTextNode} from './create-text-node'
 
@@ -22,7 +22,7 @@ export var decorators = {
 /*
 	TODO for children, autoUpdate setChild => replaceChild
 */
-function setAttr(elm, val, key) {
+export function setAttr(elm, val, key) {
 	if (val instanceof Pick) return setComponent(setAttr, elm, val, key)
 
 	if (val === false) elm.removeAttribute(key)
@@ -33,6 +33,12 @@ export function setProp(elm, val, key) {
 	if (val instanceof Pick) return setComponent(setProp, elm, val, key)
 
 	if (elm[key] !== val) elm[key] = val
+	return elm
+}
+export function setExtra(elm, val, key) {
+	if (val instanceof Pick) return setComponent(setExtra, elm, val, key)
+	var extras = getExtras(elm, Component)
+	extras[key] = val
 	return elm
 }
 
@@ -57,7 +63,7 @@ function setChild(elm, itm) {
 }
 
 function setComponent(dec, elm, cur, key) {
-	var extra = getExtra(elm, Component)
+	var extra = getExtras(elm, Component)
 	extra.updaters.push({fcn:dec, cur:cur, key:key})
 	return dec(elm, cur.value(), key)
 }

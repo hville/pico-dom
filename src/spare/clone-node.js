@@ -1,11 +1,6 @@
 import {Component} from './constructors/component'
-import {getExtra, setExtra} from './node-extra'
+import {getExtras, setExtras} from './node-extra'
 
-/**
-* @function comment
-* @param  {string} string commentNode data
-* @return {!Object} commentNode
-*/
 export function cloneNode(node, deep) {
 	var clone = node.cloneNode(deep)
 	// copy the node contexts
@@ -14,7 +9,7 @@ export function cloneNode(node, deep) {
 	return clone
 }
 function cloneExtra(clone, node) {
-	setExtra(clone, new Component(clone, getExtra(node)))
+	setExtras(clone, new Component(clone, getExtras(node)))
 }
 function cloneExtraTree(clone, node) {
 	cloneExtra(clone, node)

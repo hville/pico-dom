@@ -4,9 +4,7 @@ var jsdom = require('jsdom').jsdom,
 
 var defaultView = P.setDefaultView(jsdom().defaultView)
 
-var co = P.createComponent,
-		clone = P.cloneNode
-
+var co = P.createComponent
 
 
 var bodyTdInputFac = function(cfg) {

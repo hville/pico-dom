@@ -1,6 +1,5 @@
-import {getExtra, setExtra} from '../node-extra'
+import {getExtras, setExtras} from '../node-extra'
 import {cloneChildren} from '../util/clone-children'
-import {cloneNode} from '../clone-node'
 
 /**
  * @constructor
@@ -16,7 +15,7 @@ export function Component(node, extra, key, idx) {
 
 	// register and init
 	this.node = node
-	setExtra(node, this)
+	setExtras(node, this)
 	if (this.init) this.init(key, idx)
 }
 
@@ -76,7 +75,7 @@ Component.prototype = {
 		var last = parent.lastChild
 
 		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = getExtra(last)
+			var extra = getExtras(last)
 			if (extra) extra.moveTo(null)
 			else parent.removeChild(last)
 			last = parent.lastChild
@@ -93,7 +92,7 @@ Component.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild
 	while (ptr) {
-		var extra = getExtra(ptr)
+		var extra = getExtras(ptr)
 		if (extra) {
 			extra.update.apply(extra, arguments)
 			ptr = (extra.footer || ptr).nextSibling

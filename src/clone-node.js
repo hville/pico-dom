@@ -1,10 +1,10 @@
-import {getExtra} from './node-extra'
+import {getExtras} from './node-extra'
 import {Component} from './constructors/component'
 import {List} from './constructors/list'
 
 export function cloneNode(node, key, idx) {
 	var copy = node.cloneNode(false),
-			extra = getExtra(node)
+			extra = getExtras(node)
 
 	// copy DOM nodes before extra behaviour
 	var nodeChild = node.firstChild
