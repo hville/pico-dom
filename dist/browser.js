@@ -55,6 +55,11 @@ function assignOpts(tgt, src) {
 	return tgt
 }
 
+function cKind(t) {
+	return t == null ? t //eslint-disable-line eqeqeq
+		: t.constructor || Object
+}
+
 var rRE =/[\"\']+/g;
 var mRE = /(?:^|\.|\#)[^\.\#\[]+|\[[^\]]+\]/g;
 
@@ -83,30 +88,12 @@ function creator(factory) {
 			// options and children
 			for (var i=1; i<arguments.length; ++i) {
 				var arg = arguments[i];
-				if (arg && arg.constructor === Object) assignOpts(options, arg);
-				else mergeChildren.call(content, arg);
+				if (cKind(arg) === Object) assignOpts(options, arg);
+				else content.push(arg);
 			}
 			return factory(elem, options, content)
 		}
 	}
-}
-function mergeChildren(arg) {
-	if (arg != null) switch(ctyp(arg)) { //eslint-disable-line eqeqeq
-		case Array:
-			arg.forEach(mergeChildren, this);
-			break
-		case Number:
-			this.push(createTextNode(''+arg));
-			break
-		case String:
-			this.push(createTextNode(arg));
-			break
-		default: this.push(arg);
-	}
-}
-function ctyp(t) {
-	return t == null ? t //eslint-disable-line eqeqeq
-		: t.constructor || Object
 }
 function parse(def, txt) {
 	var idx = -1,
@@ -147,53 +134,6 @@ function reduce(obj, fcn, res, ctx) {
 	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
 	return res
 }
-
-var decorators = {
-	attrs: function(elm, val) {
-		return val ? reduce(val, setAttr, elm) : elm
-	},
-	props: function(elm, val) {
-		return val ? reduce(val, setProp, elm) : elm
-	}
-};
-function setAttr(elm, val, key) {
-	if (val === false) elm.removeAttribute(key);
-	else elm.setAttribute(key, val === true ? '' : val);
-	return elm
-}
-function setProp(elm, val, key) {
-	if (elm[key] !== val) elm[key] = val;
-	return elm
-}
-
-/**
- * Parse a CSS-style selector string and return a new Element
- * @param {!Object} element - element to be decorated
- * @param {Object} config - The existing definition to be augmented
- * @param {Array} [children] - Element children Nodes,Factory,Text
- * @returns {!Object} - The parsed element definition [sel,att]
- */
-function decorate(element, config, children) {
-	// properties and attributes
-	for (var i=0, ks=Object.keys(decorators); i<ks.length; ++i) {
-		var key = ks[i],
-				val = config[key];
-		if (val) decorators[key](element, val);
-	}
-	// children
-	for (var j=0; j<children.length; ++j) {
-		var child = children[j];
-		if (child.moveTo) child.moveTo(element);
-		else element.appendChild(child);
-	}
-	return element
-}
-
-var presetElement = creator(decorate);
-
-var createElement = presetElement();
-createElement.svg = presetElement({xmlns: namespaces.svg});
-createElement.preset = presetElement;
 
 var counter = 0;
 
@@ -345,6 +285,128 @@ function updateChildren() {
 	}
 	return this
 }
+
+function Pick(path) {
+	this.path = path;
+}
+function pick() {
+	return new Pick(Array.apply(null, arguments))
+}
+
+Pick.of = Pick['fantasy-land/of'] = pick;
+
+Pick.prototype = {
+	constructor: Pick,
+	get value() {
+		return
+	},
+	key: map,
+	map: map,
+	apply: function apply(obj) {
+		var value = obj,
+				path = this.path;
+		for (var i=0; i<path.length; ++i) {
+			var step = path[i];
+			if (value.hasOwnProperty(step)) value = value[step];     // key
+			else if (typeof key === 'function') value = step(value); // map
+			// value = step.value(value)  // ap
+			// value = step(value).value  // chain
+			else return
+		}
+		return value
+	},
+	ap: function ap(pick) {
+		return new Pick(this.path.concat(pick.path))
+	},
+	chain: function chain(f) {
+		return f(this.path)
+	}
+};
+function map() {
+	return new Pick(this.path.concat.apply(this.path, arguments))
+}
+
+var decorators = {
+	attrs: function(elm, obj) {
+		return obj ? reduce(obj, setAttr, elm) : elm
+	},
+	props: function(elm, obj) {
+		return obj ? reduce(obj, setProp, elm) : elm
+	},
+	children: function(elm, arr) {
+		return arr ? arr.reduce(setChild, elm, setChild) : elm
+	},
+	extra: function(elm, obj) {
+		return obj ? reduce(obj, setExtra, elm) : elm
+	}
+};
+/*
+	TODO for children, autoUpdate setChild => replaceChild
+*/
+function setAttr(elm, val, key) {
+	if (val instanceof Pick) return setComponent(setAttr, elm, val, key)
+
+	if (val === false) elm.removeAttribute(key);
+	else elm.setAttribute(key, val === true ? '' : val);
+	return elm
+}
+function setProp(elm, val, key) {
+	if (val instanceof Pick) return setComponent(setProp, elm, val, key)
+
+	if (elm[key] !== val) elm[key] = val;
+	return elm
+}
+
+function setChild(elm, itm) {
+	if (itm instanceof Pick) throw Error('childCursor not supported')
+	switch(cKind(itm)) {
+		case null: case undefined:
+			return elm
+		case Array:
+			return itm.reduce(setChild, elm)
+		case Number:
+			elm.appendChild(createTextNode(''+itm));
+			return elm
+		case String:
+			elm.appendChild(createTextNode(itm));
+			return elm
+		default:
+			if (itm.moveTo) itm.moveTo(elm);
+			else elm.appendChild(getNode(itm));
+			return elm
+	}
+}
+
+function setComponent(dec, elm, cur, key) {
+	var extra = getExtra(elm, Component);
+	extra.updaters.push({fcn:dec, cur:cur, key:key});
+	return dec(elm, cur.value(), key)
+}
+
+/**
+ * Parse a CSS-style selector string and return a new Element
+ * @param {!Object} element - element to be decorated
+ * @param {Object} config - The existing definition to be augmented
+ * @param {Array} [children] - Element children Nodes,Factory,Text
+ * @returns {!Object} - The parsed element definition [sel,att]
+ */
+function decorate(element, config, children) {
+	// properties and attributes
+	for (var i=0, ks=Object.keys(decorators); i<ks.length; ++i) {
+		var key = ks[i],
+				val = config[key];
+		if (val) decorators[key](element, val);
+	}
+	// children
+	if (children) decorators.children(element, children);
+	return element
+}
+
+var presetElement = creator(decorate);
+
+var createElement = presetElement();
+createElement.svg = presetElement({xmlns: namespaces.svg});
+createElement.preset = presetElement;
 
 /**
 * @function preset
@@ -544,5 +606,6 @@ exports.getNode = getNode;
 exports.getExtra = getExtra;
 exports.createComponent = createComponent;
 exports.createList = createList;
+exports.pick = pick;
 
 }((this.picoDOM = this.picoDOM || {})));

@@ -1,5 +1,6 @@
 import {getExtra, setExtra} from '../node-extra'
 import {cloneChildren} from '../util/clone-children'
+import {cloneNode} from '../clone-node'
 
 /**
  * @constructor
