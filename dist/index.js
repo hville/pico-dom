@@ -293,44 +293,62 @@ function updateChildren() {
 	return this
 }
 
-function Pick(path) {
+/*
+map:   (this:La, ( a => b)) => Lb // L(path.concat( a=>b ))         map(fcn)
+ap:    (this:La, L(a => b)) => Lb // L(path.concat(L(a=>b).path))   ap(lens)
+chain: (this:La, (a => Lb)) => Lb // L(path.concat((a=>Lb).value))  chain(lens.of) //no need
+*/
+
+function createLens(path, post, data) {
+	return new Lens(
+		Array.isArray(path) ? path : path != null ? [path] : [], //eslint-disable-line eqeqeq
+		post,
+		data
+	)
+}
+
+function Lens(path, post, data) {
 	this.path = path;
-}
-function pick() {
-	return new Pick(Array.apply(null, arguments))
+	this.post = post;
+	this.data = data;
 }
 
-Pick.of = Pick['fantasy-land/of'] = pick;
+Lens.of = createLens;
 
-Pick.prototype = {
-	constructor: Pick,
-	get value() {
-		return
+Lens.prototype = {
+	constructor: Lens,
+	get key() {
+		return this.path[this.path.length - 1] //TODO fail on fcn
 	},
-	key: map,
+	get: map,
 	map: map,
-	apply: function apply(obj) {
-		var value = obj,
+	set: function(val) {
+		this.post(this.path, val);
+	},
+	default: function() {
+		return this.value(this.data)
+	},
+	value: function value(obj) {
+		var val = obj,
 				path = this.path;
 		for (var i=0; i<path.length; ++i) {
 			var step = path[i];
-			if (value.hasOwnProperty(step)) value = value[step];     // key
-			else if (typeof key === 'function') value = step(value); // map
+			if (val.hasOwnProperty(step)) val = val[step];       // key
+			else if (typeof key === 'function') val = step(val); // map //TODO step(val, key)
 			// value = step.value(value)  // ap
 			// value = step(value).value  // chain
 			else return
 		}
-		return value
+		return val
 	},
-	ap: function ap(picker) {
-		return new Pick(this.path.concat(picker.path))
-	},
-	chain: function chain(f) {
-		return f(this.path)
+	ap: function ap(lens) {
+		return new Lens(this.path.concat(lens.path), this.post, this.data)
 	}
 };
+
 function map() {
-	return new Pick(this.path.concat.apply(this.path, arguments))
+	var path = this.path;
+	return new Lens(path.concat.apply(path, arguments), this.post, this.data)
 }
 
 var decorators = {
@@ -351,27 +369,27 @@ var decorators = {
 	TODO for children, autoUpdate setChild => replaceChild
 */
 function setAttr(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setAttr, elm, val, key)
+	if (val instanceof Lens) return setComponent(setAttr, elm, val, key)
 
 	if (val === false) elm.removeAttribute(key);
 	else elm.setAttribute(key, val === true ? '' : val);
 	return elm
 }
 function setProp(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setProp, elm, val, key)
+	if (val instanceof Lens) return setComponent(setProp, elm, val, key)
 
 	if (elm[key] !== val) elm[key] = val;
 	return elm
 }
 function setExtra(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setExtra, elm, val, key)
+	if (val instanceof Lens) return setComponent(setExtra, elm, val, key)
 	var extras = getExtras(elm, Component);
 	extras[key] = val;
 	return elm
 }
 
 function setChild(elm, itm) {
-	if (itm instanceof Pick) throw Error('childCursor not supported')
+	if (itm instanceof Lens) throw Error('childCursor not supported')
 	switch(cKind(itm)) {
 		case null: case undefined:
 			return elm
@@ -640,6 +658,6 @@ exports.getNode = getNode;
 exports.getExtras = getExtras;
 exports.createComponent = createComponent;
 exports.createList = createList;
-exports.pick = pick;
+exports.createLens = createLens;
 exports.cloneNode = cloneNode;
 exports.updateNode = updateNode;

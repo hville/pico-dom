@@ -1,6 +1,6 @@
 import {reduce} from './util/reduce'
 import {Component} from './constructors/component'
-import {Pick} from './constructors/pick'
+import {Lens} from './constructors/lens'
 import {getNode, getExtras} from './node-extra'
 import {cKind} from './util/c-kind'
 import {createTextNode} from './create-node'
@@ -23,27 +23,27 @@ export var decorators = {
 	TODO for children, autoUpdate setChild => replaceChild
 */
 export function setAttr(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setAttr, elm, val, key)
+	if (val instanceof Lens) return setComponent(setAttr, elm, val, key)
 
 	if (val === false) elm.removeAttribute(key)
 	else elm.setAttribute(key, val === true ? '' : val)
 	return elm
 }
 export function setProp(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setProp, elm, val, key)
+	if (val instanceof Lens) return setComponent(setProp, elm, val, key)
 
 	if (elm[key] !== val) elm[key] = val
 	return elm
 }
 export function setExtra(elm, val, key) {
-	if (val instanceof Pick) return setComponent(setExtra, elm, val, key)
+	if (val instanceof Lens) return setComponent(setExtra, elm, val, key)
 	var extras = getExtras(elm, Component)
 	extras[key] = val
 	return elm
 }
 
 function setChild(elm, itm) {
-	if (itm instanceof Pick) throw Error('childCursor not supported')
+	if (itm instanceof Lens) throw Error('childCursor not supported')
 	switch(cKind(itm)) {
 		case null: case undefined:
 			return elm
