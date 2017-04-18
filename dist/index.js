@@ -404,15 +404,12 @@ function setComponent(dec, elm, cur, key) {
  * @returns {!Object} - The parsed element definition [sel,att]
  */
 function decorate(element, config, children) {
-	// properties and attributes
-	for (var i=0, ks=Object.keys(decorators); i<ks.length; ++i) {
-		var key = ks[i],
-				val = config[key];
-		if (val) decorators[key](element, val);
-	}
-	// children
+	reduce(config, run, element);
 	if (children) decorators.children(element, children);
 	return element
+}
+function run(elm, val, key) {
+	return decorators[key] ? decorators[key](elm, val) : elm
 }
 
 var presetElement = creator(decorate);
