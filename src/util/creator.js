@@ -1,6 +1,6 @@
 import {defaultView} from '../default-view'
 import {namespaces} from '../namespaces'
-import {assignOpts} from './assign-opts'
+import {assignKeys} from './reduce'
 import {cKind} from './c-kind'
 
 var rRE =/[\"\']+/g, ///[\s\"\']+/g,
@@ -10,7 +10,7 @@ export function creator(factory) {
 	return function(defaults) {
 		return function define(selector) {
 			// Options precedence: defaults < selector < options[0] < options[1] ...
-			var options = assignOpts({}, defaults),
+			var options = assignKeys({}, defaults),
 					content = [],
 					elem = null
 
@@ -31,7 +31,7 @@ export function creator(factory) {
 			// options and children
 			for (var i=1; i<arguments.length; ++i) {
 				var arg = arguments[i]
-				if (cKind(arg) === Object) assignOpts(options, arg)
+				if (cKind(arg) === Object) assignKeys(options, arg)
 				else content.push(arg)
 			}
 			return factory(elem, options, content)

@@ -40,19 +40,27 @@ function createTextNode(string) {
 	return defaultView.document.createTextNode(string)
 }
 
-function assignOpts(tgt, src) {
-	if (src) for (var i=0, ks=Object.keys(src); i<ks.length; ++i) {
-		var opt = ks[i];
-		switch (opt) {
-			case 'xmlns': case 'input':
-				tgt[opt] = src[opt];
-				break
-			case 'attrs': case 'props': case 'extra':
-				if (!tgt[opt]) tgt[opt] = {};
-				var si = src[opt];
-				for (var j=0, kss=Object.keys(si); j<kss.length; ++j) tgt[opt][kss[j]] = si[kss[j]];
-		}
-	}
+function reduce(obj, fcn, res, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
+	return res
+}
+
+function setter(obj, val, key) {
+	if (obj[key] !== val) obj[key] = val;
+	return obj
+}
+
+function assign(tgt, src) {
+	return src ? reduce(src, setter, tgt) : tgt
+}
+
+function assignKeys(tgt, src) {
+	return src ? reduce(src, assignKey, tgt) : tgt
+}
+
+function assignKey(tgt, val, key) {
+	if (typeof val === 'object') tgt[key] = assign(tgt[key] || {}, val);
+	else if (tgt[key] !== val) tgt[key] = val;
 	return tgt
 }
 
@@ -68,7 +76,7 @@ function creator(factory) {
 	return function(defaults) {
 		return function define(selector) {
 			// Options precedence: defaults < selector < options[0] < options[1] ...
-			var options = assignOpts({}, defaults),
+			var options = assignKeys({}, defaults),
 					content = [],
 					elem = null;
 
@@ -89,7 +97,7 @@ function creator(factory) {
 			// options and children
 			for (var i=1; i<arguments.length; ++i) {
 				var arg = arguments[i];
-				if (cKind(arg) === Object) assignOpts(options, arg);
+				if (cKind(arg) === Object) assignKeys(options, arg);
 				else content.push(arg);
 			}
 			return factory(elem, options, content)
@@ -129,11 +137,6 @@ function parse(def, txt) {
 			}
 	}
 	return def
-}
-
-function reduce(obj, fcn, res, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
-	return res
 }
 
 var counter = 0;
@@ -198,7 +201,7 @@ function cloneChildren(targetParent, sourceChild) {
  */
 function Component(node, extra, key, idx) {
 	//decorate: key, init, update, onmove, handleEvents...
-	if (extra) for (var i=0, ks=Object.keys(extra); i<ks.length; ++i) this[ks[i]] = extra[ks[i]];
+	if (extra) reduce(extra, setter, this);
 	if (key !== void 0) this.key = key;
 
 	// register and init
@@ -319,8 +322,8 @@ Pick.prototype = {
 		}
 		return value
 	},
-	ap: function ap(pick) {
-		return new Pick(this.path.concat(pick.path))
+	ap: function ap(picker) {
+		return new Pick(this.path.concat(picker.path))
 	},
 	chain: function chain(f) {
 		return f(this.path)
@@ -624,7 +627,6 @@ function cloneNode(node, key, idx) {
 
 function updateNode(node, v,k,o) {
 	var extra = getExtras(node);
-	console.log(extra, extra.update);
 	if (extra && extra.update) extra.update.call(node, v,k,o);
 	return node
 }
