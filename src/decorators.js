@@ -3,7 +3,7 @@ import {Component} from './constructors/component'
 import {Pick} from './constructors/pick'
 import {getNode, getExtras} from './node-extra'
 import {cKind} from './util/c-kind'
-import {createTextNode} from './create-text-node'
+import {createTextNode} from './create-node'
 
 export var decorators = {
 	attrs: function(elm, obj) {

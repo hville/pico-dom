@@ -1,11 +1,9 @@
 // DOM
 export {setDefaultView} from './default-view' //document, window
 export {namespaces} from './namespaces'
-export {createDocumentFragment} from './create-document-fragment'
 
 // Nodes
-export {createComment} from './create-comment'
-export {createTextNode} from './create-text-node'
+export {createComment, createTextNode, createDocumentFragment} from './create-node'
 export {createElement} from './create-element'
 
 // Component Items

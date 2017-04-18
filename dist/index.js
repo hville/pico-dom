@@ -15,14 +15,6 @@ var namespaces = {
 };
 
 /**
-* @function fragment
-* @return {!Object} documentFragment
-*/
-function createDocumentFragment() {
-	return defaultView.document.createDocumentFragment()
-}
-
-/**
 * @function comment
 * @param  {string} string commentNode data
 * @return {!Object} commentNode
@@ -38,6 +30,14 @@ function createComment(string) {
 */
 function createTextNode(string) {
 	return defaultView.document.createTextNode(string)
+}
+
+/**
+* @function fragment
+* @return {!Object} documentFragment
+*/
+function createDocumentFragment() {
+	return defaultView.document.createDocumentFragment()
 }
 
 function reduce(obj, fcn, res, ctx) {
@@ -632,9 +632,9 @@ function updateNode(node, v,k,o) {
 
 exports.setDefaultView = setDefaultView;
 exports.namespaces = namespaces;
-exports.createDocumentFragment = createDocumentFragment;
 exports.createComment = createComment;
 exports.createTextNode = createTextNode;
+exports.createDocumentFragment = createDocumentFragment;
 exports.createElement = createElement;
 exports.getNode = getNode;
 exports.getExtras = getExtras;

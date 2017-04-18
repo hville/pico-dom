@@ -1,4 +1,4 @@
-import {createComment} from '../create-comment'
+import {createComment} from '../create-node'
 import {setExtras, getExtras} from '../node-extra'
 
 /**
