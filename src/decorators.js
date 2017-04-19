@@ -1,7 +1,7 @@
 import {reduce} from './util/reduce'
 import {Component} from './constructors/component'
 import {Lens} from './constructors/lens'
-import {getNode, getExtras} from './node-extra'
+import {getNode, getExtra} from './extras'
 import {cKind} from './util/c-kind'
 import {createTextNode} from './create-node'
 
@@ -37,7 +37,7 @@ export function setProp(elm, val, key) {
 }
 export function setExtra(elm, val, key) {
 	if (val instanceof Lens) return setComponent(setExtra, elm, val, key)
-	var extras = getExtras(elm, Component)
+	var extras = getExtra(elm, Component)
 	extras[key] = val
 	return elm
 }
@@ -63,7 +63,7 @@ function setChild(elm, itm) {
 }
 
 function setComponent(dec, elm, cur, key) {
-	var extra = getExtras(elm, Component)
+	var extra = getExtra(elm, Component)
 	extra.updaters.push({fcn:dec, cur:cur, key:key})
 	return dec(elm, cur.value(), key)
 }

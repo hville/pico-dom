@@ -7,7 +7,7 @@ export {createComment, createTextNode, createDocumentFragment} from './create-no
 export {createElement} from './create-element'
 
 // Component Items
-export {getNode, getExtras} from './node-extra'
+export {getNode, getExtra} from './extras'
 export {createComponent} from './create-component'
 export {createList} from './create-list'
 export {createLens} from './constructors/lens'

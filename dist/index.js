@@ -159,12 +159,12 @@ function getNode(item) {
 	return item ? item.node || item : void 0
 }
 /**
-* @function getExtras
+* @function getExtra
 * @param  {!Object} item node or extra
 * @param  {Function} [Extra] creates an instance if not existign
 * @return {Object} the extra node context
 */
-function getExtras(item, Extra) {
+function getExtra(item, Extra) {
 	if (!item) return void 0
 	var extra = item.node ? item : nodeExtra.get(item);
 	if (!extra && Extra) {
@@ -173,14 +173,14 @@ function getExtras(item, Extra) {
 	}
 	return extra
 }
-function setExtras(node, extra) {
+function setExtra$1(node, extra) {
 	nodeExtra.set(node, extra);
 	return node
 }
 
 function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
-	var	sourceItem = getExtras(sourceChild),
+	var	sourceItem = getExtra(sourceChild),
 			sourceNext = sourceChild.nextSibling;
 	if (!sourceItem) {
 		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
@@ -206,7 +206,7 @@ function Component(node, extra, key, idx) {
 
 	// register and init
 	this.node = node;
-	setExtras(node, this);
+	setExtra$1(node, this);
 	if (this.init) this.init(key, idx);
 }
 
@@ -266,7 +266,7 @@ Component.prototype = {
 		var last = parent.lastChild;
 
 		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = getExtras(last);
+			var extra = getExtra(last);
 			if (extra) extra.moveTo(null);
 			else parent.removeChild(last);
 			last = parent.lastChild;
@@ -283,7 +283,7 @@ Component.prototype = {
 function updateChildren() {
 	var ptr = this.node.firstChild;
 	while (ptr) {
-		var extra = getExtras(ptr);
+		var extra = getExtra(ptr);
 		if (extra) {
 			extra.update.apply(extra, arguments);
 			ptr = (extra.footer || ptr).nextSibling;
@@ -362,7 +362,7 @@ var decorators = {
 		return arr ? arr.reduce(setChild, elm, setChild) : elm
 	},
 	extra: function(elm, obj) {
-		return obj ? reduce(obj, setExtra, elm) : elm
+		return obj ? reduce(obj, setExtra$$1, elm) : elm
 	}
 };
 /*
@@ -381,9 +381,9 @@ function setProp(elm, val, key) {
 	if (elm[key] !== val) elm[key] = val;
 	return elm
 }
-function setExtra(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setExtra, elm, val, key)
-	var extras = getExtras(elm, Component);
+function setExtra$$1(elm, val, key) {
+	if (val instanceof Lens) return setComponent(setExtra$$1, elm, val, key)
+	var extras = getExtra(elm, Component);
 	extras[key] = val;
 	return elm
 }
@@ -409,7 +409,7 @@ function setChild(elm, itm) {
 }
 
 function setComponent(dec, elm, cur, key) {
-	var extra = getExtras(elm, Component);
+	var extra = getExtra(elm, Component);
 	extra.updaters.push({fcn:dec, cur:cur, key:key});
 	return dec(elm, cur.value(), key)
 }
@@ -466,8 +466,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = createComment('^');
 	this.footer = createComment('$');
-	setExtras(this.header, this);
-	setExtras(this.footer, this);
+	setExtra$1(this.header, this);
+	setExtra$1(this.footer, this);
 }
 List.prototype = {
 	constructor: List,
@@ -522,7 +522,7 @@ List.prototype = {
 			var item = next;
 			next = item.nextSibling;
 
-			var ctx = getExtras(item);
+			var ctx = getExtra(item);
 			if (ctx) ctx.moveTo(parent, before);
 			else parent.insertBefore(item, before);
 		}
@@ -547,7 +547,7 @@ List.prototype = {
 				drop = foot;
 
 		while ((drop = foot.previousSibling) !== stop) {
-			var extra = getExtras(drop);
+			var extra = getExtra(drop);
 			mapKC.delete(extra.key);
 			extra.moveTo(null);
 		}
@@ -624,7 +624,7 @@ function createList(model, dataKey) {
 
 function cloneNode(node, key, idx) {
 	var copy = node.cloneNode(false),
-			extra = getExtras(node);
+			extra = getExtra(node);
 
 	// copy DOM nodes before extra behaviour
 	var nodeChild = node.firstChild;
@@ -641,7 +641,7 @@ function cloneNode(node, key, idx) {
 }
 
 function updateNode(node, v,k,o) {
-	var extra = getExtras(node);
+	var extra = getExtra(node);
 	if (extra && extra.update) extra.update.call(node, v,k,o);
 	return node
 }
@@ -655,7 +655,7 @@ exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
 exports.createElement = createElement;
 exports.getNode = getNode;
-exports.getExtras = getExtras;
+exports.getExtra = getExtra;
 exports.createComponent = createComponent;
 exports.createList = createList;
 exports.createLens = createLens;

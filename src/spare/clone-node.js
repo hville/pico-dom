@@ -1,5 +1,5 @@
 import {Component} from './constructors/component'
-import {getExtras, setExtras} from './node-extra'
+import {getExtra, setExtra} from './extras'
 
 export function cloneNode(node, deep) {
 	var clone = node.cloneNode(deep)
@@ -9,7 +9,7 @@ export function cloneNode(node, deep) {
 	return clone
 }
 function cloneExtra(clone, node) {
-	setExtras(clone, new Component(clone, getExtras(node)))
+	setExtra(clone, new Component(clone, getExtra(node)))
 }
 function cloneExtraTree(clone, node) {
 	cloneExtra(clone, node)

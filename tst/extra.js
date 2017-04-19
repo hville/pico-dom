@@ -13,7 +13,7 @@ ct('el - dynamic', function() {
 			update: updateValue
 		}
 	})
-	ct('===', P.getExtras(el0).update, updateValue)
+	ct('===', P.getExtra(el0).update, updateValue)
 
 	var el1 = P.cloneNode(el0)
 	P.updateNode(el0, 'abc')

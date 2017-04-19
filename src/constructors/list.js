@@ -1,5 +1,5 @@
 import {createComment} from '../create-node'
-import {setExtras, getExtras} from '../node-extra'
+import {setExtra, getExtra} from '../extras'
 
 /**
  * @constructor
@@ -18,8 +18,8 @@ export function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = createComment('^')
 	this.footer = createComment('$')
-	setExtras(this.header, this)
-	setExtras(this.footer, this)
+	setExtra(this.header, this)
+	setExtra(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -74,7 +74,7 @@ List.prototype = {
 			var item = next
 			next = item.nextSibling
 
-			var ctx = getExtras(item)
+			var ctx = getExtra(item)
 			if (ctx) ctx.moveTo(parent, before)
 			else parent.insertBefore(item, before)
 		}
@@ -99,7 +99,7 @@ List.prototype = {
 				drop = foot
 
 		while ((drop = foot.previousSibling) !== stop) {
-			var extra = getExtras(drop)
+			var extra = getExtra(drop)
 			mapKC.delete(extra.key)
 			extra.moveTo(null)
 		}
