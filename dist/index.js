@@ -14,74 +14,10 @@ var namespaces = {
 	svg:  'http://www.w3.org/2000/svg'
 };
 
-/**
-* @function comment
-* @param  {string} string commentNode data
-* @return {!Object} commentNode
-*/
-function createComment(string) {
-	return defaultView.document.createComment(string)
-}
-
-/**
-* @function text
-* @param  {string} string textNode data
-* @return {!Object} textNode
-*/
-function createTextNode(string) {
-	return defaultView.document.createTextNode(string)
-}
-
-/**
-* @function fragment
-* @return {!Object} documentFragment
-*/
-function createDocumentFragment() {
-	return defaultView.document.createDocumentFragment()
-}
-
-var counter = 0;
-
-function PunyMap() {
-	// unique key to avoid clashes between instances and other properties
-	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
-}
-PunyMap.prototype.get = function get(objectKey) {
-	return objectKey[this._key]
-};
-PunyMap.prototype.set = function set(objectKey, val) {
-	objectKey[this._key] = val;
-	return this
-};
-
-var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap;
-
-function getNode(item) {
-	return item ? item.node || item : void 0
-}
-/**
-* @function getExtra
-* @param  {!Object} item node or extra
-* @param  {Function} [Extra] creates an instance if not existign
-* @return {Object} the extra node context
-*/
-function getExtra(item, Extra) {
-	if (!item) return void 0
-	var extra = item.node ? item : nodeExtra.get(item);
-	if (!extra && Extra) {
-		extra = new Extra(item);
-		nodeExtra.set(item, extra);
-	}
-	return extra
-}
-function setExtra(node, extra) {
-	nodeExtra.set(node, extra);
-	return node
-}
-
 //import {Lens} from '../constructors/lens'
 //import {List} from '../constructors/list'
 //import {Extras} from '../constructors/extras'
+//import {getExtra} from '../extras'
 //import {cKind} from './c-kind'
 //import {createTextNode, createComment} from '../create-node'
 //import {moveNode} from './move-node'
@@ -104,6 +40,11 @@ function setProperty(obj, val, key) {
 
 // ELEMENT
 
+function setAttribute(elm, val, key) {
+	if (val === false) elm.removeAttribute(key);
+	else elm.setAttribute(key, val === true ? '' : val);
+	return elm
+}
 
 
 /*export function appendChild(elm, itm) {
@@ -169,14 +110,6 @@ function setProperty(obj, val, key) {
 			state = extras.state || (extras.state = {})
 	if (val instanceof Lens) return setEdit(setState, elm, val, key)
 	if (state[key] !== val) state[key] = val
-	return elm
-}*/
-
-
-
-/*function setEdit(red, elm, lens, key) {
-	getExtra(elm, Extras).edits.push({red: red, get:lens, key:key}) //TODO replace changes the key...
-	//if (lens.data) red(elm, lens.default, key) //TODO remove?
 	return elm
 }*/
 
@@ -268,6 +201,45 @@ function parse(def, txt) {
 	return def
 }
 
+var counter = 0;
+
+function PunyMap() {
+	// unique key to avoid clashes between instances and other properties
+	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
+}
+PunyMap.prototype.get = function get(objectKey) {
+	return objectKey[this._key]
+};
+PunyMap.prototype.set = function set(objectKey, val) {
+	objectKey[this._key] = val;
+	return this
+};
+
+var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap;
+
+function getNode(item) {
+	return item ? item.node || item : void 0
+}
+/**
+* @function getExtra
+* @param  {!Object} item node or extra
+* @param  {Function} [Extra] creates an instance if not existign
+* @return {Object} the extra node context
+*/
+function getExtra(item, Extra) {
+	if (!item) return void 0
+	var extra = item.node ? item : nodeExtra.get(item);
+	if (!extra && Extra) {
+		extra = new Extra(item);
+		nodeExtra.set(item, extra);
+	}
+	return extra
+}
+function setExtra$1(node, extra) {
+	nodeExtra.set(node, extra);
+	return node
+}
+
 function cloneChildren(targetParent, sourceChild) {
 	if (sourceChild === null) return targetParent
 	var	sourceItem = getExtra(sourceChild),
@@ -296,7 +268,7 @@ function Component(node, extra, key, idx) {
 
 	// register and init
 	this.node = node;
-	setExtra(node, this);
+	setExtra$1(node, this);
 	if (this.init) this.init(key, idx);
 }
 
@@ -331,19 +303,6 @@ Component.prototype = {
 		if (parent) parent.insertBefore(node, before || null);
 		else if (oldParent) oldParent.removeChild(node);
 		if (this.onmove) this.onmove(oldParent, parent);
-		return this
-	},
-
-	/**
-	* @function setText
-	* @param  {string} text textNode data
-	* @return {!Component} this
-	*/
-	setText: function setText$$1(text) {
-		var node = this.node,
-				child = node.firstChild;
-		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text;
-		else node.textContent = text;
 		return this
 	}
 };
@@ -426,36 +385,31 @@ function map() {
 
 var decorators = {
 	attrs: function(elm, obj) {
-		return obj ? reduce(obj, setAttr, elm) : elm
+		return obj ? reduce(obj, parseValue, elm, setAttribute) : elm
 	},
 	props: function(elm, obj) {
-		return obj ? reduce(obj, setProp, elm) : elm
+		return obj ? reduce(obj, parseValue, elm, setProperty) : elm
 	},
 	children: function(elm, arr) {
-		return arr ? arr.reduce(setChild, elm, setChild) : elm
+		return arr ? reduce(arr, parseValue, elm, setChild) : elm
 	},
 	extra: function(elm, obj) {
-		return obj ? reduce(obj, setExtra$1, elm) : elm
+		return obj ? reduce(obj, setExtra$$1, elm) : elm
 	}
+	/*state: function(elm, obj) {
+		return obj ? reduce(obj, parseValue, elm, setState) : elm
+	}*/
 };
+function parseValue(elm, val, key) {
+	var fcn = this;
+	if (val instanceof Lens) return setEdit(fcn, elm, val, key)
+	else return fcn(elm, val, key)
+}
 /*
 	TODO for children, autoUpdate setChild => replaceChild
 */
-function setAttr(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setAttr, elm, val, key)
-
-	if (val === false) elm.removeAttribute(key);
-	else elm.setAttribute(key, val === true ? '' : val);
-	return elm
-}
-function setProp(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setProp, elm, val, key)
-
-	if (elm[key] !== val) elm[key] = val;
-	return elm
-}
-function setExtra$1(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setExtra$1, elm, val, key)
+function setExtra$$1(elm, val, key) {
+	if (val instanceof Lens) return setEdit(setExtra$$1, elm, val, key)
 	var extras = getExtra(elm, Component);
 	extras[key] = val;
 	return elm
@@ -481,11 +435,18 @@ function setChild(elm, itm) {
 	}
 }
 
-function setComponent(dec, elm, cur, key) {
+function setEdit(dec, elm, cur, key) {
 	var extra = getExtra(elm, Component);
 	extra.updaters.push({fcn:dec, cur:cur, key:key});
 	return dec(elm, cur.value(), key)
 }
+/*
+function setEdit(red, elm, lens, key) {
+	getExtra(elm, Extras).edits.push({red: red, get:lens, key:key}) //TODO replace changes the key...
+	//if (lens.data) red(elm, lens.default, key) //TODO remove?
+	return elm
+}
+*/
 
 /**
  * Parse a CSS-style selector string and return a new Element
@@ -508,6 +469,32 @@ var presetElement = creator(decorate);
 var createElement = presetElement();
 createElement.svg = presetElement({xmlns: namespaces.svg});
 createElement.preset = presetElement;
+
+/**
+* @function comment
+* @param  {string} string commentNode data
+* @return {!Object} commentNode
+*/
+function createComment(string) {
+	return defaultView.document.createComment(string)
+}
+
+/**
+* @function text
+* @param  {string} string textNode data
+* @return {!Object} textNode
+*/
+function createTextNode(string) {
+	return defaultView.document.createTextNode(string)
+}
+
+/**
+* @function fragment
+* @return {!Object} documentFragment
+*/
+function createDocumentFragment() {
+	return defaultView.document.createDocumentFragment()
+}
 
 function replaceChildren(parent, childIterator, after, before) {
 	var ctx = {
@@ -577,8 +564,8 @@ function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = createComment('^');
 	this.footer = createComment('$');
-	setExtra(this.header, this);
-	setExtra(this.footer, this);
+	setExtra$1(this.header, this);
+	setExtra$1(this.footer, this);
 }
 List.prototype = {
 	constructor: List,
@@ -702,20 +689,38 @@ function createList(model, dataKey) {
 	}
 }
 
-function updateNode$1(node, v,k,o) {
+function updateNode(node, v,k,o) {
 	var extra = getExtra(node);
 	if (extra && extra.update) extra.update.call(node, v,k,o);
 	return node
 }
 
+
+/*
+export function updateNode(node, v,k,o) {
+	var extra = getExtra(node)
+	if (extra) {
+		if (extra.edits) for (var i=0; i<extra.edits.length; ++i) {
+			var edit = extra.edits[i]
+			node = edit.red(node, edit.get.value(v), edit.key)
+		}
+		if (extra.footer) return extra.footer
+	}
+	var child = node.firstChild
+	while (child) child = updateNode(child, v,k,o).nextSibling
+	return node
+}
+
+*/
+
 // DOM
 
 exports.setDefaultView = setDefaultView;
 exports.namespaces = namespaces;
+exports.createElement = createElement;
 exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
-exports.createElement = createElement;
 exports.replaceChildren = replaceChildren;
 exports.getNode = getNode;
 exports.getExtra = getExtra;
@@ -723,4 +728,4 @@ exports.createComponent = createComponent;
 exports.createList = createList;
 exports.createLens = createLens;
 exports.cloneNode = cloneNode;
-exports.updateNode = updateNode$1;
+exports.updateNode = updateNode;

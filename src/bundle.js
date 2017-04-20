@@ -3,8 +3,7 @@ export {setDefaultView} from './default-view' //document, window
 export {namespaces} from './namespaces'
 
 // Creators
-export {createComment, createTextNode, createDocumentFragment} from './create-node'
-export {createElement} from './create-element'
+export {createElement, createComment, createTextNode, createDocumentFragment} from './create-node'
 
 // Reducers
 export {replaceChildren} from './replace-children'
