@@ -2,9 +2,12 @@
 export {setDefaultView} from './default-view' //document, window
 export {namespaces} from './namespaces'
 
-// Nodes
+// Creators
 export {createComment, createTextNode, createDocumentFragment} from './create-node'
 export {createElement} from './create-element'
+
+// Reducers
+export {replaceChildren} from './replace-children'
 
 // Component Items
 export {getNode, getExtra} from './extras'

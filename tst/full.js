@@ -83,7 +83,6 @@ ct('list-without component', function() {
 	ct('===', concatData(comp.node), '^010101$')
 })
 ct('list-without parent', function() {
-	ct('catch', function() {li(co('div', el('h0', 0), el('h1', 1))).update([1,2,3])}, /parentNode/, 'disalow list updates without parentNode')
 	ct('===',
 		concatData(
 			co(fr(),

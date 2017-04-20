@@ -255,23 +255,6 @@ Component.prototype = {
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text;
 		else node.textContent = text;
 		return this
-	},
-
-	/**
-	* @function removeChildren
-	* @param  {Object} [after] optional last node to be kept
-	* @return {!Component} this
-	*/
-	removeChildren: function removeChildren(after) {
-		var last = parent.lastChild;
-
-		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = getExtra(last);
-			if (extra) extra.moveTo(null);
-			else parent.removeChild(last);
-			last = parent.lastChild;
-		}
-		return this
 	}
 };
 
@@ -436,6 +419,44 @@ var createElement = presetElement();
 createElement.svg = presetElement({xmlns: namespaces.svg});
 createElement.preset = presetElement;
 
+function replaceChildren(parent, childIterator, after, before) {
+	var ctx = {
+		parent: parent,
+		cursor: after ? after.nextSibling : parent.firstChild,
+		before: before || null
+	};
+
+	// insert new children or re-insert existing
+	if (childIterator) {
+		childIterator.forEach(insertNewChild, ctx);
+	}
+
+	// remove orphans
+	var cursor = ctx.cursor;
+	while (cursor != before) { //eslint-disable-line eqeqeq
+		var next = cursor.nextSibling;
+		parent.removeChild(cursor);
+		cursor = next;
+	}
+	return parent
+}
+function insertNewChild(newChild) {
+	var parent = this.parent,
+			cursor = this.cursor,
+			before = this.before;
+	// no existing children, just append
+	if (cursor === null) parent.appendChild(newChild);
+	// right position, move on
+	else if (newChild === cursor) this.cursor = cursor.nextSibling;
+	// likely deletion, possible reshuffle. move oldChild to end
+	else if (newChild === cursor.nextSibling) {
+		parent.insertBefore(cursor, before);
+		this.cursor = newChild.nextSibling;
+	}
+	// insert newChild before oldChild
+	else parent.insertBefore(newChild, cursor);
+}
+
 /**
 * @function preset
 * @param  {Object} defaults preloaded component defaults
@@ -458,9 +479,9 @@ function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
-
+	this.data = [];
 	// lookup maps to locate existing component and delete extra ones
-	this.mapKC = new Map(); // dataKey => component, for updating
+	this.mapKN = {}; // dataKey => component, for updating
 	this.factory = factory;
 
 	//required to keep parent ref when no children.length === 0
@@ -472,8 +493,17 @@ function List(factory, dKey) {
 List.prototype = {
 	constructor: List,
 	dataKey: function dataKey(v,i) { return i },
-	update: updateChildren$1,
-	updateChildren: updateChildren$1,
+
+	forEach: function forEach(fcn, ctx) {
+		var data = this.data;
+
+		fcn.call(ctx, this.header);
+		for (var i=0; i<data.length; ++i) {
+			var key = this.dataKey(data[i], i, data);
+			fcn.call(ctx, this.mapKN[key], key);
+		}
+		fcn.call(ctx, this.footer);
+	},
 
 	/**
 	* @function clone
@@ -492,116 +522,51 @@ List.prototype = {
 	moveTo: function moveTo(parent, before) {
 		var foot = this.footer,
 				head = this.header,
-				oldParent = head.parentNode;
-
-		//nothing to do
-		if (!oldParent && !parent) return this
-		if ((oldParent === parent) && (before === foot || before === foot.nextSibling)) return this
-
-		// list without parent are empty, just move the ends
-		if (!oldParent) {
-			parent.appendChild(head);
-			parent.appendChild(foot);
-			return this
+				origin = head.parentNode;
+		// skip case where there is nothing to do
+		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
+			// newParent == null -> remove only
+			if (!parent) replaceChildren(origin, null, head.previousSibling, foot.nextSibling);
+			else replaceChildren(parent, this, before || parent.lastChild, before);
 		}
-
-		// clear the list if dismounted (newParent === null)
-		if (!parent) {
-			this.removeChildren();
-			oldParent.removeChild(head);
-			oldParent.removeChild(foot);
-			return this
-		}
-
-		// insert || append
-		var next = head.nextSibling;
-		if (!before) before = null;
-
-		parent.insertBefore(head, before);
-		while(next !== foot) {
-			var item = next;
-			next = item.nextSibling;
-
-			var ctx = getExtra(item);
-			if (ctx) ctx.moveTo(parent, before);
-			else parent.insertBefore(item, before);
-		}
-		parent.insertBefore(foot, before);
-
-		return this
+		return this //TODO check return value|type
 	},
 
 	/**
-	* @function removeChildren
-	* @param  {Object} [after] optional Element pointer
+	* @function update
+	* @param  {Array} arr array of values to update
 	* @return {!List} list instance
 	*/
-	removeChildren: function removeChildren(after) {
-		var foot = this.footer,
-				parent = foot.parentNode;
-		// list without parent are empty
-		if (!parent) return this
+	update: function update(arr) {
+		var oldKN = this.mapKN,
+				newKN = this.mapKN = {},
+				getK = this.dataKey;
+		//TODO simplify index keys
 
-		var mapKC = this.mapKC,
-				stop = after || this.header,
-				drop = foot;
-
-		while ((drop = foot.previousSibling) !== stop) {
-			var extra = getExtra(drop);
-			mapKC.delete(extra.key);
-			extra.moveTo(null);
+		// update the node keyed map
+		this.data = arr;
+		for (var i=0; i<arr.length; ++i) {
+			var val = arr[i],
+					key = getK(val, i, arr);
+			// find item, create Item if it does not exits
+			var node = newKN[key] = oldKN[key] || this.factory(key, i),
+					extra = getExtra(node);
+			if (extra.update) extra.update(val, i, arr);
 		}
-		return this
+
+		// update the view
+		var head = this.header,
+				foot = this.footer,
+				parent = head.parentNode;
+		if (!parent) return this //TODO check return value|type
+		replaceChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling);
 	}
 };
-
-/**
-* @function updateChildren
-* @param  {Array} arr array of values to update
-* @param  {...*} optional update arguments
-* @return {!List} list instance
-*/
-function updateChildren$1(arr) {
-	var head = this.header,
-			foot = this.footer,
-			parent = head.parentNode;
-	if (!parent) throw Error('list.updates requires a parentNode')
-	var mapKC = this.mapKC,
-			getK = this.dataKey,
-			before = head.nextSibling;
-
-	for (var i=0; i<arr.length; ++i) {
-		var val = arr[i],
-				key = getK(val, i, arr);
-		// find item, create Item if it does not exits
-		var itm = mapKC.get(key);
-		if (!itm) {
-			itm = this.factory(key, i);
-			if (itm.key !== key) itm.key = key;
-			mapKC.set(key, itm);
-			parent.insertBefore(itm.node, before); // new item: insertion
-		}
-		else if (itm.node === before) { // right position, move on
-			before = itm.node.nextSibling;
-		}
-		else if (itm.node === before.nextSibling) { // likely deletion, possible reshuffle. move to end
-			parent.insertBefore(before, foot);
-			before = itm.node.nextSibling;
-		}
-		else {
-			parent.insertBefore(itm.node, before); //move existing node back
-		}
-		if (itm.update) itm.update(val, i, arr);
-	}
-
-	// de-reference leftover items
-	return this.removeChildren(before.previousSibling)
-}
 
 function createFactory(instance) {
 	return function(k, i) {
 		var comp = instance.clone(k, i);
-		return comp
+		return comp.node || comp
 	}
 }
 
@@ -654,6 +619,7 @@ exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
 exports.createElement = createElement;
+exports.replaceChildren = replaceChildren;
 exports.getNode = getNode;
 exports.getExtra = getExtra;
 exports.createComponent = createComponent;

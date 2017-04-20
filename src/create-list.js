@@ -4,7 +4,7 @@ import {List} from './constructors/list'
 function createFactory(instance) {
 	return function(k, i) {
 		var comp = instance.clone(k, i)
-		return comp
+		return comp.node || comp
 	}
 }
 
