@@ -1,7 +1,7 @@
 //import {Lens} from '../constructors/lens'
 //import {List} from '../constructors/list'
 //import {Extras} from '../constructors/extras'
-import {getExtra} from '../extras'
+//import {getExtra} from '../extras'
 //import {cKind} from './c-kind'
 //import {createTextNode, createComment} from '../create-node'
 //import {moveNode} from './move-node'
@@ -38,6 +38,7 @@ export function setAttribute(elm, val, key) {
 	else elm.setAttribute(key, val === true ? '' : val)
 	return elm
 }
+
 
 /*export function appendChild(elm, itm) {
 	if (itm instanceof Lens) {
@@ -102,25 +103,5 @@ export function setAttribute(elm, val, key) {
 			state = extras.state || (extras.state = {})
 	if (val instanceof Lens) return setEdit(setState, elm, val, key)
 	if (state[key] !== val) state[key] = val
-	return elm
-}*/
-
-export function updateNode(node, v,k,o) {
-	var extra = getExtra(node)
-	if (extra) {
-		if (extra.edits) for (var i=0; i<extra.edits.length; ++i) {
-			var edit = extra.edits[i]
-			node = edit.red(node, edit.get.value(v), edit.key)
-		}
-		if (extra.footer) return extra.footer
-	}
-	var child = node.firstChild
-	while (child) child = updateNode(child, v,k,o).nextSibling
-	return node
-}
-
-/*function setEdit(red, elm, lens, key) {
-	getExtra(elm, Extras).edits.push({red: red, get:lens, key:key}) //TODO replace changes the key...
-	//if (lens.data) red(elm, lens.default, key) //TODO remove?
 	return elm
 }*/

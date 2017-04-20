@@ -53,19 +53,6 @@ Component.prototype = {
 		else if (oldParent) oldParent.removeChild(node)
 		if (this.onmove) this.onmove(oldParent, parent)
 		return this
-	},
-
-	/**
-	* @function setText
-	* @param  {string} text textNode data
-	* @return {!Component} this
-	*/
-	setText: function setText(text) {
-		var node = this.node,
-				child = node.firstChild
-		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
-		else node.textContent = text
-		return this
 	}
 }
 
