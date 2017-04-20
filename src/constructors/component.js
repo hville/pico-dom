@@ -65,23 +65,6 @@ Component.prototype = {
 		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text
 		else node.textContent = text
 		return this
-	},
-
-	/**
-	* @function removeChildren
-	* @param  {Object} [after] optional last node to be kept
-	* @return {!Component} this
-	*/
-	removeChildren: function removeChildren(after) {
-		var last = parent.lastChild
-
-		while (last && last != after) { //eslint-disable-line eqeqeq
-			var extra = getExtra(last)
-			if (extra) extra.moveTo(null)
-			else parent.removeChild(last)
-			last = parent.lastChild
-		}
-		return this
 	}
 }
 
