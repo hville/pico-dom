@@ -5,9 +5,8 @@ var jsdom = require('jsdom').jsdom,
 P.setDefaultView(jsdom().defaultView)
 
 var li = P.createList,
-		co = P.createComponent
-
-
+		co = P.createComponent,
+		el = P.createElement
 
 function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
@@ -19,18 +18,28 @@ var coOptions = {
 	}
 }
 
+ct('list static-element', function() {
+	var l0 = li(el('p', 'x'))
+	var comp = co('div', l0)
+	comp.update([1,2,3])
+	ct('===', concatData(comp.node), '^xxx$')//3
+	comp.update([4,3,1,2])
+	ct('===', concatData(comp.node), '^xxxx$')//2
+	comp.update([1,5,3])
+	ct('===', concatData(comp.node), '^xxx$')//3
+})
 ct('list-simple', function() {
 	var l0 = li(co('div', coOptions))
 	//var l0 = li(function() {return co('div', coOptions)})
 	ct('==', l0.parentNode, null)
 	var comp = co('div#myid', l0),
-			el = comp.node
+			elm = comp.node
 	comp.update([1,2,3])
-	ct('===', concatData(el), '^123$')//3
+	ct('===', concatData(elm), '^123$')//3
 	comp.update([4,3,1,2])
-	ct('===', concatData(el), '^4312$')//2
+	ct('===', concatData(elm), '^4312$')//2
 	comp.update([1,5,3])
-	ct('===', concatData(el), '^153$')//3
+	ct('===', concatData(elm), '^153$')//3
 })
 ct('list-stacked', function() {
 	var comp = co('div#myid', [
@@ -38,10 +47,10 @@ ct('list-stacked', function() {
 				li(co('span', coOptions)),
 				li(co('p', coOptions))
 			]),
-			el = comp.node
-	ct('===', concatData(el), '^$^$^$')
+			elm = comp.node
+	ct('===', concatData(elm), '^$^$^$')
 	comp.update([1,2,3])
-	ct('===', concatData(el), '^123$^123$^123$')
+	ct('===', concatData(elm), '^123$^123$^123$')
 })
 ct('list-complex', function() {
 	//list update through parent update

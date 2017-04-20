@@ -551,7 +551,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i),
 					extra = getExtra(node);
-			if (extra.update) extra.update(val, i, arr);
+			if (extra) extra.update(val, i, arr);
 		}
 
 		// update the view
@@ -562,30 +562,6 @@ List.prototype = {
 		replaceChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling);
 	}
 };
-
-function createFactory(instance) {
-	return function(k, i) {
-		var comp = instance.clone(k, i);
-		return comp.node || comp
-	}
-}
-
-/**
-* @function list
-* @param  {List|Component|Function} model list or component factory or instance to be cloned
-* @param  {Function|string|number} [dataKey] record identifier
-* @return {!List} new List
-*/
-function createList(model, dataKey) {
-	switch (model.constructor) {
-		case Function:
-			return new List(model, dataKey)
-		case Component: case List:
-			return new List(createFactory(model), dataKey)
-		default:
-			throw Error('invalid list model:' + typeof model)
-	}
-}
 
 function cloneNode(node, key, idx) {
 	var copy = node.cloneNode(false),
@@ -603,6 +579,37 @@ function cloneNode(node, key, idx) {
 		else new Component(copy, extra, key, idx);
 	}
 	return copy
+}
+
+function createFactory(instance) {
+	return function(k, i) {
+		var comp = instance.clone(k, i);
+		return comp.node || comp
+	}
+}
+
+/**
+* @function list
+* @param  {List|Component|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
+/**
+* @function list
+* @param  {List|Node|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
+function createList(model, dataKey) {
+	switch (model.constructor) {
+		case Function:
+			return new List(model, dataKey)
+		case Component: case List:
+			return new List(createFactory(model), dataKey)
+		default:
+			if (model.cloneNode) return new List(function() { return model.cloneNode(true) }, dataKey ) //TODO use cloneNode(node) to get components in tree
+			throw Error('invalid list model:' + typeof model)
+	}
 }
 
 function updateNode(node, v,k,o) {

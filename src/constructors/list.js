@@ -83,7 +83,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i),
 					extra = getExtra(node)
-			if (extra.update) extra.update(val, i, arr)
+			if (extra) extra.update(val, i, arr)
 		}
 
 		// update the view
