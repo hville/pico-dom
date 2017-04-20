@@ -1,6 +1,7 @@
 import {getExtra, setExtra} from '../extras'
 import {cloneChildren} from '../util/clone-children'
-import {reduce, setter} from '../util/reduce'
+import {reduce} from '../util/reduce'
+import {setProperty} from '../util/reducers'
 
 /**
  * @constructor
@@ -11,7 +12,7 @@ import {reduce, setter} from '../util/reduce'
  */
 export function Component(node, extra, key, idx) {
 	//decorate: key, init, update, onmove, handleEvents...
-	if (extra) reduce(extra, setter, this)
+	if (extra) reduce(extra, setProperty, this)
 	if (key !== void 0) this.key = key
 
 	// register and init
