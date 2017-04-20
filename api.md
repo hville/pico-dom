@@ -5,6 +5,8 @@
 <dd></dd>
 <dt><a href="#list">list(model, [dataKey])</a> ⇒ <code>List</code></dt>
 <dd></dd>
+<dt><a href="#list">list(model, [dataKey])</a> ⇒ <code>List</code></dt>
+<dd></dd>
 <dt><a href="#comment">comment(string)</a> ⇒ <code>Object</code></dt>
 <dd></dd>
 <dt><a href="#text">text(string)</a> ⇒ <code>Object</code></dt>
@@ -50,6 +52,27 @@
   <tbody>
 <tr>
     <td>model</td><td><code>List</code> | <code>Component</code> | <code>function</code></td><td><p>list or component factory or instance to be cloned</p>
+</td>
+    </tr><tr>
+    <td>[dataKey]</td><td><code>function</code> | <code>string</code> | <code>number</code></td><td><p>record identifier</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="list"></a>
+
+## list(model, [dataKey]) ⇒ <code>List</code>
+**Kind**: global function  
+**Returns**: <code>List</code> - new List  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>model</td><td><code>List</code> | <code>Node</code> | <code>function</code></td><td><p>list or component factory or instance to be cloned</p>
 </td>
     </tr><tr>
     <td>[dataKey]</td><td><code>function</code> | <code>string</code> | <code>number</code></td><td><p>record identifier</p>

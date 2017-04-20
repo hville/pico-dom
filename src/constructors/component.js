@@ -1,5 +1,4 @@
 import {getExtra, setExtra} from '../extras'
-import {cloneChildren} from '../util/clone-children'
 import {reduce} from '../util/reduce'
 import {setProperty} from '../util/reducers'
 
@@ -23,20 +22,6 @@ export function Component(node, extra, key, idx) {
 
 Component.prototype = {
 	constructor: Component,
-
-	/**
-	* @function clone
-	* @param {*} [key] - optional key
-	* @param {number} [idx] - optional position index
-	* @return {!Component} new Component
-	*/
-	clone: function clone(key, idx) {
-		var sourceNode = this.node,
-				targetNode = sourceNode.cloneNode(false)
-		cloneChildren(targetNode, sourceNode.firstChild)
-		return new Component(targetNode, this, key, idx)
-	},
-
 	update: updateChildren,
 	updateChildren: updateChildren,
 

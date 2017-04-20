@@ -240,20 +240,6 @@ function setExtra$1(node, extra) {
 	return node
 }
 
-function cloneChildren(targetParent, sourceChild) {
-	if (sourceChild === null) return targetParent
-	var	sourceItem = getExtra(sourceChild),
-			sourceNext = sourceChild.nextSibling;
-	if (!sourceItem) {
-		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
-	}
-	else {
-		sourceItem.clone().moveTo(targetParent);
-		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling;
-	}
-	return cloneChildren(targetParent, sourceNext)
-}
-
 /**
  * @constructor
  * @param {Object} node - DOM node
@@ -274,20 +260,6 @@ function Component(node, extra, key, idx) {
 
 Component.prototype = {
 	constructor: Component,
-
-	/**
-	* @function clone
-	* @param {*} [key] - optional key
-	* @param {number} [idx] - optional position index
-	* @return {!Component} new Component
-	*/
-	clone: function clone(key, idx) {
-		var sourceNode = this.node,
-				targetNode = sourceNode.cloneNode(false);
-		cloneChildren(targetNode, sourceNode.firstChild);
-		return new Component(targetNode, this, key, idx)
-	},
-
 	update: updateChildren,
 	updateChildren: updateChildren,
 
@@ -535,19 +507,6 @@ function insertNewChild(newChild) {
 }
 
 /**
-* @function preset
-* @param  {Object} defaults preloaded component defaults
-* @return {Function(string|Object, ...*):!Component} component hyperscript function
-*/
-var preset = creator(function(elm, cfg, cnt) {
-	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
-});
-
-var createComponent = preset();
-createComponent.svg = preset({xmlns: namespaces.svg});
-createComponent.preset = preset;
-
-/**
  * @constructor
  * @param {Function} factory - component generating function
  * @param {*} dKey - data key
@@ -640,30 +599,45 @@ List.prototype = {
 	}
 };
 
-function cloneNode(node, key, idx) {
-	var copy = node.cloneNode(false),
-			extra = getExtra(node);
+//import {replaceChildren} from '/replace-children'
+
+function cloneNode(node, deep) { //TODO change instanceof to List properties
+	var extra = getExtra(node);
+	if (extra instanceof List) return (new List(extra.factory, extra.dataKey)).footer //TODO header or footer?
 
 	// copy DOM nodes before extra behaviour
-	var nodeChild = node.firstChild;
-	while(nodeChild) {
-		copy.appendChild(cloneNode(nodeChild));
-		nodeChild = nodeChild.nextSibling;
+	var copy = node.cloneNode(false);
+
+	if (deep !== false) {
+		var childNode = node.firstChild;
+		while(childNode) {
+			var childCopy = cloneNode(childNode, true),
+					childExtra = getExtra(childNode),
+					nextNode = (childExtra && childExtra.footer || childNode).nextSibling;
+
+			if (childExtra instanceof List) getExtra(childCopy).moveTo(copy);
+			else copy.appendChild(childCopy);
+
+			childNode = nextNode;
+		}
 	}
 
-	if (extra) {
-		if (extra.header) new List(extra.factory, extra.dataKey);
-		else new Component(copy, extra, key, idx);
-	}
+	if (extra) new Component(copy, extra);
 	return copy
 }
 
-function createFactory(instance) {
-	return function(k, i) {
-		var comp = instance.clone(k, i);
-		return comp.node || comp
-	}
-}
+/**
+* @function preset
+* @param  {Object} defaults preloaded component defaults
+* @return {Function(string|Object, ...*):!Component} component hyperscript function
+*/
+var preset = creator(function(elm, cfg, cnt) {
+	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
+});
+
+var createComponent = preset();
+createComponent.svg = preset({xmlns: namespaces.svg});
+createComponent.preset = preset;
 
 /**
 * @function list
@@ -681,8 +655,10 @@ function createList(model, dataKey) {
 	switch (model.constructor) {
 		case Function:
 			return new List(model, dataKey)
-		case Component: case List:
-			return new List(createFactory(model), dataKey)
+		case List:
+			return new List(function() { return model.clone() }, dataKey )
+		case Component:
+			return new List(function() { return cloneNode(model.node, true) }, dataKey )
 		default:
 			if (model.cloneNode) return new List(function() { return model.cloneNode(true) }, dataKey ) //TODO use cloneNode(node) to get components in tree
 			throw Error('invalid list model:' + typeof model)
@@ -722,10 +698,12 @@ exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
 exports.replaceChildren = replaceChildren;
+exports.setAttribute = setAttribute;
+exports.setProperty = setProperty;
+exports.cloneNode = cloneNode;
 exports.getNode = getNode;
 exports.getExtra = getExtra;
 exports.createComponent = createComponent;
 exports.createList = createList;
 exports.createLens = createLens;
-exports.cloneNode = cloneNode;
 exports.updateNode = updateNode;

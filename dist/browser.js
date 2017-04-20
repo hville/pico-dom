@@ -13,54 +13,116 @@ var namespaces = {
 	svg:  'http://www.w3.org/2000/svg'
 };
 
-/**
-* @function comment
-* @param  {string} string commentNode data
-* @return {!Object} commentNode
-*/
-function createComment(string) {
-	return defaultView.document.createComment(string)
+//import {Lens} from '../constructors/lens'
+//import {List} from '../constructors/list'
+//import {Extras} from '../constructors/extras'
+//import {getExtra} from '../extras'
+//import {cKind} from './c-kind'
+//import {createTextNode, createComment} from '../create-node'
+//import {moveNode} from './move-node'
+// GENERAL
+
+function assignKey(tgt, val, key) {
+	if (typeof val === 'object') tgt[key] = assign(tgt[key] || {}, val);
+	else if (tgt[key] !== val) tgt[key] = val;
+	return tgt
 }
 
-/**
-* @function text
-* @param  {string} string textNode data
-* @return {!Object} textNode
-*/
-function createTextNode(string) {
-	return defaultView.document.createTextNode(string)
+function setProperty(obj, val, key) {
+	if (obj[key] !== val) obj[key] = val;
+	return obj
 }
 
-/**
-* @function fragment
-* @return {!Object} documentFragment
-*/
-function createDocumentFragment() {
-	return defaultView.document.createDocumentFragment()
+// NODE
+
+
+
+// ELEMENT
+
+function setAttribute(elm, val, key) {
+	if (val === false) elm.removeAttribute(key);
+	else elm.setAttribute(key, val === true ? '' : val);
+	return elm
 }
+
+
+/*export function appendChild(elm, itm) {
+	if (itm instanceof Lens) {
+		var child = elm.appendChild(createComment('?'))
+		return setEdit(replaceChild, elm, itm, child)
+	}
+	switch(cKind(itm)) {
+		case null: case undefined:
+			elm.appendChild(createComment(''+itm))
+			return elm
+		case Array:
+			//return itm.reduce(appendChild, elm)??? TODO List
+			throw Error('not yet supported. TODO')
+		case Number:
+			elm.appendChild(createTextNode(''+itm))
+			return elm
+		case String:
+			elm.appendChild(createTextNode(itm))
+			return elm
+		case List:
+			itm.moveList(elm)
+			return elm
+		default:
+			elm.appendChild(itm)
+			return elm
+	}
+}*/
+
+/*export function replaceChild(elm, itm, oldChild) {
+	if (itm instanceof Lens) {
+		return setEdit(replaceChild, elm, itm, oldChild)
+	}
+	switch(cKind(itm)) {
+		case null: case undefined:
+			this.key = elm.replaceChild(createComment(''+itm), oldChild)
+			return elm
+		case Array:
+			//return itm.reduce(appendChild, elm)??? TODO List
+			//for (var i=0; i<itm.length; ++i) elm.insertBefore()
+			//return itm.reduce(replaceChild, elm, ???)
+			throw Error('not yet supported. TODO')
+		case Number:
+			this.key = elm.replaceChild(createTextNode(''+itm), oldChild)
+			return elm
+		case String:
+			this.key = elm.replaceChild(createTextNode(itm), oldChild)
+			return elm
+		case List:
+			itm.moveList(elm, oldChild)
+			moveNode(oldChild, null)
+			return elm
+		default:
+			this.key = elm.replaceChild(itm, oldChild)
+			return elm
+	}
+}*/
+
+// EXTRA
+
+/*export function setState(elm, val, key) {
+	var extras = getExtra(elm, Extras),
+			state = extras.state || (extras.state = {})
+	if (val instanceof Lens) return setEdit(setState, elm, val, key)
+	if (state[key] !== val) state[key] = val
+	return elm
+}*/
 
 function reduce(obj, fcn, res, ctx) {
 	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
 	return res
 }
 
-function setter(obj, val, key) {
-	if (obj[key] !== val) obj[key] = val;
-	return obj
-}
-
 function assign(tgt, src) {
-	return src ? reduce(src, setter, tgt) : tgt
+	return src ? reduce(src, setProperty, tgt) : tgt
 }
 
 function assignKeys(tgt, src) {
 	return src ? reduce(src, assignKey, tgt) : tgt
-}
-
-function assignKey(tgt, val, key) {
-	if (typeof val === 'object') tgt[key] = assign(tgt[key] || {}, val);
-	else if (tgt[key] !== val) tgt[key] = val;
-	return tgt
 }
 
 function cKind(t) {
@@ -177,20 +239,6 @@ function setExtra$1(node, extra) {
 	return node
 }
 
-function cloneChildren(targetParent, sourceChild) {
-	if (sourceChild === null) return targetParent
-	var	sourceItem = getExtra(sourceChild),
-			sourceNext = sourceChild.nextSibling;
-	if (!sourceItem) {
-		targetParent.appendChild(cloneChildren(sourceChild.cloneNode(false), sourceChild.firstChild));
-	}
-	else {
-		sourceItem.clone().moveTo(targetParent);
-		if (sourceItem.factory) sourceNext = sourceItem.footer.nextSibling;
-	}
-	return cloneChildren(targetParent, sourceNext)
-}
-
 /**
  * @constructor
  * @param {Object} node - DOM node
@@ -200,7 +248,7 @@ function cloneChildren(targetParent, sourceChild) {
  */
 function Component(node, extra, key, idx) {
 	//decorate: key, init, update, onmove, handleEvents...
-	if (extra) reduce(extra, setter, this);
+	if (extra) reduce(extra, setProperty, this);
 	if (key !== void 0) this.key = key;
 
 	// register and init
@@ -211,20 +259,6 @@ function Component(node, extra, key, idx) {
 
 Component.prototype = {
 	constructor: Component,
-
-	/**
-	* @function clone
-	* @param {*} [key] - optional key
-	* @param {number} [idx] - optional position index
-	* @return {!Component} new Component
-	*/
-	clone: function clone(key, idx) {
-		var sourceNode = this.node,
-				targetNode = sourceNode.cloneNode(false);
-		cloneChildren(targetNode, sourceNode.firstChild);
-		return new Component(targetNode, this, key, idx)
-	},
-
 	update: updateChildren,
 	updateChildren: updateChildren,
 
@@ -240,19 +274,6 @@ Component.prototype = {
 		if (parent) parent.insertBefore(node, before || null);
 		else if (oldParent) oldParent.removeChild(node);
 		if (this.onmove) this.onmove(oldParent, parent);
-		return this
-	},
-
-	/**
-	* @function setText
-	* @param  {string} text textNode data
-	* @return {!Component} this
-	*/
-	setText: function setText(text) {
-		var node = this.node,
-				child = node.firstChild;
-		if (child && !child.nextSibling && child.nodeValue !== text) child.nodeValue = text;
-		else node.textContent = text;
 		return this
 	}
 };
@@ -335,36 +356,31 @@ function map() {
 
 var decorators = {
 	attrs: function(elm, obj) {
-		return obj ? reduce(obj, setAttr, elm) : elm
+		return obj ? reduce(obj, parseValue, elm, setAttribute) : elm
 	},
 	props: function(elm, obj) {
-		return obj ? reduce(obj, setProp, elm) : elm
+		return obj ? reduce(obj, parseValue, elm, setProperty) : elm
 	},
 	children: function(elm, arr) {
-		return arr ? arr.reduce(setChild, elm, setChild) : elm
+		return arr ? reduce(arr, parseValue, elm, setChild) : elm
 	},
 	extra: function(elm, obj) {
 		return obj ? reduce(obj, setExtra$$1, elm) : elm
 	}
+	/*state: function(elm, obj) {
+		return obj ? reduce(obj, parseValue, elm, setState) : elm
+	}*/
 };
+function parseValue(elm, val, key) {
+	var fcn = this;
+	if (val instanceof Lens) return setEdit(fcn, elm, val, key)
+	else return fcn(elm, val, key)
+}
 /*
 	TODO for children, autoUpdate setChild => replaceChild
 */
-function setAttr(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setAttr, elm, val, key)
-
-	if (val === false) elm.removeAttribute(key);
-	else elm.setAttribute(key, val === true ? '' : val);
-	return elm
-}
-function setProp(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setProp, elm, val, key)
-
-	if (elm[key] !== val) elm[key] = val;
-	return elm
-}
 function setExtra$$1(elm, val, key) {
-	if (val instanceof Lens) return setComponent(setExtra$$1, elm, val, key)
+	if (val instanceof Lens) return setEdit(setExtra$$1, elm, val, key)
 	var extras = getExtra(elm, Component);
 	extras[key] = val;
 	return elm
@@ -390,11 +406,18 @@ function setChild(elm, itm) {
 	}
 }
 
-function setComponent(dec, elm, cur, key) {
+function setEdit(dec, elm, cur, key) {
 	var extra = getExtra(elm, Component);
 	extra.updaters.push({fcn:dec, cur:cur, key:key});
 	return dec(elm, cur.value(), key)
 }
+/*
+function setEdit(red, elm, lens, key) {
+	getExtra(elm, Extras).edits.push({red: red, get:lens, key:key}) //TODO replace changes the key...
+	//if (lens.data) red(elm, lens.default, key) //TODO remove?
+	return elm
+}
+*/
 
 /**
  * Parse a CSS-style selector string and return a new Element
@@ -417,6 +440,32 @@ var presetElement = creator(decorate);
 var createElement = presetElement();
 createElement.svg = presetElement({xmlns: namespaces.svg});
 createElement.preset = presetElement;
+
+/**
+* @function comment
+* @param  {string} string commentNode data
+* @return {!Object} commentNode
+*/
+function createComment(string) {
+	return defaultView.document.createComment(string)
+}
+
+/**
+* @function text
+* @param  {string} string textNode data
+* @return {!Object} textNode
+*/
+function createTextNode(string) {
+	return defaultView.document.createTextNode(string)
+}
+
+/**
+* @function fragment
+* @return {!Object} documentFragment
+*/
+function createDocumentFragment() {
+	return defaultView.document.createDocumentFragment()
+}
 
 function replaceChildren(parent, childIterator, after, before) {
 	var ctx = {
@@ -455,19 +504,6 @@ function insertNewChild(newChild) {
 	// insert newChild before oldChild
 	else parent.insertBefore(newChild, cursor);
 }
-
-/**
-* @function preset
-* @param  {Object} defaults preloaded component defaults
-* @return {Function(string|Object, ...*):!Component} component hyperscript function
-*/
-var preset = creator(function(elm, cfg, cnt) {
-	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
-});
-
-var createComponent = preset();
-createComponent.svg = preset({xmlns: namespaces.svg});
-createComponent.preset = preset;
 
 /**
  * @constructor
@@ -550,7 +586,7 @@ List.prototype = {
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i),
 					extra = getExtra(node);
-			if (extra.update) extra.update(val, i, arr);
+			if (extra) extra.update(val, i, arr);
 		}
 
 		// update the view
@@ -562,12 +598,45 @@ List.prototype = {
 	}
 };
 
-function createFactory(instance) {
-	return function(k, i) {
-		var comp = instance.clone(k, i);
-		return comp.node || comp
+//import {replaceChildren} from '/replace-children'
+
+function cloneNode(node, deep) { //TODO change instanceof to List properties
+	var extra = getExtra(node);
+	if (extra instanceof List) return (new List(extra.factory, extra.dataKey)).footer //TODO header or footer?
+
+	// copy DOM nodes before extra behaviour
+	var copy = node.cloneNode(false);
+
+	if (deep !== false) {
+		var childNode = node.firstChild;
+		while(childNode) {
+			var childCopy = cloneNode(childNode, true),
+					childExtra = getExtra(childNode),
+					nextNode = (childExtra && childExtra.footer || childNode).nextSibling;
+
+			if (childExtra instanceof List) getExtra(childCopy).moveTo(copy);
+			else copy.appendChild(childCopy);
+
+			childNode = nextNode;
+		}
 	}
+
+	if (extra) new Component(copy, extra);
+	return copy
 }
+
+/**
+* @function preset
+* @param  {Object} defaults preloaded component defaults
+* @return {Function(string|Object, ...*):!Component} component hyperscript function
+*/
+var preset = creator(function(elm, cfg, cnt) {
+	return new Component(decorate(elm, cfg, cnt), cfg.extra, cfg.input)
+});
+
+var createComponent = preset();
+createComponent.svg = preset({xmlns: namespaces.svg});
+createComponent.preset = preset;
 
 /**
 * @function list
@@ -575,33 +644,24 @@ function createFactory(instance) {
 * @param  {Function|string|number} [dataKey] record identifier
 * @return {!List} new List
 */
+/**
+* @function list
+* @param  {List|Node|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
 function createList(model, dataKey) {
 	switch (model.constructor) {
 		case Function:
 			return new List(model, dataKey)
-		case Component: case List:
-			return new List(createFactory(model), dataKey)
+		case List:
+			return new List(function() { return model.clone() }, dataKey )
+		case Component:
+			return new List(function() { return cloneNode(model.node, true) }, dataKey )
 		default:
+			if (model.cloneNode) return new List(function() { return model.cloneNode(true) }, dataKey ) //TODO use cloneNode(node) to get components in tree
 			throw Error('invalid list model:' + typeof model)
 	}
-}
-
-function cloneNode(node, key, idx) {
-	var copy = node.cloneNode(false),
-			extra = getExtra(node);
-
-	// copy DOM nodes before extra behaviour
-	var nodeChild = node.firstChild;
-	while(nodeChild) {
-		copy.appendChild(cloneNode(nodeChild));
-		nodeChild = nodeChild.nextSibling;
-	}
-
-	if (extra) {
-		if (extra.header) new List(extra.factory, extra.dataKey);
-		else new Component(copy, extra, key, idx);
-	}
-	return copy
 }
 
 function updateNode(node, v,k,o) {
@@ -610,21 +670,41 @@ function updateNode(node, v,k,o) {
 	return node
 }
 
+
+/*
+export function updateNode(node, v,k,o) {
+	var extra = getExtra(node)
+	if (extra) {
+		if (extra.edits) for (var i=0; i<extra.edits.length; ++i) {
+			var edit = extra.edits[i]
+			node = edit.red(node, edit.get.value(v), edit.key)
+		}
+		if (extra.footer) return extra.footer
+	}
+	var child = node.firstChild
+	while (child) child = updateNode(child, v,k,o).nextSibling
+	return node
+}
+
+*/
+
 // DOM
 
 exports.setDefaultView = setDefaultView;
 exports.namespaces = namespaces;
+exports.createElement = createElement;
 exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
-exports.createElement = createElement;
 exports.replaceChildren = replaceChildren;
+exports.setAttribute = setAttribute;
+exports.setProperty = setProperty;
+exports.cloneNode = cloneNode;
 exports.getNode = getNode;
 exports.getExtra = getExtra;
 exports.createComponent = createComponent;
 exports.createList = createList;
 exports.createLens = createLens;
-exports.cloneNode = cloneNode;
 exports.updateNode = updateNode;
 
 }((this.picoDOM = this.picoDOM || {})));

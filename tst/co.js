@@ -70,8 +70,9 @@ ct('co - cloning', function() {
 		bodyTdInputFac(),
 		bodyTdInputFac()
 	])
-	var cell = model.clone()
-	var el = cell.node
+	var el = P.cloneNode(model.node, true),
+			cell = P.getExtra(el)
+
 	cell.update('def')
 	//for (var i=0, lst=el.childNodes, typ=[]; i<lst.length; ++i) typ.push(lst.item(i).nodeType)
 	//console.log(typ)
