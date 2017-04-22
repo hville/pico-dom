@@ -2,7 +2,7 @@
   "name": "pico-dom",
   "version": "0.20.0",
   "main": "./dist/index.js",
-  "module": "./dist/module.js",
+  "module": "./module.js",
   "browser": "./dist/browser.js",
   "description": "small DOM component system",
   "keywords": [
@@ -24,9 +24,8 @@
     "gzip": "node -e \"fs.writeFileSync(process.argv[2], zlib.gzipSync(fs.readFileSync(process.argv[1])))\"",
     "docs": "jsdoc2md --no-gfm ./src/*.js > api.md",
 
-    "build:module": "rollup -o ./dist/module.js -f es -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
-    "build:main": "rollup -o ./dist/index.js -f cjs --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
-    "build:browser": "rollup -o ./dist/browser.js -f iife -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./src/bundle.js",
+    "build:main": "rollup -o ./dist/index.js -f cjs --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./module.js",
+    "build:browser": "rollup -o ./dist/browser.js -f iife -n picoDOM --banner \"/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */\" ./module.js",
 
     "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
     "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gz",

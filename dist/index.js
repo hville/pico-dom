@@ -215,7 +215,7 @@ PunyMap.prototype.set = function set(objectKey, val) {
 	return this
 };
 
-var nodeExtra = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap;
+var extras = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap; //TODO use extras directly
 
 function getNode(item) {
 	return item ? item.node || item : void 0
@@ -228,15 +228,15 @@ function getNode(item) {
 */
 function getExtra(item, Extra) {
 	if (!item) return void 0
-	var extra = item.node ? item : nodeExtra.get(item);
+	var extra = item.node ? item : extras.get(item);
 	if (!extra && Extra) {
 		extra = new Extra(item);
-		nodeExtra.set(item, extra);
+		extras.set(item, extra);
 	}
 	return extra
 }
-function setExtra$1(node, extra) {
-	nodeExtra.set(node, extra);
+function setExtra$1(node, extra) { //TODO retire
+	extras.set(node, extra);
 	return node
 }
 
@@ -303,18 +303,13 @@ ap:    (this:La, L(a => b)) => Lb // L(path.concat(L(a=>b).path))   ap(lens)
 chain: (this:La, (a => Lb)) => Lb // L(path.concat((a=>Lb).value))  chain(lens.of) //no need
 */
 
-function createLens(path, post, data) {
-	return new Lens(
-		Array.isArray(path) ? path : path != null ? [path] : [], //eslint-disable-line eqeqeq
-		post,
-		data
-	)
+function createLens(set, key) {
+	return new Lens(set, Array.isArray(key) ? key : key != null ? [key] : []) //eslint-disable-line eqeqeq
 }
 
-function Lens(path, post, data) {
-	this.path = path;
-	this.post = post;
-	this.data = data;
+function Lens(set, path) {
+	this.set = set;
+	this.path = path || [];
 }
 
 Lens.of = createLens;
@@ -324,36 +319,27 @@ Lens.prototype = {
 	get key() {
 		return this.path[this.path.length - 1] //TODO fail on fcn
 	},
-	get: map,
-	map: map,
-	set: function(val) {
-		this.post(this.path, val);
+	set: null,
+	map: function map() {
+		var path = this.path.slice();
+		for (var i=0; i<arguments.length; ++i) path.push(arguments[i]);
+		return new Lens(this.set, path)
 	},
-	default: function() {
-		return this.value(this.data)
-	},
-	value: function value(obj) {
+	get: function get(obj) {
 		var val = obj,
 				path = this.path;
 		for (var i=0; i<path.length; ++i) {
-			var step = path[i];
-			if (val.hasOwnProperty(step)) val = val[step];       // key
-			else if (typeof key === 'function') val = step(val); // map //TODO step(val, key)
-			// value = step.value(value)  // ap
-			// value = step(value).value  // chain
+			var key = path[i];
+			if (val[key] !== undefined) val = val[key];       // key
+			else if (typeof key === 'function') val = key(val); // map //TODO step(val, key)
 			else return
 		}
 		return val
 	},
 	ap: function ap(lens) {
-		return new Lens(this.path.concat(lens.path), this.post, this.data)
+		return new Lens(this.set, this.path.concat(lens.path))
 	}
 };
-
-function map() {
-	var path = this.path;
-	return new Lens(path.concat.apply(path, arguments), this.post, this.data)
-}
 
 var decorators = {
 	attrs: function(elm, obj) {
@@ -382,8 +368,8 @@ function parseValue(elm, val, key) {
 */
 function setExtra$$1(elm, val, key) {
 	if (val instanceof Lens) return setEdit(setExtra$$1, elm, val, key)
-	var extras = getExtra(elm, Component);
-	extras[key] = val;
+	var extras$$1 = getExtra(elm, Component);
+	extras$$1[key] = val;
 	return elm
 }
 
@@ -409,16 +395,9 @@ function setChild(elm, itm) {
 
 function setEdit(dec, elm, cur, key) {
 	var extra = getExtra(elm, Component);
-	extra.updaters.push({fcn:dec, cur:cur, key:key});
+	extra.patch.push('TODO');
 	return dec(elm, cur.value(), key)
 }
-/*
-function setEdit(red, elm, lens, key) {
-	getExtra(elm, Extras).edits.push({red: red, get:lens, key:key}) //TODO replace changes the key...
-	//if (lens.data) red(elm, lens.default, key) //TODO remove?
-	return elm
-}
-*/
 
 /**
  * Parse a CSS-style selector string and return a new Element
@@ -434,38 +413,6 @@ function decorate(element, config, children) {
 }
 function run(elm, val, key) {
 	return decorators[key] ? decorators[key](elm, val) : elm
-}
-
-var presetElement = creator(decorate);
-
-var createElement = presetElement();
-createElement.svg = presetElement({xmlns: namespaces.svg});
-createElement.preset = presetElement;
-
-/**
-* @function comment
-* @param  {string} string commentNode data
-* @return {!Object} commentNode
-*/
-function createComment(string) {
-	return defaultView.document.createComment(string)
-}
-
-/**
-* @function text
-* @param  {string} string textNode data
-* @return {!Object} textNode
-*/
-function createTextNode(string) {
-	return defaultView.document.createTextNode(string)
-}
-
-/**
-* @function fragment
-* @return {!Object} documentFragment
-*/
-function createDocumentFragment() {
-	return defaultView.document.createDocumentFragment()
 }
 
 function replaceChildren(parent, childIterator, after, before) {
@@ -504,6 +451,15 @@ function insertNewChild(newChild) {
 	}
 	// insert newChild before oldChild
 	else parent.insertBefore(newChild, cursor);
+}
+
+function updateNode(node, v,k,o) {
+	var extra = getExtra(node),
+			last = extra && extra.update ? extra.update(v,k,o) : node;
+
+	var ptr = node.firstChild;
+	while (ptr) ptr = updateNode(ptr, v,k,o).nextSibling;
+	return last
 }
 
 /**
@@ -585,9 +541,8 @@ List.prototype = {
 			var val = arr[i],
 					key = getK(val, i, arr);
 			// find item, create Item if it does not exits
-			var node = newKN[key] = oldKN[key] || this.factory(key, i),
-					extra = getExtra(node);
-			if (extra) extra.update(val, i, arr);
+			var node = newKN[key] = oldKN[key] || this.factory(key, i);
+			updateNode(node, val, i, arr);
 		}
 
 		// update the view
@@ -596,6 +551,8 @@ List.prototype = {
 				parent = head.parentNode;
 		if (!parent) return this //TODO check return value|type
 		replaceChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling);
+
+		return this.footer
 	}
 };
 
@@ -615,15 +572,168 @@ function cloneNode(node, deep) { //TODO change instanceof to List properties
 					childExtra = getExtra(childNode),
 					nextNode = (childExtra && childExtra.footer || childNode).nextSibling;
 
-			if (childExtra instanceof List) getExtra(childCopy).moveTo(copy);
+			if (childExtra instanceof List) getExtra(childCopy).moveTo(copy); //TODO use moveTo in all cases?
 			else copy.appendChild(childCopy);
 
 			childNode = nextNode;
 		}
 	}
 
-	if (extra) new Component(copy, extra);
+	if (extra) new Component(copy, extra); //TODO move back to components
 	return copy
+}
+
+/**
+ * @constructor
+ * @param {Object} node - DOM node
+ * @param {Object} [extra] - configuration
+ * @param {*} [key] - optional data key
+ * @param {number} [idx] - optional position index
+ */
+function Extra(node, extra) {
+	this.node = node;
+	setExtra$1(node, this);
+	if (extra) reduce(extra, setProperty, this);
+	//TODO init
+}
+
+var extraP = Extra.prototype;
+
+extraP.patch = null;
+extraP.init = null; //TODO
+
+extraP.clone = function clone() {
+	return cloneNode(this.node) //TODO
+};
+
+extraP.update = function update() {
+	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].apply(this.node, arguments);
+	return this.node
+};
+
+extraP.moveTo = function moveTo(parent, before) {
+	var node = this.node,
+			oldParent = node.parentNode;
+	if (parent) parent.insertBefore(node, before || null);
+	else if (oldParent) oldParent.removeChild(node);
+	if (this.onmove) this.onmove(oldParent, parent);
+	return this
+};
+
+function addPatch(patch, node) {
+	var extra = getExtra(node, Extra);
+	if (!extra.patch) extra.patch = [patch];
+	else extra.patch.push(patch);
+	return node
+}
+function setProperty$1(key, val, node) {
+	// curried function if node missing
+	if (!node) return function(n) { return setProperty$1(key, val, n) }
+	// dynamic patch is value is a lens
+	if (val instanceof Lens) return addPatch(function() {
+		return setProperty$1(key, val.get.apply(val, arguments), this)
+	}, node)
+	// normal
+	if (node[key] !== val) node[key] = val;
+	return node
+}
+function setText$1(txt, node) {
+	console.log('setting text', txt);
+	// curried function if node missing
+	if (!node) return function(n) { return setText$1(txt, n) }
+	// dynamic patch is value is a lens
+	if (txt instanceof Lens) return addPatch(function() {
+		return setText$1(txt.get.apply(txt, arguments), this)
+	}, node)
+	// normal
+	var child = node.firstChild;
+	if (child && !child.nextSibling) {
+		if (child.nodeValue !== txt) child.nodeValue = txt;
+	}
+	else node.textContent = txt;
+	return node
+}
+function setAttribute$1(key, val, node) {
+	// curried function if node missing
+	if (!node) return function(n) { return setAttribute$1(key, val, n) }
+	// dynamic patch is value is a lens
+	if (val instanceof Lens) return addPatch(function() {
+		return setAttribute$1(key, val.get.apply(val, arguments), this)
+	}, node)
+	// normal
+	if (val === false) node.removeAttribute(key);
+	else node.setAttribute(key, val === true ? '' : val);
+	return node
+}
+function addChild(child, parent) {
+	if (child instanceof Lens) throw Error('childLens not supported')
+	if (!parent) return function(n) { return addChild(child, n) }
+	switch(cKind(child)) {
+		case null: case undefined:
+			return parent
+		case Array:
+			return child.reduce(addChild, parent)
+		case Number:
+			parent.appendChild(createTextNode(''+child));
+			return parent
+		case String:
+			parent.appendChild(createTextNode(child));
+			return parent
+		default:
+			if (child.moveTo) child.moveTo(parent);
+			else if (child.nodeType) parent.appendChild(child);
+			else throw Error ('unsupported child type ' + typeof child)
+			return parent
+	}
+}
+
+var presetElement = creator(decorate);
+
+function createEl(tag) {
+	var node = tag.nodeType ? tag : defaultView.document.createElement(tag);
+	for (var i=1; i<arguments.length; ++i) {
+		var arg = arguments[i];
+		if (typeof arg === 'function') arg(node);
+		else addChild(arg, node);
+	}
+	return node
+}
+
+var createElement = presetElement();
+createElement.svg = presetElement({xmlns: namespaces.svg});
+createElement.preset = presetElement;
+
+/**
+* @function comment
+* @param  {string} string commentNode data
+* @return {!Object} commentNode
+*/
+function createComment(string) {
+	return defaultView.document.createComment(string)
+}
+
+/**
+* @function text
+* @param  {string|Lens} text textNode data
+* @return {!Object} textNode
+*/
+function createTextNode(text) {
+	var doc = defaultView.document;
+	if (text instanceof Lens) {
+		return setText$1(text, doc.createTextNode('')) // integrate logic here???
+	}
+	return doc.createTextNode(text)
+}
+
+
+
+
+/**
+* @function fragment
+* @return {!Object} documentFragment
+*/
+function createDocumentFragment() {
+	return defaultView.document.createDocumentFragment()
 }
 
 /**
@@ -665,30 +775,6 @@ function createList(model, dataKey) {
 	}
 }
 
-function updateNode(node, v,k,o) {
-	var extra = getExtra(node);
-	if (extra && extra.update) extra.update.call(node, v,k,o);
-	return node
-}
-
-
-/*
-export function updateNode(node, v,k,o) {
-	var extra = getExtra(node)
-	if (extra) {
-		if (extra.edits) for (var i=0; i<extra.edits.length; ++i) {
-			var edit = extra.edits[i]
-			node = edit.red(node, edit.get.value(v), edit.key)
-		}
-		if (extra.footer) return extra.footer
-	}
-	var child = node.firstChild
-	while (child) child = updateNode(child, v,k,o).nextSibling
-	return node
-}
-
-*/
-
 // DOM
 
 exports.setDefaultView = setDefaultView;
@@ -697,9 +783,12 @@ exports.createElement = createElement;
 exports.createComment = createComment;
 exports.createTextNode = createTextNode;
 exports.createDocumentFragment = createDocumentFragment;
+exports.createEl = createEl;
+exports.setAttribute = setAttribute$1;
+exports.setText = setText$1;
+exports.setProperty = setProperty$1;
+exports.addChild = addChild;
 exports.replaceChildren = replaceChildren;
-exports.setAttribute = setAttribute;
-exports.setProperty = setProperty;
 exports.cloneNode = cloneNode;
 exports.getNode = getNode;
 exports.getExtra = getExtra;

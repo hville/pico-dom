@@ -1,29 +1,26 @@
-import {getExtra} from './extras'
-import {Component} from './constructors/component'
-import {List} from './constructors/list'
-//import {replaceChildren} from '/replace-children'
+import {extras} from './extras'
 
 export function cloneNode(node, deep) { //TODO change instanceof to List properties
-	var extra = getExtra(node)
-	if (extra instanceof List) return (new List(extra.factory, extra.dataKey)).footer //TODO header or footer?
+	// components have their own logic
+	var extra = extras.get(node)
+	if (extra) return extra.clone(node, deep)
 
-	// copy DOM nodes before extra behaviour
+	// for plain elements
 	var copy = node.cloneNode(false)
+	return deep === false ? copy : cloneChildren(node, copy)
+}
 
-	if (deep !== false) {
-		var childNode = node.firstChild
-		while(childNode) {
-			var childCopy = cloneNode(childNode, true),
-					childExtra = getExtra(childNode),
-					nextNode = (childExtra && childExtra.footer || childNode).nextSibling
+export function cloneChildren(node, copy) {
+	var childNode = node.firstChild
+	while(childNode) {
+		var childCopy = cloneNode(childNode, true),
+				nextNode = childCopy.nextSibling,
+				extra = extras.get(childCopy)
 
-			if (childExtra instanceof List) getExtra(childCopy).moveTo(copy)
-			else copy.appendChild(childCopy)
+		if (extra) extra.insertBefore(copy, childCopy)
+		else copy.appendChild(childCopy)
 
-			childNode = nextNode
-		}
+		childNode = nextNode
 	}
-
-	if (extra) new Component(copy, extra)
 	return copy
 }

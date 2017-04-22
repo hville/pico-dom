@@ -5,64 +5,61 @@ var jsdom = require('jsdom').jsdom,
 P.setDefaultView(jsdom().defaultView)
 
 var li = P.createList,
-		co = P.createComponent,
-		el = P.createElement
+		//co = P.createComponent,
+		update = P.updateNode,
+		el = P.createEl,
+		setText = P.setText
 
 function concatData(e) {
 	for (var i=0, str=''; i<e.childNodes.length; ++i) str+=e.childNodes.item(i).textContent
 	return str
 }
-var coOptions = {
-	extra: {
-		update: function(v) {this.node.textContent = v}
-	}
-}
 
 ct('list static-element', function() {
 	var l0 = li(el('p', 'x'))
-	var comp = co('div', l0)
-	comp.update([1,2,3])
-	ct('===', concatData(comp.node), '^xxx$')//3
-	comp.update([4,3,1,2])
-	ct('===', concatData(comp.node), '^xxxx$')//2
-	comp.update([1,5,3])
-	ct('===', concatData(comp.node), '^xxx$')//3
+	var elem = el('div', l0)
+	update(elem, [1,2,3])
+	ct('===', concatData(elem), '^xxx$')//3
+	update(elem, [4,3,1,2])
+	ct('===', concatData(elem), '^xxxx$')//2
+	update(elem, [1,5,3])
+	ct('===', concatData(elem), '^xxx$')//3
 })
-ct('list-simple', function() {
-	var l0 = li(co('div', coOptions))
-	//var l0 = li(function() {return co('div', coOptions)})
+ct.only('list-simple', function() {
+	var lens = P.createLens()
+	var l0 = li(el('div', P.setText(lens)))
 	ct('==', l0.parentNode, null)
-	var comp = co('div#myid', l0),
-			elm = comp.node
-	comp.update([1,2,3])
-	ct('===', concatData(elm), '^123$')//3
-	comp.update([4,3,1,2])
-	ct('===', concatData(elm), '^4312$')//2
-	comp.update([1,5,3])
-	ct('===', concatData(elm), '^153$')//3
+	var elem = el('div', l0)
+
+	update(elem, [1,2,3])
+	ct('===', elem.childNodes.length, 5)
+	ct('===', concatData(elem), '^123$')//3
+	//update(elem, [4,3,1,2])
+	//ct('===', concatData(elem), '^4312$')//2
+	//update(elem, [1,5,3])
+	//ct('===', concatData(elem), '^153$')//3
 })
 ct('list-stacked', function() {
-	var comp = co('div#myid', [
-				li(co('div', coOptions)),
-				li(co('span', coOptions)),
-				li(co('p', coOptions))
-			]),
-			elm = comp.node
-	ct('===', concatData(elm), '^$^$^$')
-	comp.update([1,2,3])
-	ct('===', concatData(elm), '^123$^123$^123$')
+	var lens = P.createLens()
+	var elem = el('div#myid', [
+		li(el('div', setText(lens))),
+		li(el('span', setText(lens))),
+		li(el('p', setText(lens)))
+	])
+	ct('===', concatData(elem), '^$^$^$')
+	update(elem, [1,2,3])
+	ct('===', concatData(elem), '^123$^123$^123$')
 })
 ct('list-complex', function() {
 	//list update through parent update
-	var liFac = li(co('td', { extra: {
+	var liFac = li(el('td', { extra: {
 		update: function(v,i) {
 			this.node.textContent = v.v
 			this.node.tabIndex = i
 		}
 	}}), 'k')
-	var coObj = co('tr#myid0', {}, liFac),
-			coEl = coObj.node
-	coObj.update([{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
+	var coEl = el('tr#myid0', {}, liFac)
+	update(coEl, [{k:'one', v:'one'}, {k:'two', v:'two'}, {k:'twe', v:'twe'}], 0)
 	ct('===', concatData(coEl), '^onetwotwe$')
 })
 ct('sequence in nested lists', function() {
@@ -70,13 +67,12 @@ ct('sequence in nested lists', function() {
 		this.node.textContent = v
 		this.node.tabIndex = i
 	}
-	var matCo = co('div', {},
-		li(co('p',
-			li(co('span', {update: edit}))
+	var matEl = el('div', {},
+		li(el('p',
+			li(el('span', {update: edit}))
 		))
 	)
-	var matEl = matCo.node
-	matCo.update([[11,12,13],[21,22,23],[31,32,33]])
+	update(matEl, [[11,12,13],[21,22,23],[31,32,33]])
 	ct('===', matEl.children.length, 3)
 	ct('===', matEl.children[0].children.length, 3)
 	ct('===', matEl.children[1].children.length, 3)

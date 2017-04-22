@@ -1,6 +1,7 @@
 import {createComment} from '../create-node'
-import {setExtra, getExtra} from '../extras'
+import {extras} from '../extras'
 import {replaceChildren} from '../replace-children'
+import {updateNode} from '../update-node'
 
 /**
  * @constructor
@@ -19,8 +20,8 @@ export function List(factory, dKey) {
 	//required to keep parent ref when no children.length === 0
 	this.header = createComment('^')
 	this.footer = createComment('$')
-	setExtra(this.header, this)
-	setExtra(this.footer, this)
+	extras.set(this.header, this)
+	extras.set(this.footer, this)
 }
 List.prototype = {
 	constructor: List,
@@ -42,7 +43,7 @@ List.prototype = {
 	* @return {!List} new List
 	*/
 	clone: function clone() {
-		return new List(this.factory, this.dataKey)
+		return new List(this.factory, this.dataKey).footer
 	},
 
 	/**
@@ -64,12 +65,7 @@ List.prototype = {
 		return this //TODO check return value|type
 	},
 
-	/**
-	* @function update
-	* @param  {Array} arr array of values to update
-	* @return {!List} list instance
-	*/
-	update: function update(arr) {
+	update: function update(endNode, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey
@@ -81,9 +77,8 @@ List.prototype = {
 			var val = arr[i],
 					key = getK(val, i, arr)
 			// find item, create Item if it does not exits
-			var node = newKN[key] = oldKN[key] || this.factory(key, i),
-					extra = getExtra(node)
-			if (extra) extra.update(val, i, arr)
+			var node = newKN[key] = oldKN[key] || this.factory(key, i)
+			updateNode(node, val, i, arr)
 		}
 
 		// update the view
@@ -92,5 +87,7 @@ List.prototype = {
 				parent = head.parentNode
 		if (!parent) return this //TODO check return value|type
 		replaceChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling)
+
+		return this.footer
 	}
 }

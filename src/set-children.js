@@ -1,4 +1,4 @@
-export function replaceChildren(parent, childIterator, after, before) {
+export function setChildren(parent, childIterator, after, before) {
 	var ctx = {
 		parent: parent,
 		cursor: after ? after.nextSibling : parent.firstChild,
@@ -19,6 +19,7 @@ export function replaceChildren(parent, childIterator, after, before) {
 	}
 	return parent
 }
+
 function insertNewChild(newChild) {
 	var parent = this.parent,
 			cursor = this.cursor,
