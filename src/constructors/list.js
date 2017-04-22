@@ -1,6 +1,6 @@
 import {createComment} from '../create-node'
 import {extras} from '../extras'
-import {replaceChildren} from '../replace-children'
+import {setChildren} from '../set-children'
 import {updateNode} from '../update-node'
 
 /**
@@ -59,8 +59,8 @@ List.prototype = {
 		// skip case where there is nothing to do
 		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
 			// newParent == null -> remove only
-			if (!parent) replaceChildren(origin, null, head.previousSibling, foot.nextSibling)
-			else replaceChildren(parent, this, before || parent.lastChild, before)
+			if (!parent) setChildren(origin, null, head.previousSibling, foot.nextSibling)
+			else setChildren(parent, this, before || parent.lastChild, before)
 		}
 		return this //TODO check return value|type
 	},
@@ -86,7 +86,7 @@ List.prototype = {
 				foot = this.footer,
 				parent = head.parentNode
 		if (!parent) return this //TODO check return value|type
-		replaceChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling)
+		setChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling)
 
 		return this.footer
 	}

@@ -1,21 +1,23 @@
 // DOM
-export {setDefaultView} from './default-view' //document, window
-export {namespaces} from './namespaces'
+export {setDefaultView} from './src/default-view' //document, window
+
+// NODES
+export {cloneNode} from './src/clone-node'
+export {
+	createElement,
+	createElementNS,
+	createElementSVG,
+	createComment,
+	createTextNode,
+	createDocumentFragment
+} from './src/create-node'
 
 // MODIFY
-export {setAttribute, setText, setProperty, addChild} from './patch'
-export {replaceChildren} from './replace-children'
+export {setAttribute, setText, setProperty, addChild} from './src/patch'
+export {setChildren} from './src/set-children'
+export {updateNode} from './src/update-node'
 
 // DYNAMIC
-export {updateNode} from './update-node'
-export {createList} from './create-list'
-export {createLens} from './constructors/lens'
-
-
-
-// Nodes
-export {createElement, createComment, createTextNode, createDocumentFragment, createEl} from './create-node'
-// Edits
-export {cloneNode} from './clone-node'
-// Component Items
-export {getNode, getExtra} from './extras'
+export {createLens} from './src/constructors/lens'
+export {createList} from './src/create-list'
+export {extras} from './src/extras'
