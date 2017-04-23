@@ -1,6 +1,6 @@
-import {extras} from '../extras'
-import {assign} from '../util/reduce'
-import {cloneNode} from '../clone-node'
+import {extras} from './extras'
+import {assign} from './util/reduce'
+import {cloneChildren} from './clone-node'
 
 /**
  * @constructor
@@ -21,18 +21,20 @@ var extraP = Extra.prototype
 extraP.patch = null
 extraP.init = null //TODO
 
-extraP.clone = function clone() {
-	return cloneNode(this.node) //TODO
+extraP.clone = function clone(node, deep) {
+	var copy = node.cloneNode(false)
+	// copy tree before creating initiating the new Extra
+	if (deep !== false) cloneChildren(node, copy)
+	return (new Extra(node, this)).node
 }
 
-extraP.update = function update(node) {
-	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].apply(this, arguments)
+extraP.update = function update(node, v,k,o) {
+	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o)
 	return node
 }
 
-extraP.moveTo = function moveTo(parent, before) {
-	var node = this.node,
-			oldParent = node.parentNode
+extraP.moveTo = function moveTo(node, parent, before) {
+	var oldParent = node.parentNode
 	if (parent) parent.insertBefore(node, before || null)
 	else if (oldParent) oldParent.removeChild(node)
 	if (this.onmove) this.onmove(oldParent, parent)

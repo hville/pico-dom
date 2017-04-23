@@ -1,6 +1,6 @@
 import {defaultView} from './default-view'
 import {addChild} from './patch'
-import {Lens} from './constructors/lens'
+import {Lens} from './lens'
 import {setText} from './patch'
 
 var svgURI = 'http://www.w3.org/2000/svg'

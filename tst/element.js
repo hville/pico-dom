@@ -4,7 +4,7 @@ var jsdom = require('jsdom').jsdom,
 
 X.setDefaultView(jsdom().defaultView)
 
-var el = X.createEl,
+var el = X.createElement,
 		attr = X.setAttribute,
 		prop = X.setProperty,
 		child = X.addChild,

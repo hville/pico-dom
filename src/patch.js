@@ -1,5 +1,5 @@
-import {Extra} from './constructors/extra'
-import {Lens} from './constructors/lens'
+import {Extra} from './extra'
+import {Lens} from './lens'
 import {cKind} from './util/c-kind'
 import {createTextNode} from './create-node'
 import {extras} from './extras'
@@ -18,8 +18,8 @@ export function setProperty(key, val, node) {
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
 	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function() {
-		return setProperty(key, val.get.apply(val, arguments), this)
+	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setProperty(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -32,8 +32,8 @@ export function setText(txt, node) {
 	if (!node) return function(n) { return setText(txt, n) }
 
 	// dynamic patch is value is a lens
-	if (txt instanceof Lens) return addPatch(function() {
-		return setText(txt.get.apply(txt, arguments), this)
+	if (txt instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setText(txt.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -50,8 +50,8 @@ export function setAttribute(key, val, node) {
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
 	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function() {
-		return setAttribute(key, val.get.apply(val, arguments), this)
+	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setAttribute(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -75,7 +75,7 @@ export function addChild(child, parent) {
 			parent.appendChild(createTextNode(child))
 			return parent
 		default:
-			if (child.moveTo) child.moveTo(parent)
+			if (child.moveTo) child.moveTo(child, parent)
 			else if (child.nodeType) parent.appendChild(child)
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent

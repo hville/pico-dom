@@ -7,7 +7,7 @@ P.setDefaultView(jsdom().defaultView)
 var li = P.createList,
 		//co = P.createComponent,
 		update = P.updateNode,
-		el = P.createEl,
+		el = P.createElement,
 		setText = P.setText
 
 function concatData(e) {
@@ -25,7 +25,7 @@ ct('list static-element', function() {
 	update(elem, [1,5,3])
 	ct('===', concatData(elem), '^xxx$')//3
 })
-ct.only('list-simple', function() {
+ct('list-simple', function() {
 	var lens = P.createLens()
 	var l0 = li(el('div', P.setText(lens)))
 	ct('==', l0.parentNode, null)

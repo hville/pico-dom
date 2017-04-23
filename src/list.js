@@ -1,7 +1,21 @@
-import {createComment} from '../create-node'
-import {extras} from '../extras'
-import {setChildren} from '../set-children'
-import {updateNode} from '../update-node'
+import {createComment} from './create-node'
+import {extras} from './extras'
+import {setChildren} from './set-children'
+import {updateNode} from './update-node'
+import {cloneNode} from './clone-node'
+
+/**
+* @function createList
+* @param  {List|Node|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
+export function createList(model, dataKey) {
+	return new List(
+		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
+		dataKey
+	)
+}
 
 /**
  * @constructor
@@ -18,10 +32,10 @@ export function List(factory, dKey) {
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
-	this.header = createComment('^')
-	this.footer = createComment('$')
-	extras.set(this.header, this)
-	extras.set(this.footer, this)
+	this.head = createComment('^')
+	this.foot = createComment('$')
+	extras.set(this.head, this)
+	extras.set(this.foot, this)
 }
 List.prototype = {
 	constructor: List,
@@ -30,12 +44,12 @@ List.prototype = {
 	forEach: function forEach(fcn, ctx) {
 		var data = this.data
 
-		fcn.call(ctx, this.header)
+		fcn.call(ctx, this.head)
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data)
 			fcn.call(ctx, this.mapKN[key], key)
 		}
-		fcn.call(ctx, this.footer)
+		fcn.call(ctx, this.foot)
 	},
 
 	/**
@@ -43,18 +57,18 @@ List.prototype = {
 	* @return {!List} new List
 	*/
 	clone: function clone() {
-		return new List(this.factory, this.dataKey).footer
+		return new List(this.factory, this.dataKey).foot
 	},
 
 	/**
 	* @function moveTo
-	* @param  {Object} parent parentNode
+	* @param  {Object} head node to be moved
+	* @param  {Object} parent destination parent
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(parent, before) {
-		var foot = this.footer,
-				head = this.header,
+	moveTo: function moveTo(head, parent, before) {
+		var foot = this.foot,
 				origin = head.parentNode
 		// skip case where there is nothing to do
 		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
@@ -62,10 +76,10 @@ List.prototype = {
 			if (!parent) setChildren(origin, null, head.previousSibling, foot.nextSibling)
 			else setChildren(parent, this, before || parent.lastChild, before)
 		}
-		return this //TODO check return value|type
+		return foot
 	},
 
-	update: function update(endNode, arr) {
+	update: function update(head, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey
@@ -82,12 +96,11 @@ List.prototype = {
 		}
 
 		// update the view
-		var head = this.header,
-				foot = this.footer,
+		var foot = this.foot,
 				parent = head.parentNode
 		if (!parent) return this //TODO check return value|type
 		setChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling)
 
-		return this.footer
+		return foot
 	}
 }
