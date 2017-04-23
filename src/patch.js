@@ -1,6 +1,5 @@
 import {Extra} from './extra'
 import {Lens} from './lens'
-import {cKind} from './util/c-kind'
 import {createTextNode} from './create-node'
 import {extras} from './extras'
 
@@ -63,11 +62,12 @@ export function setAttribute(key, val, node) {
 export function addChild(child, parent) {
 	if (child instanceof Lens) throw Error('childLens not supported')
 	if (!parent) return function(n) { return addChild(child, n) }
-	switch(cKind(child)) {
+	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
 		case null: case undefined:
 			return parent
 		case Array:
-			return child.reduce(addChild, parent)
+			for (var i=0; i<child.length; ++i) addChild(child[i], parent)
+			return parent
 		case Number:
 			parent.appendChild(createTextNode(''+child))
 			return parent
@@ -75,7 +75,8 @@ export function addChild(child, parent) {
 			parent.appendChild(createTextNode(child))
 			return parent
 		default:
-			if (child.moveTo) child.moveTo(child, parent)
+			var extra = extras.get(child)
+			if (extra) extra.moveTo(child, parent)
 			else if (child.nodeType) parent.appendChild(child)
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent

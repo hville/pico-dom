@@ -20,7 +20,7 @@ export function setChildren(parent, childIterator, after, before) {
 	return parent
 }
 
-function insertNewChild(newChild) {
+function insertNewChild(newChild) { //TODO nexted lists
 	var parent = this.parent,
 			cursor = this.cursor,
 			before = this.before

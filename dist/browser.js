@@ -42,7 +42,7 @@ function cloneChildren(node, copy) {
 				nextNode = childCopy.nextSibling,
 				extra = extras.get(childCopy);
 
-		if (extra) extra.insertBefore(copy, childCopy);
+		if (extra) extra.moveTo(childCopy, copy);
 		else copy.appendChild(childCopy);
 
 		childNode = nextNode;
@@ -63,7 +63,6 @@ function assign(target, source) {
  * @param {number} [idx] - optional position index
  */
 function Extra(node, extra) {
-	this.node = node;
 	extras.set(node, this);
 	if (extra) assign(this, extra);
 	//TODO init
@@ -74,18 +73,21 @@ var extraP = Extra.prototype;
 extraP.patch = null;
 extraP.init = null; //TODO
 
-extraP.clone = function clone() {
-	return cloneNode(this.node) //TODO
+extraP.clone = function clone(node, deep) {
+	var copy = node.cloneNode(false);
+	// copy tree before creating initiating the new Extra
+	if (deep !== false) cloneChildren(node, copy);
+	new Extra(copy, this);
+	return copy
 };
 
-extraP.update = function update(node) {
-	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].apply(this, arguments);
+extraP.update = function update(node, v,k,o) {
+	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o);
 	return node
 };
 
-extraP.moveTo = function moveTo(parent, before) {
-	var node = this.node,
-			oldParent = node.parentNode;
+extraP.moveTo = function moveTo(node, parent, before) {
+	var oldParent = node.parentNode;
 	if (parent) parent.insertBefore(node, before || null);
 	else if (oldParent) oldParent.removeChild(node);
 	if (this.onmove) this.onmove(oldParent, parent);
@@ -136,11 +138,6 @@ Lens.prototype = {
 	}
 };
 
-function cKind(t) {
-	return t == null ? t //eslint-disable-line eqeqeq
-		: t.constructor || Object
-}
-
 function addPatch(patch, node) {
 	var extra = extras.get(node);
 	if (!extra) extra = new Extra(node);
@@ -155,8 +152,8 @@ function setProperty(key, val, node) {
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
 	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function() {
-		return setProperty(key, val.get.apply(val, arguments), this)
+	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setProperty(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -169,8 +166,8 @@ function setText(txt, node) {
 	if (!node) return function(n) { return setText(txt, n) }
 
 	// dynamic patch is value is a lens
-	if (txt instanceof Lens) return addPatch(function() {
-		return setText(txt.get.apply(txt, arguments), this)
+	if (txt instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setText(txt.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -187,8 +184,8 @@ function setAttribute(key, val, node) {
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
 	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function() {
-		return setAttribute(key, val.get.apply(val, arguments), this)
+	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
+		return setAttribute(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -200,11 +197,12 @@ function setAttribute(key, val, node) {
 function addChild(child, parent) {
 	if (child instanceof Lens) throw Error('childLens not supported')
 	if (!parent) return function(n) { return addChild(child, n) }
-	switch(cKind(child)) {
+	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
 		case null: case undefined:
 			return parent
 		case Array:
-			return child.reduce(addChild, parent)
+			for (var i=0; i<child.length; ++i) addChild(child[i], parent);
+			return parent
 		case Number:
 			parent.appendChild(createTextNode(''+child));
 			return parent
@@ -212,7 +210,8 @@ function addChild(child, parent) {
 			parent.appendChild(createTextNode(child));
 			return parent
 		default:
-			if (child.moveTo) child.moveTo(parent);
+			var extra = extras.get(child);
+			if (extra) extra.moveTo(child, parent);
 			else if (child.nodeType) parent.appendChild(child);
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent
@@ -296,7 +295,7 @@ function setChildren(parent, childIterator, after, before) {
 	return parent
 }
 
-function insertNewChild(newChild) {
+function insertNewChild(newChild) { //TODO nexted lists
 	var parent = this.parent,
 			cursor = this.cursor,
 			before = this.before;
@@ -323,6 +322,19 @@ function updateNode(node, v,k,o) {
 }
 
 /**
+* @function createList
+* @param  {List|Node|Function} model list or component factory or instance to be cloned
+* @param  {Function|string|number} [dataKey] record identifier
+* @return {!List} new List
+*/
+function createList(model, dataKey) {
+	return new List(
+		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
+		dataKey
+	).foot
+}
+
+/**
  * @constructor
  * @param {Function} factory - component generating function
  * @param {*} dKey - data key
@@ -331,30 +343,27 @@ function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
-	this.data = [];
+	this.data = []; //???
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKN = {}; // dataKey => component, for updating
 	this.factory = factory;
 
 	//required to keep parent ref when no children.length === 0
-	this.header = createComment('^');
-	this.footer = createComment('$');
-	extras.set(this.header, this);
-	extras.set(this.footer, this);
+	this.head = createComment('^');
+	this.foot = createComment('$');
+	extras.set(this.head, this);
+	extras.set(this.foot, this);
 }
 List.prototype = {
 	constructor: List,
 	dataKey: function dataKey(v,i) { return i },
 
 	forEach: function forEach(fcn, ctx) {
-		var data = this.data;
-
-		fcn.call(ctx, this.header);
+		var data = this.data; //TODO???
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data);
 			fcn.call(ctx, this.mapKN[key], key);
 		}
-		fcn.call(ctx, this.footer);
 	},
 
 	/**
@@ -362,29 +371,40 @@ List.prototype = {
 	* @return {!List} new List
 	*/
 	clone: function clone() {
-		return new List(this.factory, this.dataKey).footer
+		return new List(this.factory, this.dataKey).foot
 	},
 
 	/**
 	* @function moveTo
-	* @param  {Object} parent parentNode
+	* @param  {Object} edge unused head or foot node
+	* @param  {Object} parent destination parent
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(parent, before) {
-		var foot = this.footer,
-				head = this.header,
-				origin = head.parentNode;
+	moveTo: function moveTo(edge, parent, before) {
+		var foot = this.foot,
+				head = this.head,
+				origin = head.parentNode,
+				cursor = before || null;
 		// skip case where there is nothing to do
-		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
-			// newParent == null -> remove only
-			if (!parent) setChildren(origin, null, head.previousSibling, foot.nextSibling);
-			else setChildren(parent, this, before || parent.lastChild, before);
+		if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+			// newParent == null -> remove only -> clear list and dismount head and foot
+			if (!parent) {
+				setChildren(origin, null, head, foot);
+				origin.removeChild(head);
+				origin.removeChild(foot);
+			}
+			// relocate
+			else {
+				parent.insertBefore(head, cursor);
+				parent.insertBefore(foot, cursor);
+				setChildren(parent, this, head, foot);
+			}
 		}
-		return this //TODO check return value|type
+		return foot
 	},
 
-	update: function update(endNode, arr) {
+	update: function update(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey;
@@ -401,38 +421,11 @@ List.prototype = {
 		}
 
 		// update the view
-		var head = this.header,
-				foot = this.footer,
-				parent = head.parentNode;
-		if (!parent) return this //TODO check return value|type
-		setChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling);
-
-		return this.footer
+		var parent = this.foot.parentNode;
+		if (parent) setChildren(parent, this, this.head, this.foot);
+		return this.foot
 	}
 };
-
-/**
-* @function list
-* @param  {List|Function} model list or component factory or instance to be cloned
-* @param  {Function|string|number} [dataKey] record identifier
-* @return {!List} new List
-*/
-/**
-* @function list
-* @param  {List|Node|Function} model list or component factory or instance to be cloned
-* @param  {Function|string|number} [dataKey] record identifier
-* @return {!List} new List
-*/
-function createList(model, dataKey) {
-	switch (model.constructor) {
-		case Function:
-			return new List(model, dataKey)
-		case List:
-			return new List(function() { return model.clone() }, dataKey )
-		default:
-			return new List(function() { return cloneNode(model, true) }, dataKey )
-	}
-}
 
 // DOM
 

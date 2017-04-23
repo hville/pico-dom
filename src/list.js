@@ -14,7 +14,7 @@ export function createList(model, dataKey) {
 	return new List(
 		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
 		dataKey
-	)
+	).foot
 }
 
 /**
@@ -26,7 +26,7 @@ export function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] }
 	}
-	this.data = []
+	this.data = [] //???
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKN = {} // dataKey => component, for updating
 	this.factory = factory
@@ -42,14 +42,11 @@ List.prototype = {
 	dataKey: function dataKey(v,i) { return i },
 
 	forEach: function forEach(fcn, ctx) {
-		var data = this.data
-
-		fcn.call(ctx, this.head)
+		var data = this.data //TODO???
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data)
 			fcn.call(ctx, this.mapKN[key], key)
 		}
-		fcn.call(ctx, this.foot)
 	},
 
 	/**
@@ -62,24 +59,35 @@ List.prototype = {
 
 	/**
 	* @function moveTo
-	* @param  {Object} head node to be moved
+	* @param  {Object} edge unused head or foot node
 	* @param  {Object} parent destination parent
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(head, parent, before) {
+	moveTo: function moveTo(edge, parent, before) {
 		var foot = this.foot,
-				origin = head.parentNode
+				head = this.head,
+				origin = head.parentNode,
+				cursor = before || null
 		// skip case where there is nothing to do
-		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
-			// newParent == null -> remove only
-			if (!parent) setChildren(origin, null, head.previousSibling, foot.nextSibling)
-			else setChildren(parent, this, before || parent.lastChild, before)
+		if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+			// newParent == null -> remove only -> clear list and dismount head and foot
+			if (!parent) {
+				setChildren(origin, null, head, foot)
+				origin.removeChild(head)
+				origin.removeChild(foot)
+			}
+			// relocate
+			else {
+				parent.insertBefore(head, cursor)
+				parent.insertBefore(foot, cursor)
+				setChildren(parent, this, head, foot)
+			}
 		}
 		return foot
 	},
 
-	update: function update(head, arr) {
+	update: function update(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey
@@ -96,11 +104,8 @@ List.prototype = {
 		}
 
 		// update the view
-		var foot = this.foot,
-				parent = head.parentNode
-		if (!parent) return this //TODO check return value|type
-		setChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling)
-
-		return foot
+		var parent = this.foot.parentNode
+		if (parent) setChildren(parent, this, this.head, this.foot)
+		return this.foot
 	}
 }

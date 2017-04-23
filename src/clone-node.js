@@ -17,7 +17,7 @@ export function cloneChildren(node, copy) {
 				nextNode = childCopy.nextSibling,
 				extra = extras.get(childCopy)
 
-		if (extra) extra.insertBefore(copy, childCopy)
+		if (extra) extra.moveTo(childCopy, copy)
 		else copy.appendChild(childCopy)
 
 		childNode = nextNode

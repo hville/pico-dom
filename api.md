@@ -1,30 +1,36 @@
-## Functions
+## Classes
 
 <dl>
-<dt><a href="#preset">preset(defaults)</a> ⇒ <code>function</code></dt>
+<dt><a href="#Extra">Extra</a></dt>
 <dd></dd>
-<dt><a href="#list">list(model, [dataKey])</a> ⇒ <code>List</code></dt>
-<dd></dd>
-<dt><a href="#list">list(model, [dataKey])</a> ⇒ <code>List</code></dt>
-<dd></dd>
-<dt><a href="#comment">comment(string)</a> ⇒ <code>Object</code></dt>
-<dd></dd>
-<dt><a href="#text">text(string)</a> ⇒ <code>Object</code></dt>
-<dd></dd>
-<dt><a href="#fragment">fragment()</a> ⇒ <code>Object</code></dt>
-<dd></dd>
-<dt><a href="#decorate">decorate(element, config, [children])</a> ⇒ <code>Object</code></dt>
-<dd><p>Parse a CSS-style selector string and return a new Element</p>
-</dd>
-<dt><a href="#getExtra">getExtra(item, [Extra])</a> ⇒ <code>Object</code></dt>
+<dt><a href="#List">List</a></dt>
 <dd></dd>
 </dl>
 
-<a name="preset"></a>
+## Functions
 
-## preset(defaults) ⇒ <code>function</code>
-**Kind**: global function  
-**Returns**: <code>function</code> - component hyperscript function  
+<dl>
+<dt><a href="#comment">comment(string)</a> ⇒ <code>Object</code></dt>
+<dd></dd>
+<dt><a href="#fragment">fragment()</a> ⇒ <code>Object</code></dt>
+<dd></dd>
+<dt><a href="#text">text(text)</a> ⇒ <code>Object</code></dt>
+<dd></dd>
+<dt><a href="#createList">createList(model, [dataKey])</a> ⇒ <code><a href="#List">List</a></code></dt>
+<dd></dd>
+<dt><a href="#clone">clone()</a> ⇒ <code><a href="#List">List</a></code></dt>
+<dd></dd>
+<dt><a href="#moveTo">moveTo(edge, parent, [before])</a> ⇒ <code><a href="#List">List</a></code></dt>
+<dd></dd>
+</dl>
+
+<a name="Extra"></a>
+
+## Extra
+**Kind**: global class  
+<a name="new_Extra_new"></a>
+
+### new exports.Extra(node, [extra], [key], [idx])
 <table>
   <thead>
     <tr>
@@ -33,16 +39,27 @@
   </thead>
   <tbody>
 <tr>
-    <td>defaults</td><td><code>Object</code></td><td><p>preloaded component defaults</p>
+    <td>node</td><td><code>Object</code></td><td><p>DOM node</p>
+</td>
+    </tr><tr>
+    <td>[extra]</td><td><code>Object</code></td><td><p>configuration</p>
+</td>
+    </tr><tr>
+    <td>[key]</td><td><code>*</code></td><td><p>optional data key</p>
+</td>
+    </tr><tr>
+    <td>[idx]</td><td><code>number</code></td><td><p>optional position index</p>
 </td>
     </tr>  </tbody>
 </table>
 
-<a name="list"></a>
+<a name="List"></a>
 
-## list(model, [dataKey]) ⇒ <code>List</code>
-**Kind**: global function  
-**Returns**: <code>List</code> - new List  
+## List
+**Kind**: global class  
+<a name="new_List_new"></a>
+
+### new exports.List(factory, dKey)
 <table>
   <thead>
     <tr>
@@ -51,31 +68,10 @@
   </thead>
   <tbody>
 <tr>
-    <td>model</td><td><code>List</code> | <code>Component</code> | <code>function</code></td><td><p>list or component factory or instance to be cloned</p>
+    <td>factory</td><td><code>function</code></td><td><p>component generating function</p>
 </td>
     </tr><tr>
-    <td>[dataKey]</td><td><code>function</code> | <code>string</code> | <code>number</code></td><td><p>record identifier</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="list"></a>
-
-## list(model, [dataKey]) ⇒ <code>List</code>
-**Kind**: global function  
-**Returns**: <code>List</code> - new List  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>model</td><td><code>List</code> | <code>Node</code> | <code>function</code></td><td><p>list or component factory or instance to be cloned</p>
-</td>
-    </tr><tr>
-    <td>[dataKey]</td><td><code>function</code> | <code>string</code> | <code>number</code></td><td><p>record identifier</p>
+    <td>dKey</td><td><code>*</code></td><td><p>data key</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -98,9 +94,14 @@
     </tr>  </tbody>
 </table>
 
+<a name="fragment"></a>
+
+## fragment() ⇒ <code>Object</code>
+**Kind**: global function  
+**Returns**: <code>Object</code> - documentFragment  
 <a name="text"></a>
 
-## text(string) ⇒ <code>Object</code>
+## text(text) ⇒ <code>Object</code>
 **Kind**: global function  
 **Returns**: <code>Object</code> - textNode  
 <table>
@@ -111,23 +112,16 @@
   </thead>
   <tbody>
 <tr>
-    <td>string</td><td><code>string</code></td><td><p>textNode data</p>
+    <td>text</td><td><code>string</code> | <code>Lens</code></td><td><p>textNode data</p>
 </td>
     </tr>  </tbody>
 </table>
 
-<a name="fragment"></a>
+<a name="createList"></a>
 
-## fragment() ⇒ <code>Object</code>
+## createList(model, [dataKey]) ⇒ <code>[List](#List)</code>
 **Kind**: global function  
-**Returns**: <code>Object</code> - documentFragment  
-<a name="decorate"></a>
-
-## decorate(element, config, [children]) ⇒ <code>Object</code>
-Parse a CSS-style selector string and return a new Element
-
-**Kind**: global function  
-**Returns**: <code>Object</code> - - The parsed element definition [sel,att]  
+**Returns**: <code>[List](#List)</code> - new List  
 <table>
   <thead>
     <tr>
@@ -136,22 +130,24 @@ Parse a CSS-style selector string and return a new Element
   </thead>
   <tbody>
 <tr>
-    <td>element</td><td><code>Object</code></td><td><p>element to be decorated</p>
+    <td>model</td><td><code><a href="#List">List</a></code> | <code>Node</code> | <code>function</code></td><td><p>list or component factory or instance to be cloned</p>
 </td>
     </tr><tr>
-    <td>config</td><td><code>Object</code></td><td><p>The existing definition to be augmented</p>
-</td>
-    </tr><tr>
-    <td>[children]</td><td><code>Array</code></td><td><p>Element children Nodes,Factory,Text</p>
+    <td>[dataKey]</td><td><code>function</code> | <code>string</code> | <code>number</code></td><td><p>record identifier</p>
 </td>
     </tr>  </tbody>
 </table>
 
-<a name="getExtra"></a>
+<a name="clone"></a>
 
-## getExtra(item, [Extra]) ⇒ <code>Object</code>
+## clone() ⇒ <code>[List](#List)</code>
 **Kind**: global function  
-**Returns**: <code>Object</code> - the extra node context  
+**Returns**: <code>[List](#List)</code> - new List  
+<a name="moveTo"></a>
+
+## moveTo(edge, parent, [before]) ⇒ <code>[List](#List)</code>
+**Kind**: global function  
+**Returns**: <code>[List](#List)</code> - this  
 <table>
   <thead>
     <tr>
@@ -160,10 +156,13 @@ Parse a CSS-style selector string and return a new Element
   </thead>
   <tbody>
 <tr>
-    <td>item</td><td><code>Object</code></td><td><p>node or extra</p>
+    <td>edge</td><td><code>Object</code></td><td><p>unused head or foot node</p>
 </td>
     </tr><tr>
-    <td>[Extra]</td><td><code>function</code></td><td><p>creates an instance if not existign</p>
+    <td>parent</td><td><code>Object</code></td><td><p>destination parent</p>
+</td>
+    </tr><tr>
+    <td>[before]</td><td><code>Object</code></td><td><p>nextSibling</p>
 </td>
     </tr>  </tbody>
 </table>

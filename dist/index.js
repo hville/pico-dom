@@ -43,7 +43,7 @@ function cloneChildren(node, copy) {
 				nextNode = childCopy.nextSibling,
 				extra = extras.get(childCopy);
 
-		if (extra) extra.insertBefore(copy, childCopy);
+		if (extra) extra.moveTo(childCopy, copy);
 		else copy.appendChild(childCopy);
 
 		childNode = nextNode;
@@ -64,7 +64,6 @@ function assign(target, source) {
  * @param {number} [idx] - optional position index
  */
 function Extra(node, extra) {
-	this.node = node;
 	extras.set(node, this);
 	if (extra) assign(this, extra);
 	//TODO init
@@ -79,7 +78,8 @@ extraP.clone = function clone(node, deep) {
 	var copy = node.cloneNode(false);
 	// copy tree before creating initiating the new Extra
 	if (deep !== false) cloneChildren(node, copy);
-	return (new Extra(node, this)).node
+	new Extra(copy, this);
+	return copy
 };
 
 extraP.update = function update(node, v,k,o) {
@@ -138,11 +138,6 @@ Lens.prototype = {
 		return new Lens(this.set, this.path.concat(lens.path))
 	}
 };
-
-function cKind(t) {
-	return t == null ? t //eslint-disable-line eqeqeq
-		: t.constructor || Object
-}
 
 function addPatch(patch, node) {
 	var extra = extras.get(node);
@@ -203,11 +198,12 @@ function setAttribute(key, val, node) {
 function addChild(child, parent) {
 	if (child instanceof Lens) throw Error('childLens not supported')
 	if (!parent) return function(n) { return addChild(child, n) }
-	switch(cKind(child)) {
+	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
 		case null: case undefined:
 			return parent
 		case Array:
-			return child.reduce(addChild, parent)
+			for (var i=0; i<child.length; ++i) addChild(child[i], parent);
+			return parent
 		case Number:
 			parent.appendChild(createTextNode(''+child));
 			return parent
@@ -215,7 +211,8 @@ function addChild(child, parent) {
 			parent.appendChild(createTextNode(child));
 			return parent
 		default:
-			if (child.moveTo) child.moveTo(child, parent);
+			var extra = extras.get(child);
+			if (extra) extra.moveTo(child, parent);
 			else if (child.nodeType) parent.appendChild(child);
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent
@@ -299,7 +296,7 @@ function setChildren(parent, childIterator, after, before) {
 	return parent
 }
 
-function insertNewChild(newChild) {
+function insertNewChild(newChild) { //TODO nexted lists
 	var parent = this.parent,
 			cursor = this.cursor,
 			before = this.before;
@@ -335,7 +332,7 @@ function createList(model, dataKey) {
 	return new List(
 		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
 		dataKey
-	)
+	).foot
 }
 
 /**
@@ -347,7 +344,7 @@ function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
-	this.data = [];
+	this.data = []; //???
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKN = {}; // dataKey => component, for updating
 	this.factory = factory;
@@ -363,14 +360,11 @@ List.prototype = {
 	dataKey: function dataKey(v,i) { return i },
 
 	forEach: function forEach(fcn, ctx) {
-		var data = this.data;
-
-		fcn.call(ctx, this.head);
+		var data = this.data; //TODO???
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data);
 			fcn.call(ctx, this.mapKN[key], key);
 		}
-		fcn.call(ctx, this.foot);
 	},
 
 	/**
@@ -383,24 +377,35 @@ List.prototype = {
 
 	/**
 	* @function moveTo
-	* @param  {Object} head node to be moved
+	* @param  {Object} edge unused head or foot node
 	* @param  {Object} parent destination parent
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(head, parent, before) {
+	moveTo: function moveTo(edge, parent, before) {
 		var foot = this.foot,
-				origin = head.parentNode;
+				head = this.head,
+				origin = head.parentNode,
+				cursor = before || null;
 		// skip case where there is nothing to do
-		if ((origin || parent) && before !== foot && (origin !== parent || before !== foot.nextSibling)) {
-			// newParent == null -> remove only
-			if (!parent) setChildren(origin, null, head.previousSibling, foot.nextSibling);
-			else setChildren(parent, this, before || parent.lastChild, before);
+		if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+			// newParent == null -> remove only -> clear list and dismount head and foot
+			if (!parent) {
+				setChildren(origin, null, head, foot);
+				origin.removeChild(head);
+				origin.removeChild(foot);
+			}
+			// relocate
+			else {
+				parent.insertBefore(head, cursor);
+				parent.insertBefore(foot, cursor);
+				setChildren(parent, this, head, foot);
+			}
 		}
 		return foot
 	},
 
-	update: function update(head, arr) {
+	update: function update(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey;
@@ -417,12 +422,9 @@ List.prototype = {
 		}
 
 		// update the view
-		var foot = this.foot,
-				parent = head.parentNode;
-		if (!parent) return this //TODO check return value|type
-		setChildren(parent, this, head && head.previousSibling, foot && foot.nextSibling);
-
-		return foot
+		var parent = this.foot.parentNode;
+		if (parent) setChildren(parent, this, this.head, this.foot);
+		return this.foot
 	}
 };
 

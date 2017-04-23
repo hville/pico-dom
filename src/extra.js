@@ -10,7 +10,6 @@ import {cloneChildren} from './clone-node'
  * @param {number} [idx] - optional position index
  */
 export function Extra(node, extra) {
-	this.node = node
 	extras.set(node, this)
 	if (extra) assign(this, extra)
 	//TODO init
@@ -25,7 +24,8 @@ extraP.clone = function clone(node, deep) {
 	var copy = node.cloneNode(false)
 	// copy tree before creating initiating the new Extra
 	if (deep !== false) cloneChildren(node, copy)
-	return (new Extra(node, this)).node
+	new Extra(copy, this)
+	return copy
 }
 
 extraP.update = function update(node, v,k,o) {
