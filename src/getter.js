@@ -13,7 +13,7 @@ pGetter.map = function() {
 	for (var i=0; i<arguments.length; ++i) path.push(arguments[i])
 	return new Getter(path)
 }
-pGetter.value = function(obj) {
+pGetter.get = function(obj) {
 	var val = obj,
 			path = this.path
 	for (var i=0; i<path.length; ++i) {

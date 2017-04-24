@@ -112,7 +112,7 @@
   </thead>
   <tbody>
 <tr>
-    <td>text</td><td><code>string</code> | <code>Lens</code></td><td><p>textNode data</p>
+    <td>text</td><td><code>string</code> | <code>Getter</code></td><td><p>textNode data</p>
 </td>
     </tr>  </tbody>
 </table>

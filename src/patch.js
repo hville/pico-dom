@@ -18,7 +18,7 @@ export function setProperty(key, val, node) {
 
 	// dynamic patch if value is a getter
 	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.value(v,k,o), n)
+		return setProperty(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -32,7 +32,7 @@ export function setText(txt, node) {
 
 	// dynamic patch if value is a getter
 	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setText(txt.value(v,k,o), n)
+		return setText(txt.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -50,7 +50,7 @@ export function setAttribute(key, val, node) {
 
 	// dynamic patch if value is a getter
 	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.value(v,k,o), n)
+		return setAttribute(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal

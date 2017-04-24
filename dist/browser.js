@@ -73,7 +73,7 @@ var extraP = Extra.prototype;
 extraP.patch = null;
 extraP.init = null; //TODO
 
-extraP.clone = function clone(node, deep) {
+extraP.clone = function(node, deep) {
 	var copy = node.cloneNode(false);
 	// copy tree before creating initiating the new Extra
 	if (deep !== false) cloneChildren(node, copy);
@@ -81,12 +81,12 @@ extraP.clone = function clone(node, deep) {
 	return copy
 };
 
-extraP.update = function update(node, v,k,o) {
+extraP.update = function(node, v,k,o) {
 	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o);
 	return node
 };
 
-extraP.moveTo = function moveTo(node, parent, before) {
+extraP.moveTo = function(node, parent, before) {
 	var oldParent = node.parentNode;
 	if (parent) parent.insertBefore(node, before || null);
 	else if (oldParent) oldParent.removeChild(node);
@@ -94,48 +94,31 @@ extraP.moveTo = function moveTo(node, parent, before) {
 	return this
 };
 
-/*
-map:   (this:La, ( a => b)) => Lb // L(path.concat( a=>b ))         map(fcn)
-ap:    (this:La, L(a => b)) => Lb // L(path.concat(L(a=>b).path))   ap(lens)
-chain: (this:La, (a => Lb)) => Lb // L(path.concat((a=>Lb).value))  chain(lens.of) //no need
-*/
-
-function createLens(set, key) {
-	return new Lens(set, Array.isArray(key) ? key : key != null ? [key] : []) //eslint-disable-line eqeqeq
+function getter(key) {
+	return new Getter(Array.isArray(key) ? key : key != null ? [key] : []) //eslint-disable-line eqeqeq
 }
 
-function Lens(set, path) {
-	this.set = set;
+function Getter(path) {
 	this.path = path || [];
 }
 
-Lens.of = createLens;
+var pGetter = Getter.prototype;
 
-Lens.prototype = {
-	constructor: Lens,
-	get key() {
-		return this.path[this.path.length - 1] //TODO fail on fcn
-	},
-	set: null,
-	map: function map() {
-		var path = this.path.slice();
-		for (var i=0; i<arguments.length; ++i) path.push(arguments[i]);
-		return new Lens(this.set, path)
-	},
-	get: function get(obj) {
-		var val = obj,
-				path = this.path;
-		for (var i=0; i<path.length; ++i) {
-			var key = path[i];
-			if (val[key] !== undefined) val = val[key];       // key
-			else if (typeof key === 'function') val = key(val); // map //TODO step(val, key)
-			else return
-		}
-		return val
-	},
-	ap: function ap(lens) {
-		return new Lens(this.set, this.path.concat(lens.path))
+pGetter.map = function() {
+	var path = this.path.slice();
+	for (var i=0; i<arguments.length; ++i) path.push(arguments[i]);
+	return new Getter(path)
+};
+pGetter.value = function(obj) {
+	var val = obj,
+			path = this.path;
+	for (var i=0; i<path.length; ++i) {
+		var key = path[i];
+		if (val[key] !== undefined) val = val[key];       // key
+		else if (typeof key === 'function') val = key(val); // map //TODO step(val, key)
+		else return
 	}
+	return val
 };
 
 function addPatch(patch, node) {
@@ -151,9 +134,9 @@ function setProperty(key, val, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
-	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setProperty(key, val.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -165,9 +148,9 @@ function setText(txt, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setText(txt, n) }
 
-	// dynamic patch is value is a lens
-	if (txt instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setText(txt.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setText(txt.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -183,9 +166,9 @@ function setAttribute(key, val, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
-	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setAttribute(key, val.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -195,7 +178,7 @@ function setAttribute(key, val, node) {
 }
 
 function addChild(child, parent) {
-	if (child instanceof Lens) throw Error('childLens not supported')
+	if (child instanceof Getter) throw Error('childLens not supported')
 	if (!parent) return function(n) { return addChild(child, n) }
 	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
 		case null: case undefined:
@@ -239,12 +222,12 @@ function createDocumentFragment() {
 
 /**
 * @function text
-* @param  {string|Lens} text textNode data
+* @param  {string|Getter} text textNode data
 * @return {!Object} textNode
 */
 function createTextNode(text) {
 	var doc = defaultView.document;
-	if (text instanceof Lens) {
+	if (text instanceof Getter) {
 		return setText(text, doc.createTextNode('')) // integrate logic here???
 	}
 	return doc.createTextNode(text)
@@ -273,20 +256,16 @@ function decorate(node, stuff) {
 	else addChild(stuff, node);
 }
 
-function setChildren(parent, childIterator, after, before) {
-	var ctx = {
-		parent: parent,
-		cursor: after ? after.nextSibling : parent.firstChild,
-		before: before || null
-	};
+function setChildren(parent, children, after, before) {
+	var cursor = after || null;
 
 	// insert new children or re-insert existing
-	if (childIterator) {
-		childIterator.forEach(insertNewChild, ctx);
+	if (children) for (var i=0; i<children.length; ++i) {
+		cursor = placeChild(parent, children[i], cursor);
 	}
 
 	// remove orphans
-	var cursor = ctx.cursor;
+	cursor = cursor ? cursor.nextSibling : parent.firstChild;
 	while (cursor != before) { //eslint-disable-line eqeqeq
 		var next = cursor.nextSibling;
 		parent.removeChild(cursor);
@@ -295,29 +274,23 @@ function setChildren(parent, childIterator, after, before) {
 	return parent
 }
 
-function insertNewChild(newChild) { //TODO nexted lists
-	var parent = this.parent,
-			cursor = this.cursor,
-			before = this.before;
-	// no existing children, just append
-	if (cursor === null) parent.appendChild(newChild);
-	// right position, move on
-	else if (newChild === cursor) this.cursor = cursor.nextSibling;
-	// likely deletion, possible reshuffle. move oldChild to end
-	else if (newChild === cursor.nextSibling) {
-		parent.insertBefore(cursor, before);
-		this.cursor = newChild.nextSibling;
-	}
-	// insert newChild before oldChild
-	else parent.insertBefore(newChild, cursor);
+function placeChild(parent, child, after) {
+	if (!after) return parent.insertBefore(child, parent.firstChild)
+	var before = after.nextSibling;
+	return !before ? parent.appendChild(child)
+	: child === before ? child
+	// likely deletion, possible reshuffle
+	: child === before.nextSibling ? parent.removeChild(before)
+	// insert child before oldChild
+	: parent.insertBefore(child, before)
 }
 
-function updateNode(node, v,k,o) {
+function update(node, v,k,o) {
 	var extra = extras.get(node),
 			last = extra && extra.update ? extra.update(node, v,k,o) : node;
 
 	var ptr = node.firstChild;
-	while (ptr) ptr = updateNode(ptr, v,k,o).nextSibling;
+	while (ptr) ptr = update(ptr, v,k,o).nextSibling;
 	return last
 }
 
@@ -343,7 +316,6 @@ function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
-	this.data = []; //???
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKN = {}; // dataKey => component, for updating
 	this.factory = factory;
@@ -354,23 +326,16 @@ function List(factory, dKey) {
 	extras.set(this.head, this);
 	extras.set(this.foot, this);
 }
+
 List.prototype = {
 	constructor: List,
-	dataKey: function dataKey(v,i) { return i },
-
-	forEach: function forEach(fcn, ctx) {
-		var data = this.data; //TODO???
-		for (var i=0; i<data.length; ++i) {
-			var key = this.dataKey(data[i], i, data);
-			fcn.call(ctx, this.mapKN[key], key);
-		}
-	},
+	dataKey: function(v,i) { return i },
 
 	/**
 	* @function clone
 	* @return {!List} new List
 	*/
-	clone: function clone() {
+	clone: function() {
 		return new List(this.factory, this.dataKey).foot
 	},
 
@@ -381,7 +346,7 @@ List.prototype = {
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(edge, parent, before) {
+	moveTo: function(edge, parent, before) {
 		var foot = this.foot,
 				head = this.head,
 				origin = head.parentNode,
@@ -404,25 +369,27 @@ List.prototype = {
 		return foot
 	},
 
-	update: function update(edge, arr) {
+	update: function(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
-				getK = this.dataKey;
+				getK = this.dataKey,
+				after = this.head,
+				foot = this.foot,
+				parent = foot.parentNode;
 		//TODO simplify index keys
 
 		// update the node keyed map
-		this.data = arr;
 		for (var i=0; i<arr.length; ++i) {
 			var val = arr[i],
 					key = getK(val, i, arr);
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i);
-			updateNode(node, val, i, arr);
+			update(node, val, i, arr);
+			if (parent) after = placeChild(parent, node, after);
 		}
 
 		// update the view
-		var parent = this.foot.parentNode;
-		if (parent) setChildren(parent, this, this.head, this.foot);
+		if (parent) setChildren(parent, null, after, foot);
 		return this.foot
 	}
 };
@@ -442,8 +409,8 @@ exports.setText = setText;
 exports.setProperty = setProperty;
 exports.addChild = addChild;
 exports.setChildren = setChildren;
-exports.updateNode = updateNode;
-exports.createLens = createLens;
+exports.update = update;
+exports.getter = getter;
 exports.createList = createList;
 exports.extras = extras;
 

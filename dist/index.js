@@ -110,7 +110,7 @@ pGetter.map = function() {
 	for (var i=0; i<arguments.length; ++i) path.push(arguments[i]);
 	return new Getter(path)
 };
-pGetter.value = function(obj) {
+pGetter.get = function(obj) {
 	var val = obj,
 			path = this.path;
 	for (var i=0; i<path.length; ++i) {
@@ -137,7 +137,7 @@ function setProperty(key, val, node) {
 
 	// dynamic patch if value is a getter
 	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.value(v,k,o), n)
+		return setProperty(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -151,7 +151,7 @@ function setText(txt, node) {
 
 	// dynamic patch if value is a getter
 	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setText(txt.value(v,k,o), n)
+		return setText(txt.get(v,k,o), n)
 	}, node)
 
 	// normal
@@ -169,7 +169,7 @@ function setAttribute(key, val, node) {
 
 	// dynamic patch if value is a getter
 	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.value(v,k,o), n)
+		return setAttribute(key, val.get(v,k,o), n)
 	}, node)
 
 	// normal
