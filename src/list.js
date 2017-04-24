@@ -1,6 +1,6 @@
 import {createComment} from './create-node'
 import {extras} from './extras'
-import {setChildren} from './set-children'
+import {setChildren, placeChild} from './set-children'
 import {update} from './update'
 import {cloneNode} from './clone-node'
 
@@ -26,7 +26,6 @@ export function List(factory, dKey) {
 	if (dKey !== undefined) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] }
 	}
-	this.data = [] //???
 	// lookup maps to locate existing component and delete extra ones
 	this.mapKN = {} // dataKey => component, for updating
 	this.factory = factory
@@ -41,14 +40,6 @@ export function List(factory, dKey) {
 List.prototype = {
 	constructor: List,
 	dataKey: function(v,i) { return i },
-
-	forEach: function(fcn, ctx) {
-		var data = this.data //TODO???
-		for (var i=0; i<data.length; ++i) {
-			var key = this.dataKey(data[i], i, data)
-			fcn.call(ctx, this.mapKN[key], key)
-		}
-	},
 
 	/**
 	* @function clone
@@ -91,22 +82,24 @@ List.prototype = {
 	update: function(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
-				getK = this.dataKey
+				getK = this.dataKey,
+				after = this.head,
+				foot = this.foot,
+				parent = foot.parentNode
 		//TODO simplify index keys
 
 		// update the node keyed map
-		this.data = arr
 		for (var i=0; i<arr.length; ++i) {
 			var val = arr[i],
 					key = getK(val, i, arr)
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i)
 			update(node, val, i, arr)
+			if (parent) after = placeChild(parent, node, after)
 		}
 
 		// update the view
-		var parent = this.foot.parentNode
-		if (parent) setChildren(parent, this, this.head, this.foot)
+		if (parent) setChildren(parent, null, after, foot)
 		return this.foot
 	}
 }

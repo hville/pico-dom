@@ -38,9 +38,9 @@ ct('element - static, multiple mixed arguments', function() {
 })
 
 ct('element - dynamic - self', function() {
-	var lens = X.createLens(),
-			p0 = el('p', 0, attr('class', lens.map('0')), child(1), prop('id', lens.map('1')), 2),
-			p1 = el('p', text(lens.map(1)))
+	var get = X.getter(),
+			p0 = el('p', 0, attr('class', get.map('0')), child(1), prop('id', get.map('1')), 2),
+			p1 = el('p', text(get.map(1)))
 	X.update(p0, ['aa', 'bb'])
 	ct('===', p0.className, 'aa')
 	ct('===', p0.id, 'bb')
@@ -50,8 +50,8 @@ ct('element - dynamic - self', function() {
 })
 
 ct('element - dynamic - nested', function() {
-	var lens = X.createLens(),
-			p = el('p', 0, attr('class', lens.map('0')), child(1), prop('id', lens.map('1')), 2),
+	var get = X.getter(),
+			p = el('p', 0, attr('class', get.map('0')), child(1), prop('id', get.map('1')), 2),
 			d = el('div', p)
 	X.update(d, ['aa', 'bb'])
 	ct('===', p.className, 'aa')

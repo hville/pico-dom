@@ -1,6 +1,6 @@
 import {defaultView} from './default-view'
 import {addChild} from './patch'
-import {Lens} from './lens'
+import {Getter} from './getter'
 import {setText} from './patch'
 
 var svgURI = 'http://www.w3.org/2000/svg'
@@ -24,12 +24,12 @@ export function createDocumentFragment() {
 
 /**
 * @function text
-* @param  {string|Lens} text textNode data
+* @param  {string|Getter} text textNode data
 * @return {!Object} textNode
 */
 export function createTextNode(text) {
 	var doc = defaultView.document
-	if (text instanceof Lens) {
+	if (text instanceof Getter) {
 		return setText(text, doc.createTextNode('')) // integrate logic here???
 	}
 	return doc.createTextNode(text)

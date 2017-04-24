@@ -13,9 +13,9 @@ ct('text - static', function() {
 })
 
 ct('text - dynamic', function() {
-	var lens = X.createLens(),
-			t0 = text(lens.map(0)),
-			t1 = text(lens.map(1))
+	var get = X.getter(),
+			t0 = text(get.map(0)),
+			t1 = text(get.map(1))
 	ct('===', t0.nodeValue, '')
 	ct('===', t1.nodeValue, '')
 	X.update(t0, ['a', 'b'])

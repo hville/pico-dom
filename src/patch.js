@@ -1,5 +1,5 @@
 import {Extra} from './extra'
-import {Lens} from './lens'
+import {Getter} from './getter'
 import {createTextNode} from './create-node'
 import {extras} from './extras'
 
@@ -16,9 +16,9 @@ export function setProperty(key, val, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
-	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setProperty(key, val.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -30,9 +30,9 @@ export function setText(txt, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setText(txt, n) }
 
-	// dynamic patch is value is a lens
-	if (txt instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setText(txt.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setText(txt.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -48,9 +48,9 @@ export function setAttribute(key, val, node) {
 	// curried function if node missing
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
-	// dynamic patch is value is a lens
-	if (val instanceof Lens) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.get(v,k,o), n)
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
+		return setAttribute(key, val.value(v,k,o), n)
 	}, node)
 
 	// normal
@@ -60,7 +60,7 @@ export function setAttribute(key, val, node) {
 }
 
 export function addChild(child, parent) {
-	if (child instanceof Lens) throw Error('childLens not supported')
+	if (child instanceof Getter) throw Error('childLens not supported')
 	if (!parent) return function(n) { return addChild(child, n) }
 	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
 		case null: case undefined:

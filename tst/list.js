@@ -35,8 +35,8 @@ ct('list static-element', function() {
 	ct('===', concatData(elem), '^xxx$')//3
 })
 ct('list-simple', function() {
-	var lens = P.createLens()
-	var l0 = li(el('p', P.setText(lens)))
+	var getter = P.getter()
+	var l0 = li(el('p', P.setText(getter)))
 	var elem = el('div', l0)
 
 	update(elem, [1,2,3])
@@ -48,11 +48,11 @@ ct('list-simple', function() {
 	ct('===', concatData(elem), '^153$')//3
 })
 ct('list-stacked', function() {
-	var lens = P.createLens()
+	var getter = P.getter()
 	var elem = el('div',
-		li(el('h0', setText(lens))),
-		li(el('h1', setText(lens))),
-		li(el('h2', setText(lens)))
+		li(el('h0', setText(getter))),
+		li(el('h1', setText(getter))),
+		li(el('h2', setText(getter)))
 	)
 	ct('===', concatData(elem), '^$^$^$')
 
@@ -60,12 +60,12 @@ ct('list-stacked', function() {
 	ct('===', concatData(elem), '^123$^123$^123$')
 })
 ct('list-complex', function() {
-	var lens = P.createLens()
+	var getter = P.getter()
 	//list update through parent update
 	var liFac = li(
 		el('td',
-			P.setText(lens.map('v')),
-			P.setProperty('', lens.map(function(v,i) {return i}))
+			P.setText(getter.map('v')),
+			P.setProperty('', getter.map(function(v,i) {return i}))
 		),
 		'k'
 	)
@@ -74,12 +74,12 @@ ct('list-complex', function() {
 	ct('===', concatData(coEl), '^onetwotwe$')
 })
 ct('sequence in nested lists', function() {
-	var lens = P.createLens()
+	var getter = P.getter()
 	var matEl = el('div',
 		li(el('p',
 			li(el('span',
-				P.setText(lens.map()),
-				P.setProperty('', lens.map(function(v,i) {return i}))
+				P.setText(getter.map()),
+				P.setProperty('', getter.map(function(v,i) {return i}))
 			))
 		))
 	)

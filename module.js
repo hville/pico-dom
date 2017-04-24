@@ -18,6 +18,6 @@ export {setChildren} from './src/set-children'
 export {update} from './src/update'
 
 // DYNAMIC
-export {createLens} from './src/lens'
+export {getter} from './src/getter'
 export {createList} from './src/list'
 export {extras} from './src/extras'

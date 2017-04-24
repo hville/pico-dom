@@ -1,17 +1,13 @@
-export function setChildren(parent, childIterator, after, before) {
-	var ctx = {
-		parent: parent,
-		cursor: after ? after.nextSibling : parent.firstChild,
-		before: before || null
-	}
+export function setChildren(parent, children, after, before) {
+	var cursor = after || null
 
 	// insert new children or re-insert existing
-	if (childIterator) {
-		childIterator.forEach(insertNewChild, ctx)
+	if (children) for (var i=0; i<children.length; ++i) {
+		cursor = placeChild(parent, children[i], cursor)
 	}
 
 	// remove orphans
-	var cursor = ctx.cursor
+	cursor = cursor ? cursor.nextSibling : parent.firstChild
 	while (cursor != before) { //eslint-disable-line eqeqeq
 		var next = cursor.nextSibling
 		parent.removeChild(cursor)
@@ -20,19 +16,13 @@ export function setChildren(parent, childIterator, after, before) {
 	return parent
 }
 
-function insertNewChild(newChild) { //TODO nexted lists
-	var parent = this.parent,
-			cursor = this.cursor,
-			before = this.before
-	// no existing children, just append
-	if (cursor === null) parent.appendChild(newChild)
-	// right position, move on
-	else if (newChild === cursor) this.cursor = cursor.nextSibling
-	// likely deletion, possible reshuffle. move oldChild to end
-	else if (newChild === cursor.nextSibling) {
-		parent.insertBefore(cursor, before)
-		this.cursor = newChild.nextSibling
-	}
-	// insert newChild before oldChild
-	else parent.insertBefore(newChild, cursor)
+export function placeChild(parent, child, after) {
+	if (!after) return parent.insertBefore(child, parent.firstChild)
+	var before = after.nextSibling
+	return !before ? parent.appendChild(child)
+	: child === before ? child
+	// likely deletion, possible reshuffle
+	: child === before.nextSibling ? parent.removeChild(before)
+	// insert child before oldChild
+	: parent.insertBefore(child, before)
 }
