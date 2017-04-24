@@ -20,7 +20,7 @@ var extraP = Extra.prototype
 extraP.patch = null
 extraP.init = null //TODO
 
-extraP.clone = function clone(node, deep) {
+extraP.clone = function(node, deep) {
 	var copy = node.cloneNode(false)
 	// copy tree before creating initiating the new Extra
 	if (deep !== false) cloneChildren(node, copy)
@@ -28,12 +28,12 @@ extraP.clone = function clone(node, deep) {
 	return copy
 }
 
-extraP.update = function update(node, v,k,o) {
+extraP.update = function(node, v,k,o) {
 	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o)
 	return node
 }
 
-extraP.moveTo = function moveTo(node, parent, before) {
+extraP.moveTo = function(node, parent, before) {
 	var oldParent = node.parentNode
 	if (parent) parent.insertBefore(node, before || null)
 	else if (oldParent) oldParent.removeChild(node)

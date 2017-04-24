@@ -74,7 +74,7 @@ var extraP = Extra.prototype;
 extraP.patch = null;
 extraP.init = null; //TODO
 
-extraP.clone = function clone(node, deep) {
+extraP.clone = function(node, deep) {
 	var copy = node.cloneNode(false);
 	// copy tree before creating initiating the new Extra
 	if (deep !== false) cloneChildren(node, copy);
@@ -82,12 +82,12 @@ extraP.clone = function clone(node, deep) {
 	return copy
 };
 
-extraP.update = function update(node, v,k,o) {
+extraP.update = function(node, v,k,o) {
 	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o);
 	return node
 };
 
-extraP.moveTo = function moveTo(node, parent, before) {
+extraP.moveTo = function(node, parent, before) {
 	var oldParent = node.parentNode;
 	if (parent) parent.insertBefore(node, before || null);
 	else if (oldParent) oldParent.removeChild(node);
@@ -313,12 +313,12 @@ function insertNewChild(newChild) { //TODO nexted lists
 	else parent.insertBefore(newChild, cursor);
 }
 
-function updateNode(node, v,k,o) {
+function update(node, v,k,o) {
 	var extra = extras.get(node),
 			last = extra && extra.update ? extra.update(node, v,k,o) : node;
 
 	var ptr = node.firstChild;
-	while (ptr) ptr = updateNode(ptr, v,k,o).nextSibling;
+	while (ptr) ptr = update(ptr, v,k,o).nextSibling;
 	return last
 }
 
@@ -355,11 +355,12 @@ function List(factory, dKey) {
 	extras.set(this.head, this);
 	extras.set(this.foot, this);
 }
+
 List.prototype = {
 	constructor: List,
-	dataKey: function dataKey(v,i) { return i },
+	dataKey: function(v,i) { return i },
 
-	forEach: function forEach(fcn, ctx) {
+	forEach: function(fcn, ctx) {
 		var data = this.data; //TODO???
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data);
@@ -371,7 +372,7 @@ List.prototype = {
 	* @function clone
 	* @return {!List} new List
 	*/
-	clone: function clone() {
+	clone: function() {
 		return new List(this.factory, this.dataKey).foot
 	},
 
@@ -382,7 +383,7 @@ List.prototype = {
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(edge, parent, before) {
+	moveTo: function(edge, parent, before) {
 		var foot = this.foot,
 				head = this.head,
 				origin = head.parentNode,
@@ -405,7 +406,7 @@ List.prototype = {
 		return foot
 	},
 
-	update: function update(edge, arr) {
+	update: function(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey;
@@ -418,7 +419,7 @@ List.prototype = {
 					key = getK(val, i, arr);
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i);
-			updateNode(node, val, i, arr);
+			update(node, val, i, arr);
 		}
 
 		// update the view
@@ -443,7 +444,7 @@ exports.setText = setText;
 exports.setProperty = setProperty;
 exports.addChild = addChild;
 exports.setChildren = setChildren;
-exports.updateNode = updateNode;
+exports.update = update;
 exports.createLens = createLens;
 exports.createList = createList;
 exports.extras = extras;

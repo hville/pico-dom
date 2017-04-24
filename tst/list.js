@@ -6,7 +6,7 @@ P.setDefaultView(jsdom().defaultView)
 
 var li = P.createList,
 		//co = P.createComponent,
-		update = P.updateNode,
+		update = P.update,
 		el = P.createElement,
 		setText = P.setText
 

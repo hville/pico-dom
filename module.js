@@ -15,7 +15,7 @@ export {
 // MODIFY
 export {setAttribute, setText, setProperty, addChild} from './src/patch'
 export {setChildren} from './src/set-children'
-export {updateNode} from './src/update-node'
+export {update} from './src/update'
 
 // DYNAMIC
 export {createLens} from './src/lens'

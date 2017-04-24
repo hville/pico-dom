@@ -1,7 +1,7 @@
 import {createComment} from './create-node'
 import {extras} from './extras'
 import {setChildren} from './set-children'
-import {updateNode} from './update-node'
+import {update} from './update'
 import {cloneNode} from './clone-node'
 
 /**
@@ -37,11 +37,12 @@ export function List(factory, dKey) {
 	extras.set(this.head, this)
 	extras.set(this.foot, this)
 }
+
 List.prototype = {
 	constructor: List,
-	dataKey: function dataKey(v,i) { return i },
+	dataKey: function(v,i) { return i },
 
-	forEach: function forEach(fcn, ctx) {
+	forEach: function(fcn, ctx) {
 		var data = this.data //TODO???
 		for (var i=0; i<data.length; ++i) {
 			var key = this.dataKey(data[i], i, data)
@@ -53,7 +54,7 @@ List.prototype = {
 	* @function clone
 	* @return {!List} new List
 	*/
-	clone: function clone() {
+	clone: function() {
 		return new List(this.factory, this.dataKey).foot
 	},
 
@@ -64,7 +65,7 @@ List.prototype = {
 	* @param  {Object} [before] nextSibling
 	* @return {!List} this
 	*/
-	moveTo: function moveTo(edge, parent, before) {
+	moveTo: function(edge, parent, before) {
 		var foot = this.foot,
 				head = this.head,
 				origin = head.parentNode,
@@ -87,7 +88,7 @@ List.prototype = {
 		return foot
 	},
 
-	update: function update(edge, arr) {
+	update: function(edge, arr) {
 		var oldKN = this.mapKN,
 				newKN = this.mapKN = {},
 				getK = this.dataKey
@@ -100,7 +101,7 @@ List.prototype = {
 					key = getK(val, i, arr)
 			// find item, create Item if it does not exits
 			var node = newKN[key] = oldKN[key] || this.factory(key, i)
-			updateNode(node, val, i, arr)
+			update(node, val, i, arr)
 		}
 
 		// update the view

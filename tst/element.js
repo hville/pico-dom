@@ -41,11 +41,11 @@ ct('element - dynamic - self', function() {
 	var lens = X.createLens(),
 			p0 = el('p', 0, attr('class', lens.map('0')), child(1), prop('id', lens.map('1')), 2),
 			p1 = el('p', text(lens.map(1)))
-	X.updateNode(p0, ['aa', 'bb'])
+	X.update(p0, ['aa', 'bb'])
 	ct('===', p0.className, 'aa')
 	ct('===', p0.id, 'bb')
 	ct('===', p0.textContent, '012')
-	X.updateNode(p1, ['aa', 'bb'])
+	X.update(p1, ['aa', 'bb'])
 	ct('===', p1.textContent, 'bb')
 })
 
@@ -53,7 +53,7 @@ ct('element - dynamic - nested', function() {
 	var lens = X.createLens(),
 			p = el('p', 0, attr('class', lens.map('0')), child(1), prop('id', lens.map('1')), 2),
 			d = el('div', p)
-	X.updateNode(d, ['aa', 'bb'])
+	X.update(d, ['aa', 'bb'])
 	ct('===', p.className, 'aa')
 	ct('===', p.id, 'bb')
 	ct('===', p.textContent, '012')
