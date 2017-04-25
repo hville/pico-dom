@@ -10,21 +10,12 @@ function setDefaultView(win) {
 	return defaultView
 }
 
-var counter = 0;
+var pVCo = '_㎴㏇';
 
-function PunyMap() {
-	// unique key to avoid clashes between instances and other properties
-	this._key = '_wMap' + String.fromCodePoint(Date.now()<<8>>>16) + (counter++).toString(36);
-}
-PunyMap.prototype.get = function get(objectKey) {
-	return objectKey[this._key]
+var extras = {
+	get: function(node) { return node[pVCo] },
+	set: function(node, val) { return node[pVCo] = val }
 };
-PunyMap.prototype.set = function set(objectKey, val) {
-	objectKey[this._key] = val;
-	return this
-};
-
-var extras = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap; //TODO use extras directly
 
 function cloneNode(node, deep) { //TODO change instanceof to List properties
 	// components have their own logic

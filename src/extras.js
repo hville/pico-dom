@@ -1,3 +1,6 @@
-import {PunyMap} from './util/puny-map'
+var pVCo = '_㎴㏇'
 
-export var extras = typeof WeakMap !== 'undefined' ? new WeakMap : new PunyMap //TODO use extras directly
+export var extras = {
+	get: function(node) { return node[pVCo] },
+	set: function(node, val) { return node[pVCo] = val }
+}
