@@ -56,6 +56,20 @@ function assign(target, source) {
 	return target
 }
 
+function update(node, v,k,o) {
+	var extra = extras.get(node);
+	if (extra) {
+		extra.update(node, v,k,o);
+		return extra.foot || node
+	}
+	return updateChildren(node, v,k,o)
+}
+function updateChildren(node, v,k,o) {
+	var ptr = node.firstChild;
+	while (ptr) ptr = update(ptr, v,k,o).nextSibling;
+	return node
+}
+
 /**
  * @constructor
  * @param {Object} node - DOM node
@@ -83,6 +97,11 @@ extraP.clone = function(node, deep) {
 };
 
 extraP.update = function(node, v,k,o) {
+	this.updateSelf(node, v,k,o);
+	updateChildren(node, v,k,o);
+};
+
+extraP.updateSelf = function(node, v,k,o) {
 	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o);
 	return node
 };
@@ -286,15 +305,6 @@ function placeChild(parent, child, after) {
 	: parent.insertBefore(child, before)
 }
 
-function update(node, v,k,o) {
-	var extra = extras.get(node),
-			last = extra && extra.update ? extra.update(node, v,k,o) : node;
-
-	var ptr = node.firstChild;
-	while (ptr) ptr = update(ptr, v,k,o).nextSibling;
-	return last
-}
-
 /**
 * @function createList
 * @param  {List|Node|Function} model list or component factory or instance to be cloned
@@ -328,71 +338,70 @@ function List(factory, dKey) {
 	extras.set(this.foot, this);
 }
 
-List.prototype = {
-	constructor: List,
-	dataKey: function(v,i) { return i },
+var pList = List.prototype;
 
-	/**
-	* @function clone
-	* @return {!List} new List
-	*/
-	clone: function() {
-		return new List(this.factory, this.dataKey).foot
-	},
+pList.dataKey = function(v,i) { return i };
 
-	/**
-	* @function moveTo
-	* @param  {Object} edge unused head or foot node
-	* @param  {Object} parent destination parent
-	* @param  {Object} [before] nextSibling
-	* @return {!List} this
-	*/
-	moveTo: function(edge, parent, before) {
-		var foot = this.foot,
-				head = this.head,
-				origin = head.parentNode,
-				cursor = before || null;
-		// skip case where there is nothing to do
-		if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
-			// newParent == null -> remove only -> clear list and dismount head and foot
-			if (!parent) {
-				setChildren(origin, null, head, foot);
-				origin.removeChild(head);
-				origin.removeChild(foot);
-			}
-			// relocate
-			else {
-				parent.insertBefore(head, cursor);
-				parent.insertBefore(foot, cursor);
-				setChildren(parent, this, head, foot);
-			}
+/**
+* @function clone
+* @return {!List} new List
+*/
+pList.clone = function() {
+	return new List(this.factory, this.dataKey).foot
+};
+
+/**
+* @function moveTo
+* @param  {Object} edge unused head or foot node
+* @param  {Object} parent destination parent
+* @param  {Object} [before] nextSibling
+* @return {!List} this
+*/
+pList.moveTo = function(edge, parent, before) {
+	var foot = this.foot,
+			head = this.head,
+			origin = head.parentNode,
+			cursor = before || null;
+	// skip case where there is nothing to do
+	if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+		// newParent == null -> remove only -> clear list and dismount head and foot
+		if (!parent) {
+			setChildren(origin, null, head, foot);
+			origin.removeChild(head);
+			origin.removeChild(foot);
 		}
-		return foot
-	},
-
-	update: function(edge, arr) {
-		var oldKN = this.mapKN,
-				newKN = this.mapKN = {},
-				getK = this.dataKey,
-				after = this.head,
-				foot = this.foot,
-				parent = foot.parentNode;
-		//TODO simplify index keys
-
-		// update the node keyed map
-		for (var i=0; i<arr.length; ++i) {
-			var val = arr[i],
-					key = getK(val, i, arr);
-			// find item, create Item if it does not exits
-			var node = newKN[key] = oldKN[key] || this.factory(key, i);
-			update(node, val, i, arr);
-			if (parent) after = placeChild(parent, node, after);
+		// relocate
+		else {
+			parent.insertBefore(head, cursor);
+			parent.insertBefore(foot, cursor);
+			setChildren(parent, this, head, foot);
 		}
-
-		// update the view
-		if (parent) setChildren(parent, null, after, foot);
-		return this.foot
 	}
+	return foot
+};
+
+pList.update = pList.updateSelf = function(edge, arr) {
+	var oldKN = this.mapKN,
+			newKN = this.mapKN = {},
+			getK = this.dataKey,
+			after = this.head,
+			foot = this.foot,
+			parent = foot.parentNode;
+	//TODO simplify index keys
+
+	// update the node keyed map
+	for (var i=0; i<arr.length; ++i) {
+		var val = arr[i],
+				key = getK(val, i, arr);
+		// find item, create Item if it does not exits
+		var node = newKN[key] = oldKN[key] || this.factory(key, i);
+		update(node, val, i, arr);
+		if (parent) after = placeChild(parent, node, after);
+	}
+
+	// update the view
+	if (parent) setChildren(parent, null, after, foot);
+	return this.foot
 };
 
 // DOM

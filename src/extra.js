@@ -1,6 +1,7 @@
 import {extras} from './extras'
 import {assign} from './util/reduce'
 import {cloneChildren} from './clone-node'
+import {updateChildren} from './update'
 
 /**
  * @constructor
@@ -29,6 +30,11 @@ extraP.clone = function(node, deep) {
 }
 
 extraP.update = function(node, v,k,o) {
+	this.updateSelf(node, v,k,o)
+	updateChildren(node, v,k,o)
+}
+
+extraP.updateSelf = function(node, v,k,o) {
 	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o)
 	return node
 }
