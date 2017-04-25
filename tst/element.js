@@ -50,9 +50,9 @@ ct('element - dynamic - self', function() {
 })
 
 ct('element - dynamic - nested', function() {
-	var get = X.getter(),
-			p = el('p', 0, attr('class', get.map('0')), child(1), prop('id', get.map('1')), 2),
-			d = el('div', p)
+	var get = X.getter()
+	var p = el('p', 0, attr('class', get.map('0')), child(1), prop('id', get.map('1')), 2)
+	var d = el('div', p)
 	X.update(d, ['aa', 'bb'])
 	ct('===', p.className, 'aa')
 	ct('===', p.id, 'bb')

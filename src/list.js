@@ -56,7 +56,7 @@ pList.clone = function() {
 * @param  {Object} [before] nextSibling
 * @return {!List} this
 */
-pList.moveTo = function(edge, parent, before) {
+pList.moveTo = function(parent, before) {
 	var foot = this.foot,
 			head = this.head,
 			origin = head.parentNode,
@@ -79,7 +79,7 @@ pList.moveTo = function(edge, parent, before) {
 	return foot
 }
 
-pList.update = pList.updateSelf = function(edge, arr) {
+pList.update = pList.updateSelf = function(arr) {
 	var oldKN = this.mapKN,
 			newKN = this.mapKN = {},
 			getK = this.dataKey,

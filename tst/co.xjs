@@ -1,7 +1,0 @@
-var jsdom = require('jsdom').jsdom,
-		ct = require('cotest'),
-		P = require('../dist/index.js')
-
-var defaultView = P.setDefaultView(jsdom().defaultView)
-
-var co = P.createComponent

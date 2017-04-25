@@ -17,8 +17,8 @@ export function setProperty(key, val, node) {
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
 	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.get(v,k,o), n)
+	if (val instanceof Getter) return addPatch(function(v,k,o) {
+		return setProperty(key, val.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -31,8 +31,8 @@ export function setText(txt, node) {
 	if (!node) return function(n) { return setText(txt, n) }
 
 	// dynamic patch if value is a getter
-	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setText(txt.get(v,k,o), n)
+	if (txt instanceof Getter) return addPatch(function(v,k,o) {
+		return setText(txt.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -49,8 +49,8 @@ export function setAttribute(key, val, node) {
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
 	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.get(v,k,o), n)
+	if (val instanceof Getter) return addPatch(function(v,k,o) {
+		return setAttribute(key, val.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -76,7 +76,7 @@ export function addChild(child, parent) {
 			return parent
 		default:
 			var extra = extras.get(child)
-			if (extra) extra.moveTo(child, parent)
+			if (extra) extra.moveTo(parent)
 			else if (child.nodeType) parent.appendChild(child)
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent
