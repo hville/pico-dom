@@ -9,17 +9,17 @@ function setDefaultView(win) {
 	return defaultView
 }
 
-var pVCo = '_㎴㏇';
+var pDOM = '_ᵖᴰᴼᴹ';
 
 var extras = {
-	get: function(node) { return node[pVCo] },
-	set: function(node, val) { return node[pVCo] = val }
+	get: function(node) { return node[pDOM] },
+	set: function(node, val) { return node[pDOM] = val }
 };
 
 function cloneNode(node, deep) { //TODO change instanceof to List properties
 	// components have their own logic
 	var extra = extras.get(node);
-	if (extra) return extra.clone(node, deep)
+	if (extra) return extra.clone(deep)
 
 	// for plain elements
 	var copy = node.cloneNode(false);
@@ -33,7 +33,7 @@ function cloneChildren(node, copy) {
 				nextNode = childCopy.nextSibling,
 				extra = extras.get(childCopy);
 
-		if (extra) extra.moveTo(childCopy, copy);
+		if (extra) extra.moveTo(copy);
 		else copy.appendChild(childCopy);
 
 		childNode = nextNode;
@@ -49,7 +49,7 @@ function assign(target, source) {
 function update(node, v,k,o) {
 	var extra = extras.get(node);
 	if (extra) {
-		extra.update(node, v,k,o);
+		extra.update(v,k,o);
 		return extra.foot || node
 	}
 	return updateChildren(node, v,k,o)
@@ -68,8 +68,9 @@ function updateChildren(node, v,k,o) {
  * @param {number} [idx] - optional position index
  */
 function Extra(node, extra) {
-	extras.set(node, this);
 	if (extra) assign(this, extra);
+	this.node = node;
+	extras.set(node, this);
 	//TODO init
 }
 
@@ -78,26 +79,30 @@ var extraP = Extra.prototype;
 extraP.patch = null;
 extraP.init = null; //TODO
 
-extraP.clone = function(node, deep) {
-	var copy = node.cloneNode(false);
+extraP.clone = function(deep) {
+	var copy = this.node.cloneNode(false);
 	// copy tree before creating initiating the new Extra
-	if (deep !== false) cloneChildren(node, copy);
+	if (deep !== false) cloneChildren(this.node, copy);
 	new Extra(copy, this);
 	return copy
 };
 
-extraP.update = function(node, v,k,o) {
-	this.updateSelf(node, v,k,o);
-	updateChildren(node, v,k,o);
+extraP.update = function(v,k,o) {
+	this.updateSelf(v,k,o);
+	this.updateChildren(v,k,o);
+};
+extraP.updateChildren = function(v,k,o) {
+	updateChildren(this.node, v,k,o);
 };
 
-extraP.updateSelf = function(node, v,k,o) {
-	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i](node, v,k,o);
-	return node
+extraP.updateSelf = function(v,k,o) {
+	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].call(this.node, v,k,o);
+	return this.node
 };
 
-extraP.moveTo = function(node, parent, before) {
-	var oldParent = node.parentNode;
+extraP.moveTo = function(parent, before) {
+	var node = this.node,
+			oldParent = node.parentNode;
 	if (parent) parent.insertBefore(node, before || null);
 	else if (oldParent) oldParent.removeChild(node);
 	if (this.onmove) this.onmove(oldParent, parent);
@@ -145,8 +150,8 @@ function setProperty(key, val, node) {
 	if (!node) return function(n) { return setProperty(key, val, n) }
 
 	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setProperty(key, val.get(v,k,o), n)
+	if (val instanceof Getter) return addPatch(function(v,k,o) {
+		return setProperty(key, val.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -159,8 +164,8 @@ function setText(txt, node) {
 	if (!node) return function(n) { return setText(txt, n) }
 
 	// dynamic patch if value is a getter
-	if (txt instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setText(txt.get(v,k,o), n)
+	if (txt instanceof Getter) return addPatch(function(v,k,o) {
+		return setText(txt.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -177,8 +182,8 @@ function setAttribute(key, val, node) {
 	if (!node) return function(n) { return setAttribute(key, val, n) }
 
 	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(n, v,k,o) {
-		return setAttribute(key, val.get(v,k,o), n)
+	if (val instanceof Getter) return addPatch(function(v,k,o) {
+		return setAttribute(key, val.get(v,k,o), this)
 	}, node)
 
 	// normal
@@ -204,7 +209,7 @@ function addChild(child, parent) {
 			return parent
 		default:
 			var extra = extras.get(child);
-			if (extra) extra.moveTo(child, parent);
+			if (extra) extra.moveTo(parent);
 			else if (child.nodeType) parent.appendChild(child);
 			else throw Error ('unsupported child type ' + typeof child)
 			return parent
@@ -347,7 +352,7 @@ pList.clone = function() {
 * @param  {Object} [before] nextSibling
 * @return {!List} this
 */
-pList.moveTo = function(edge, parent, before) {
+pList.moveTo = function(parent, before) {
 	var foot = this.foot,
 			head = this.head,
 			origin = head.parentNode,
@@ -370,7 +375,7 @@ pList.moveTo = function(edge, parent, before) {
 	return foot
 };
 
-pList.update = pList.updateSelf = function(edge, arr) {
+pList.update = pList.updateSelf = function(arr) {
 	var oldKN = this.mapKN,
 			newKN = this.mapKN = {},
 			getK = this.dataKey,
