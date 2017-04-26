@@ -10,17 +10,13 @@
 ## Functions
 
 <dl>
-<dt><a href="#comment">comment(string)</a> ⇒ <code>Object</code></dt>
-<dd></dd>
-<dt><a href="#fragment">fragment()</a> ⇒ <code>Object</code></dt>
-<dd></dd>
 <dt><a href="#text">text(text)</a> ⇒ <code>Object</code></dt>
 <dd></dd>
 <dt><a href="#createList">createList(model, [dataKey])</a> ⇒ <code><a href="#List">List</a></code></dt>
 <dd></dd>
 <dt><a href="#clone">clone()</a> ⇒ <code><a href="#List">List</a></code></dt>
 <dd></dd>
-<dt><a href="#moveTo">moveTo(edge, parent, [before])</a> ⇒ <code><a href="#List">List</a></code></dt>
+<dt><a href="#moveTo">moveTo(parent, [before])</a> ⇒ <code><a href="#List">List</a></code></dt>
 <dd></dd>
 </dl>
 
@@ -76,29 +72,6 @@
     </tr>  </tbody>
 </table>
 
-<a name="comment"></a>
-
-## comment(string) ⇒ <code>Object</code>
-**Kind**: global function  
-**Returns**: <code>Object</code> - commentNode  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>string</td><td><code>string</code></td><td><p>commentNode data</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="fragment"></a>
-
-## fragment() ⇒ <code>Object</code>
-**Kind**: global function  
-**Returns**: <code>Object</code> - documentFragment  
 <a name="text"></a>
 
 ## text(text) ⇒ <code>Object</code>
@@ -145,7 +118,7 @@
 **Returns**: <code>[List](#List)</code> - new List  
 <a name="moveTo"></a>
 
-## moveTo(edge, parent, [before]) ⇒ <code>[List](#List)</code>
+## moveTo(parent, [before]) ⇒ <code>[List](#List)</code>
 **Kind**: global function  
 **Returns**: <code>[List](#List)</code> - this  
 <table>
@@ -156,9 +129,6 @@
   </thead>
   <tbody>
 <tr>
-    <td>edge</td><td><code>Object</code></td><td><p>unused head or foot node</p>
-</td>
-    </tr><tr>
     <td>parent</td><td><code>Object</code></td><td><p>destination parent</p>
 </td>
     </tr><tr>

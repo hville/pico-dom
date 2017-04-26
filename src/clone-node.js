@@ -1,9 +1,13 @@
 import {extras} from './extras'
 
+//TODO delete?
+
 export function cloneNode(node, deep) { //TODO change instanceof to List properties
 	// components have their own logic
-	var extra = extras.get(node)
-	if (extra) return extra.clone(deep)
+	var extra = node.update ? node : extras.get(node) //TODO isCo
+	if (extra) {
+		return extra.foot ? extra.clone(deep).foot : extra.clone(deep).node
+	}
 
 	// for plain elements
 	var copy = node.cloneNode(false)

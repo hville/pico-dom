@@ -1,17 +1,17 @@
-var jsdom = require('jsdom').jsdom,
+var JSDOM = require('jsdom').JSDOM,
 		ct = require('cotest'),
 		P = require('../dist/index.js')
 
-var defaultView = P.setDefaultView(jsdom().defaultView),
-		doc = defaultView.document,
-		setChildren = P.setChildren
+var D = (new JSDOM).window.document
+P.setDocument(D)
+var setChildren = P.setChildren
 
 function text(v) {
-	return doc.createTextNode(v)
+	return D.createTextNode(v)
 }
 
 ct('setChildren', function() {
-	var p = doc.createElement('p')
+	var p = D.createElement('p')
 
 	setChildren(p, [1,2,3,4,5].map(text))
 	ct('===', p.textContent, '12345', 'insert into empty parent')

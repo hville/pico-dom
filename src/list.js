@@ -1,8 +1,7 @@
-import {createComment} from './create-node'
 import {extras} from './extras'
-import {setChildren, placeChild} from './set-children'
-import {update} from './update'
-import {cloneNode} from './clone-node'
+import {setChildren, placeChild} from './children'
+import {Extra} from './extra'
+import {DOC} from './document'
 
 /**
 * @function createList
@@ -11,10 +10,10 @@ import {cloneNode} from './clone-node'
 * @return {!List} new List
 */
 export function createList(model, dataKey) {
-	return new List(
-		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
-		dataKey
-	).foot
+	var factory = typeof model === 'function' ? model
+			: model.clone ? function() { return model.clone(true) }
+			: function() { return new Extra(model.cloneNode(true)) }
+	return new List(factory, dataKey) //dataKeyMethod??
 }
 
 /**
@@ -27,17 +26,21 @@ export function List(factory, dKey) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] }
 	}
 	// lookup maps to locate existing component and delete extra ones
-	this.mapKN = {} // dataKey => component, for updating
+	this.mapKC = {} // dataKey => component, for updating
 	this.factory = factory
 
 	//required to keep parent ref when no children.length === 0
-	this.head = createComment('^')
-	this.foot = createComment('$')
+	this.head = DOC.createComment('^')
+	this.foot = DOC.createComment('$')
 	extras.set(this.head, this)
 	extras.set(this.foot, this)
 }
 
 var pList = List.prototype
+Object.defineProperty(pList, 'nodes', {
+	get: function() { return Object.keys(this.mapKC).map(this.get, this) }
+})
+pList.get = function(k) { return this.mapKC[k].node }
 
 pList.dataKey = function(v,i) { return i }
 
@@ -46,42 +49,42 @@ pList.dataKey = function(v,i) { return i }
 * @return {!List} new List
 */
 pList.clone = function() {
-	return new List(this.factory, this.dataKey).foot
+	return new List(this.factory, this.dataKey)
 }
 
 /**
 * @function moveTo
-* @param  {Object} edge unused head or foot node
 * @param  {Object} parent destination parent
 * @param  {Object} [before] nextSibling
 * @return {!List} this
 */
-pList.moveTo = function(parent, before) {
+pList.moveTo = function(parent, before) { //TODO sanitize parent?
 	var foot = this.foot,
 			head = this.head,
 			origin = head.parentNode,
+			target = extras.node(parent),
 			cursor = before || null
 	// skip case where there is nothing to do
-	if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+	if ((origin || target) && cursor !== foot && (origin !== target || cursor !== foot.nextSibling)) {
 		// newParent == null -> remove only -> clear list and dismount head and foot
-		if (!parent) {
+		if (!target) {
 			setChildren(origin, null, head, foot)
 			origin.removeChild(head)
 			origin.removeChild(foot)
 		}
 		// relocate
 		else {
-			parent.insertBefore(head, cursor)
-			parent.insertBefore(foot, cursor)
-			setChildren(parent, this, head, foot)
+			target.insertBefore(head, cursor)
+			target.insertBefore(foot, cursor)
+			setChildren(target, this.nodes, head, foot)
 		}
 	}
-	return foot
+	return this
 }
 
 pList.update = pList.updateSelf = function(arr) {
-	var oldKN = this.mapKN,
-			newKN = this.mapKN = {},
+	var oldKC = this.mapKC,
+			newKC = this.mapKC = {},
 			getK = this.dataKey,
 			after = this.head,
 			foot = this.foot,
@@ -93,12 +96,12 @@ pList.update = pList.updateSelf = function(arr) {
 		var val = arr[i],
 				key = getK(val, i, arr)
 		// find item, create Item if it does not exits
-		var node = newKN[key] = oldKN[key] || this.factory(key, i)
-		update(node, val, i, arr)
-		if (parent) after = placeChild(parent, node, after)
+		var extra = newKC[key] = oldKC[key] || this.factory(key, i)
+		extra.update(val, i, arr)
+		if (parent) after = placeChild(parent, extra.node, after)
 	}
 
 	// update the view
 	if (parent) setChildren(parent, null, after, foot)
-	return this.foot
+	return this
 }

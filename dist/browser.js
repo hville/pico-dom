@@ -2,24 +2,25 @@
 (function (exports) {
 'use strict';
 
-var defaultView = typeof window !== 'undefined' ? window : void 0;
+var DOC = typeof document !== 'undefined' ? document : void 0;
 
-function setDefaultView(win) {
-	if (win) defaultView = win;
-	return defaultView
+function setDocument(doc) {
+	DOC = doc;
 }
 
-var pDOM = '_ᵖᴰᴼᴹ';
-
+// ᵖᵢᶜₒ
 var extras = {
-	get: function(node) { return node[pDOM] },
-	set: function(node, val) { return node[pDOM] = val }
+	get: function(node) { return node._pico },
+	set: function(node, val) { return node._pico = val },
+	node: function(obj) { return obj.node || obj.nodeType && obj || null }
 };
+
+//TODO delete?
 
 function cloneNode(node, deep) { //TODO change instanceof to List properties
 	// components have their own logic
-	var extra = extras.get(node);
-	if (extra) return extra.clone(deep)
+	var extra = node.update ? node : extras.get(node); //TODO isCo
+	if (extra) return extra.foot ? extra.clone(deep).foot : extra.clone(deep).node
 
 	// for plain elements
 	var copy = node.cloneNode(false);
@@ -40,74 +41,6 @@ function cloneChildren(node, copy) {
 	}
 	return copy
 }
-
-function assign(target, source) {
-	for (var i=0, ks=Object.keys(source); i<ks.length; ++i) target[ks[i]] = source[ks[i]];
-	return target
-}
-
-function update(node, v,k,o) {
-	var extra = extras.get(node);
-	if (extra) {
-		extra.update(v,k,o);
-		return extra.foot || node
-	}
-	return updateChildren(node, v,k,o)
-}
-function updateChildren(node, v,k,o) {
-	var ptr = node.firstChild;
-	while (ptr) ptr = update(ptr, v,k,o).nextSibling;
-	return node
-}
-
-/**
- * @constructor
- * @param {Object} node - DOM node
- * @param {Object} [extra] - configuration
- * @param {*} [key] - optional data key
- * @param {number} [idx] - optional position index
- */
-function Extra(node, extra) {
-	if (extra) assign(this, extra);
-	this.node = node;
-	extras.set(node, this);
-	//TODO init
-}
-
-var extraP = Extra.prototype;
-
-extraP.patch = null;
-extraP.init = null; //TODO
-
-extraP.clone = function(deep) {
-	var copy = this.node.cloneNode(false);
-	// copy tree before creating initiating the new Extra
-	if (deep !== false) cloneChildren(this.node, copy);
-	new Extra(copy, this);
-	return copy
-};
-
-extraP.update = function(v,k,o) {
-	this.updateSelf(v,k,o);
-	this.updateChildren(v,k,o);
-};
-extraP.updateChildren = function(v,k,o) {
-	updateChildren(this.node, v,k,o);
-};
-
-extraP.updateSelf = function(v,k,o) {
-	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].call(this.node, v,k,o);
-	return this.node
-};
-
-extraP.moveTo = function(parent, before) {
-	var node = this.node,
-			oldParent = node.parentNode;
-	if (parent) parent.insertBefore(node, before || null);
-	else if (oldParent) oldParent.removeChild(node);
-	if (this.onmove) this.onmove(oldParent, parent);
-	return this
-};
 
 function getter(key) {
 	return new Getter(Array.isArray(key) ? key : key != null ? [key] : []) //eslint-disable-line eqeqeq
@@ -136,139 +69,9 @@ pGetter.get = function(obj) {
 	return val
 };
 
-function addPatch(patch, node) {
-	var extra = extras.get(node);
-	if (!extra) extra = new Extra(node);
-
-	if (!extra.patch) extra.patch = [patch];
-	else extra.patch.push(patch);
-	return node
-}
-
-function setProperty(key, val, node) {
-	// curried function if node missing
-	if (!node) return function(n) { return setProperty(key, val, n) }
-
-	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(v,k,o) {
-		return setProperty(key, val.get(v,k,o), this)
-	}, node)
-
-	// normal
-	if (node[key] !== val) node[key] = val;
-	return node
-}
-
-function setText(txt, node) {
-	// curried function if node missing
-	if (!node) return function(n) { return setText(txt, n) }
-
-	// dynamic patch if value is a getter
-	if (txt instanceof Getter) return addPatch(function(v,k,o) {
-		return setText(txt.get(v,k,o), this)
-	}, node)
-
-	// normal
-	var child = node.firstChild;
-	if (child && !child.nextSibling) {
-		if (child.nodeValue !== txt) child.nodeValue = txt;
-	}
-	else node.textContent = txt;
-	return node
-}
-
-function setAttribute(key, val, node) {
-	// curried function if node missing
-	if (!node) return function(n) { return setAttribute(key, val, n) }
-
-	// dynamic patch if value is a getter
-	if (val instanceof Getter) return addPatch(function(v,k,o) {
-		return setAttribute(key, val.get(v,k,o), this)
-	}, node)
-
-	// normal
-	if (val === false) node.removeAttribute(key);
-	else node.setAttribute(key, val === true ? '' : val);
-	return node
-}
-
-function addChild(child, parent) {
-	if (child instanceof Getter) throw Error('childLens not supported')
-	if (!parent) return function(n) { return addChild(child, n) }
-	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
-		case null: case undefined:
-			return parent
-		case Array:
-			for (var i=0; i<child.length; ++i) addChild(child[i], parent);
-			return parent
-		case Number:
-			parent.appendChild(createTextNode(''+child));
-			return parent
-		case String:
-			parent.appendChild(createTextNode(child));
-			return parent
-		default:
-			var extra = extras.get(child);
-			if (extra) extra.moveTo(parent);
-			else if (child.nodeType) parent.appendChild(child);
-			else throw Error ('unsupported child type ' + typeof child)
-			return parent
-	}
-}
-
-var svgURI = 'http://www.w3.org/2000/svg';
-
-/**
-* @function comment
-* @param  {string} string commentNode data
-* @return {!Object} commentNode
-*/
-function createComment(string) {
-	return defaultView.document.createComment(string)
-}
-
-/**
-* @function fragment
-* @return {!Object} documentFragment
-*/
-function createDocumentFragment() {
-	return defaultView.document.createDocumentFragment()
-}
-
-/**
-* @function text
-* @param  {string|Getter} text textNode data
-* @return {!Object} textNode
-*/
-function createTextNode(text) {
-	var doc = defaultView.document;
-	if (text instanceof Getter) {
-		return setText(text, doc.createTextNode('')) // integrate logic here???
-	}
-	return doc.createTextNode(text)
-}
-
-function createElement(tag) {
-	var node = tag.nodeType ? tag : defaultView.document.createElement(tag);
-	for (var i=1; i<arguments.length; ++i) decorate(node, arguments[i]);
-	return node
-}
-
-function createElementNS(nsURI, tag) {
-	var node = tag.nodeType ? tag : defaultView.document.createElementNS(nsURI, tag);
-	for (var i=2; i<arguments.length; ++i) decorate(node, arguments[i]);
-	return node
-}
-
-function createElementSVG(tag) {
-	var node = tag.nodeType ? tag : defaultView.document.createElementNS(svgURI, tag);
-	for (var i=1; i<arguments.length; ++i) decorate(node, arguments[i]);
-	return node
-}
-
-function decorate(node, stuff) {
-	if (typeof stuff === 'function') stuff(node);
-	else addChild(stuff, node);
+function assign(target, source) {
+	for (var i=0, ks=Object.keys(source); i<ks.length; ++i) target[ks[i]] = source[ks[i]];
+	return target
 }
 
 function setChildren(parent, children, after, before) {
@@ -290,14 +93,15 @@ function setChildren(parent, children, after, before) {
 }
 
 function placeChild(parent, child, after) {
-	if (!after) return parent.insertBefore(child, parent.firstChild)
+	var target = extras.node(parent);
+	if (!after) return target.insertBefore(child, parent.firstChild) //TODO getNode
 	var before = after.nextSibling;
 	return !before ? parent.appendChild(child)
 	: child === before ? child
 	// likely deletion, possible reshuffle
 	: child === before.nextSibling ? parent.removeChild(before)
 	// insert child before oldChild
-	: parent.insertBefore(child, before)
+	: target.insertBefore(child, before) //TODO getNode
 }
 
 /**
@@ -307,10 +111,10 @@ function placeChild(parent, child, after) {
 * @return {!List} new List
 */
 function createList(model, dataKey) {
-	return new List(
-		typeof model === 'function' ? model : function() { return cloneNode(model, true) },
-		dataKey
-	).foot
+	var factory = typeof model === 'function' ? model
+			: model.clone ? function() { return model.clone(true) }
+			: function() { return new Extra(model.cloneNode(true)) };
+	return new List(factory, dataKey) //dataKeyMethod??
 }
 
 /**
@@ -323,12 +127,12 @@ function List(factory, dKey) {
 		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
 	}
 	// lookup maps to locate existing component and delete extra ones
-	this.mapKN = {}; // dataKey => component, for updating
+	this.mapKC = {}; // dataKey => component, for updating
 	this.factory = factory;
 
 	//required to keep parent ref when no children.length === 0
-	this.head = createComment('^');
-	this.foot = createComment('$');
+	this.head = DOC.createComment('^');
+	this.foot = DOC.createComment('$');
 	extras.set(this.head, this);
 	extras.set(this.foot, this);
 }
@@ -342,42 +146,44 @@ pList.dataKey = function(v,i) { return i };
 * @return {!List} new List
 */
 pList.clone = function() {
-	return new List(this.factory, this.dataKey).foot
+	return new List(this.factory, this.dataKey)
 };
 
 /**
 * @function moveTo
-* @param  {Object} edge unused head or foot node
 * @param  {Object} parent destination parent
 * @param  {Object} [before] nextSibling
 * @return {!List} this
 */
-pList.moveTo = function(parent, before) {
+pList.moveTo = function(parent, before) { //TODO sanitize parent?
 	var foot = this.foot,
 			head = this.head,
 			origin = head.parentNode,
+			target = extras.node(parent),
 			cursor = before || null;
 	// skip case where there is nothing to do
-	if ((origin || parent) && cursor !== foot && (origin !== parent || cursor !== foot.nextSibling)) {
+	if ((origin || target) && cursor !== foot && (origin !== target || cursor !== foot.nextSibling)) {
 		// newParent == null -> remove only -> clear list and dismount head and foot
-		if (!parent) {
+		if (!target) {
 			setChildren(origin, null, head, foot);
 			origin.removeChild(head);
 			origin.removeChild(foot);
 		}
 		// relocate
 		else {
-			parent.insertBefore(head, cursor);
-			parent.insertBefore(foot, cursor);
-			setChildren(parent, this, head, foot);
+			target.insertBefore(head, cursor);
+			target.insertBefore(foot, cursor);
+			for (var i=0, ks=Object.keys(this.mapKC); i<ks.length; ++i) {
+				target.insertBefore(this.mapKC[ks[i]].node, foot);
+			}
 		}
 	}
-	return foot
+	return this
 };
 
 pList.update = pList.updateSelf = function(arr) {
-	var oldKN = this.mapKN,
-			newKN = this.mapKN = {},
+	var oldKC = this.mapKC,
+			newKC = this.mapKC = {},
 			getK = this.dataKey,
 			after = this.head,
 			foot = this.foot,
@@ -389,30 +195,173 @@ pList.update = pList.updateSelf = function(arr) {
 		var val = arr[i],
 				key = getK(val, i, arr);
 		// find item, create Item if it does not exits
-		var node = newKN[key] = oldKN[key] || this.factory(key, i);
-		update(node, val, i, arr);
-		if (parent) after = placeChild(parent, node, after);
+		var extra = newKC[key] = oldKC[key] || this.factory(key, i);
+		extra.update(val, i, arr);
+		if (parent) after = placeChild(parent, extra.node, after);
 	}
 
 	// update the view
 	if (parent) setChildren(parent, null, after, foot);
-	return this.foot
+	return this
 };
+
+/**
+ * @constructor
+ * @param {Object} node - DOM node
+ * @param {Object} [extra] - configuration
+ * @param {*} [key] - optional data key
+ * @param {number} [idx] - optional position index
+ */
+function Extra(node, extra) {
+	if (extra) assign(this, extra);
+	this.node = node;
+	extras.set(node, this);
+	//TODO init
+}
+
+var extraP = Extra.prototype;
+
+extraP.patch = null;
+extraP.init = null; //TODO
+
+extraP.clone = function(deep) {
+	var copy = this.node.cloneNode(false);
+	// copy tree before creating initiating the new Extra
+	if (deep !== false) cloneChildren(this.node, copy);
+	return new Extra(copy, this)
+};
+
+extraP.updateChildren = function(v,k,o) {
+	var ptr = this.node.firstChild;
+	while (ptr) {
+		var extra = extras.get(ptr);
+		if (extra) {
+			extra.update(v,k,o);
+			if (extra.foot) ptr = extra.foot;
+		}
+		ptr = ptr.nextSibling;
+	}
+	return this
+};
+
+extraP.update = extraP.updateSelf = function(v,k,o) {
+	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].call(this, v,k,o);
+	return this
+};
+
+extraP.moveTo = function(parent, before) {
+	var node = this.node,
+			oldParent = node.parentNode;
+	if (parent) extras.node(parent).insertBefore(node, before || null); //TODO getNode
+	else if (oldParent) oldParent.removeChild(node);
+	if (this.onmove) this.onmove(oldParent, parent);
+	return this
+};
+
+extraP.addPatch = function(patch) {
+	var extra = this;
+	if (!extra.patch) extra.patch = [patch];
+	else extra.patch.push(patch);
+	return this
+};
+
+extraP.setProp = function(key, val) {
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return this.addPatch(function(v,k,o) {
+		return this.setProp(key, val.get(v,k,o))
+	})
+
+	if (this.node[key] !== val) this.node[key] = val;
+	return this
+};
+
+extraP.setText = function(txt) {
+	// dynamic patch if value is a getter
+	if (txt instanceof Getter) return this.addPatch(function(v,k,o) {
+		return this.setText(txt.get(v,k,o))
+	})
+
+	var child = this.node.firstChild;
+	if (child && !child.nextSibling) {
+		if (child.nodeValue !== txt) child.nodeValue = txt;
+	}
+	else this.node.textContent = txt;
+	return this
+};
+
+extraP.setAttr = function(key, val) {
+	// dynamic patch if value is a getter
+	if (val instanceof Getter) return this.addPatch(function(v,k,o) {
+		return this.setAttr(key, val.get(v,k,o))
+	})
+
+	if (val === false) this.node.removeAttribute(key);
+	else this.node.setAttribute(key, val === true ? '' : val);
+	return this
+};
+
+extraP.addChild = function(child) {
+	if (child instanceof Getter) throw Error('childLens not supported')
+	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
+		case null: case undefined:
+			return this
+		case Array:
+			for (var i=0; i<child.length; ++i) this.addChild(child[i]);
+			return this
+		case Number:
+			this.addChild(createTextNode(''+child));
+			return this
+		case String:
+			this.addChild(createTextNode(child));
+			return this
+		case Extra: case List:
+			child.moveTo(this.node);
+			return this
+		default:
+			if (child.nodeType) this.node.appendChild(child);
+			else throw Error ('unsupported child type ' + typeof child)
+			return this
+	}
+};
+
+var svgURI = 'http://www.w3.org/2000/svg';
+
+/**
+* @function text
+* @param  {string|Getter} text textNode data
+* @return {!Object} textNode
+*/
+function createTextNode(text) {
+	if (text instanceof Getter) return (new Extra(DOC.createTextNode(''))).setText(text)
+	return new Extra(DOC.createTextNode(text || ''))
+}
+
+function createElement(tag) { //TODO addChild
+	return new Extra(tag.nodeType ? tag : DOC.createElement(tag))
+}
+
+function createElementNS(nsURI, tag) {
+	return new Extra(tag.nodeType ? tag : DOC.createElementNS(nsURI, tag))
+}
+
+function createElementSVG(tag) {
+	return new Extra(tag.nodeType ? tag : DOC.createElementNS(svgURI, tag))
+}
+
+function update(node, v,k,o) {
+	var extra = node.update ? node : extras.get(node);
+	if (extra) return extra.update(v,k,o)
+	return node
+}
 
 // DOM
 
-exports.setDefaultView = setDefaultView;
+exports.setDocument = setDocument;
 exports.cloneNode = cloneNode;
 exports.createElement = createElement;
 exports.createElementNS = createElementNS;
 exports.createElementSVG = createElementSVG;
-exports.createComment = createComment;
 exports.createTextNode = createTextNode;
-exports.createDocumentFragment = createDocumentFragment;
-exports.setAttribute = setAttribute;
-exports.setText = setText;
-exports.setProperty = setProperty;
-exports.addChild = addChild;
 exports.setChildren = setChildren;
 exports.update = update;
 exports.getter = getter;

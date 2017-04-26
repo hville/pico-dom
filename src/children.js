@@ -1,3 +1,18 @@
+import {extras} from './extras'
+
+export function updateChildren(parent, v,k,o, after, before) {
+	var cursor = after ? after.nextSibling : parent.firstChild
+	while (cursor != before) { //eslint-disable-line eqeqeq
+		var extra = extras.get(cursor)
+		if (extra) {
+			extra.update(v,k,o)
+			if (extra.foot) cursor = extra.foot
+		}
+		cursor = cursor.nextSibling
+	}
+	return parent
+}
+
 export function setChildren(parent, children, after, before) {
 	var cursor = after || null
 
@@ -17,12 +32,13 @@ export function setChildren(parent, children, after, before) {
 }
 
 export function placeChild(parent, child, after) {
-	if (!after) return parent.insertBefore(child, parent.firstChild)
+	var target = extras.node(parent)
+	if (!after) return target.insertBefore(child, parent.firstChild) //TODO getNode
 	var before = after.nextSibling
 	return !before ? parent.appendChild(child)
 	: child === before ? child
 	// likely deletion, possible reshuffle
 	: child === before.nextSibling ? parent.removeChild(before)
 	// insert child before oldChild
-	: parent.insertBefore(child, before)
+	: target.insertBefore(child, before) //TODO getNode
 }
