@@ -1,7 +1,6 @@
-import {extras} from './extras'
 import {setChildren, placeChild} from './children'
 import {Extra} from './extra'
-import {DOC} from './document'
+import {Group} from './group'
 
 /**
 * @function createList
@@ -29,17 +28,15 @@ export function List(factory, dKey) {
 	this.mapKC = {} // dataKey => component, for updating
 	this.factory = factory
 
-	//required to keep parent ref when no children.length === 0
-	this.head = DOC.createComment('^')
-	this.foot = DOC.createComment('$')
-	extras.set(this.head, this)
-	extras.set(this.foot, this)
+	Group.call(this)
 }
 
-var pList = List.prototype
-Object.defineProperty(pList, 'nodes', {
-	get: function() { return Object.keys(this.mapKC).map(this.get, this) }
+var pList = List.prototype = Object.create(Group.prototype, {
+	nodes: {
+		get: function() { return Object.keys(this.mapKC).map(this.get, this) }
+	}
 })
+
 pList.get = function(k) { return this.mapKC[k].node }
 
 pList.dataKey = function(v,i) { return i }
@@ -52,37 +49,7 @@ pList.clone = function() {
 	return new List(this.factory, this.dataKey)
 }
 
-/**
-* @function moveTo
-* @param  {Object} parent destination parent
-* @param  {Object} [before] nextSibling
-* @return {!List} this
-*/
-pList.moveTo = function(parent, before) { //TODO sanitize parent?
-	var foot = this.foot,
-			head = this.head,
-			origin = head.parentNode,
-			target = extras.node(parent),
-			cursor = before || null
-	// skip case where there is nothing to do
-	if ((origin || target) && cursor !== foot && (origin !== target || cursor !== foot.nextSibling)) {
-		// newParent == null -> remove only -> clear list and dismount head and foot
-		if (!target) {
-			setChildren(origin, null, head, foot)
-			origin.removeChild(head)
-			origin.removeChild(foot)
-		}
-		// relocate
-		else {
-			target.insertBefore(head, cursor)
-			target.insertBefore(foot, cursor)
-			setChildren(target, this.nodes, head, foot)
-		}
-	}
-	return this
-}
-
-pList.update = pList.updateSelf = function(arr) {
+pList.updateChildren = function(arr) {
 	var oldKC = this.mapKC,
 			newKC = this.mapKC = {},
 			getK = this.dataKey,

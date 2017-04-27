@@ -1,54 +1,69 @@
 import {extras} from './extras'
-import {setChildren, updateChildren} from './children'
+import {setChildren, updateChildren, insertBefore} from './children'
 import {DOC} from './document'
 import {cloneNode} from './clone-node'
+import {concatPatch, updatePatch} from './patch'
 
-export function createFragment(nodes) {
-	var fr = new Fragment
-	if (Array.isArray(nodes)) fr.nodes = nodes
-	else if (nodes) fr.nodes = [nodes]
+export function createGroup(nodes) {
+	var fr = (new Group).moveTo(DOC.createDocumentFragment())
+	if (nodes) fr.nodes = nodes
 	return fr
 }
 
 /**
  * @constructor
  */
-export function Fragment() {
+export function Group() {
 	//required to keep parent ref when no children.length === 0
 	this.head = DOC.createComment('^') //only required if not first
 	this.foot = DOC.createComment('$')
 	extras.set(this.head, this)
 	extras.set(this.foot, this)
 }
-Fragment.prototype = {
-	constructor: Fragment,
+Group.prototype = {
+	constructor: Group,
+	patch: null,
+	update: function(v,k,o) {
+		this.updateSelf(v,k,o)
+		this.updateChildren(v,k,o)
+		return this
+	},
+	updateSelf: updatePatch,
+	concatPatch: concatPatch,
 	get nodes() {
 		var nodes = [],
-				child = this.head.nextSibling
+				head = this.head
+		if (!head.parentNode) return []
+		var child = this.head.nextSibling
 		while(child !== this.foot) {
 			nodes.push(child)
 			child = child.nextSibling
 		}
 		return nodes
 	},
-	set nodes(nodes) { setChildren(
-		this.head.parentNode || DOC.createDocumentFragment(),
-		Array.isArray(nodes) ? nodes : [nodes], //TODO Components?
-		this.head,
-		this.foot
-	)},
-/*	get nextSibling() { //TODO delete
-		return this.foot.nextSibling
-	},*/
+	set nodes(nodes) {
+		var head = this.head
+		if (!head.parentNode) this.moveTo(DOC.createDocumentFragment())
+		var parent = head.parentNode
+		insertBefore.call(parent, nodes, this.foot)
+		setChildren(parent, null, head, nodes || nodes[0])
+
+		setChildren(
+			head.parentNode,
+			Array.isArray(nodes) ? nodes.map(extras.node) : [extras.node(nodes)],
+			head,
+			this.foot
+		)
+	},
 
 	/**
 	* @function clone
 	* @return {!List} new List
 	*/
 	clone: function() {
-		var fr = new Fragment
-		fr.nodes = this.nodes.map(cloneNode)
-		return fr
+		var group = new Group
+		group.nodes = this.nodes.map(cloneNode)
+		return group
 	},
 
 	/**
@@ -73,21 +88,15 @@ Fragment.prototype = {
 			}
 			// relocate
 			else {
+				var nodes = this.nodes
 				target.insertBefore(head, cursor)
 				target.insertBefore(foot, cursor)
-				setChildren(target, this.nodes, head, foot)
+				setChildren(target, nodes, head, foot)
 			}
 		}
 		return this
 	},
-	update: function(v,k,o) {
+	updateChildren: function(v,k,o) {
 		updateChildren(this.head.parentNode, v,k,o, this.head, this.foot)
 	}
 }
-
-
-
-
-
-
-

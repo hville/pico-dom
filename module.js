@@ -17,4 +17,5 @@ export {update} from './src/update'
 // DYNAMIC
 export {getter} from './src/getter'
 export {createList} from './src/list'
+export {createGroup} from './src/group'
 export {extras} from './src/extras'
