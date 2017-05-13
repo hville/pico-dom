@@ -1,21 +1,7 @@
-// DOM
-export {setDocument} from './src/document' //document, window
+// @ts-check
 
-// NODES
-export {cloneNode} from './src/clone-node'
-export {
-	createElement,
-	createElementNS,
-	createElementSVG,
-	createTextNode
-} from './src/create-node'
+// create template
+export {text, element, svg, elementNS, list} from './src/create'
 
-// MODIFY
-export {setChildren} from './src/children'
-export {update} from './src/update'
-
-// DYNAMIC
-export {getter} from './src/getter'
-export {createList} from './src/list'
-export {createGroup} from './src/group'
-export {extras} from './src/extras'
+// utils
+export {setDocument, D} from './src/document'

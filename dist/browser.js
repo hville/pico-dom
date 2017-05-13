@@ -2,370 +2,573 @@
 (function (exports) {
 'use strict';
 
-var DOC = typeof document !== 'undefined' ? document : void 0;
+exports.D = typeof document !== 'undefined' ? document : null;
 
+/**
+* @function setDocument
+* @param  {Document} doc DOM document
+* @return {Document} DOM document
+*/
 function setDocument(doc) {
-	DOC = doc;
-}
-
-// ᵖᵢᶜₒ
-var extras = {
-	get: function(node) { return node._pico },
-	set: function(node, val) { return node._pico = val },
-	node: function(obj) { return obj.node || obj.nodeType && obj || null }
-};
-
-//TODO delete?
-
-function cloneNode(node, deep) { //TODO change instanceof to List properties
-	// components have their own logic
-	var extra = node.update ? node : extras.get(node); //TODO isCo
-	if (extra) return extra.foot ? extra.clone(deep).foot : extra.clone(deep).node
-
-	// for plain elements
-	var copy = node.cloneNode(false);
-	return deep === false ? copy : cloneChildren(node, copy)
-}
-
-function cloneChildren(node, copy) {
-	var childNode = node.firstChild;
-	while(childNode) {
-		var childCopy = cloneNode(childNode, true),
-				nextNode = childCopy.nextSibling,
-				extra = extras.get(childCopy);
-
-		if (extra) extra.moveTo(copy);
-		else copy.appendChild(childCopy);
-
-		childNode = nextNode;
-	}
-	return copy
-}
-
-function getter(key) {
-	return new Getter(Array.isArray(key) ? key : key != null ? [key] : []) //eslint-disable-line eqeqeq
-}
-
-function Getter(path) {
-	this.path = path || [];
-}
-
-var pGetter = Getter.prototype;
-
-pGetter.map = function() {
-	var path = this.path.slice();
-	for (var i=0; i<arguments.length; ++i) path.push(arguments[i]);
-	return new Getter(path)
-};
-pGetter.get = function(obj) {
-	var val = obj,
-			path = this.path;
-	for (var i=0; i<path.length; ++i) {
-		var key = path[i];
-		if (val[key] !== undefined) val = val[key];       // key
-		else if (typeof key === 'function') val = key(val); // map //TODO step(val, key)
-		else return
-	}
-	return val
-};
-
-function assign(target, source) {
-	for (var i=0, ks=Object.keys(source); i<ks.length; ++i) target[ks[i]] = source[ks[i]];
-	return target
-}
-
-function setChildren(parent, children, after, before) {
-	var cursor = after || null;
-
-	// insert new children or re-insert existing
-	if (children) for (var i=0; i<children.length; ++i) {
-		cursor = placeChild(parent, children[i], cursor);
-	}
-
-	// remove orphans
-	cursor = cursor ? cursor.nextSibling : parent.firstChild;
-	while (cursor != before) { //eslint-disable-line eqeqeq
-		var next = cursor.nextSibling;
-		parent.removeChild(cursor);
-		cursor = next;
-	}
-	return parent
-}
-
-function placeChild(parent, child, after) {
-	var target = extras.node(parent);
-	if (!after) return target.insertBefore(child, parent.firstChild) //TODO getNode
-	var before = after.nextSibling;
-	return !before ? parent.appendChild(child)
-	: child === before ? child
-	// likely deletion, possible reshuffle
-	: child === before.nextSibling ? parent.removeChild(before)
-	// insert child before oldChild
-	: target.insertBefore(child, before) //TODO getNode
+	return exports.D = doc
 }
 
 /**
-* @function createList
-* @param  {List|Node|Function} model list or component factory or instance to be cloned
-* @param  {Function|string|number} [dataKey] record identifier
-* @return {!List} new List
-*/
-function createList(model, dataKey) {
-	var factory = typeof model === 'function' ? model
-			: model.clone ? function() { return model.clone(true) }
-			: function() { return new Extra(model.cloneNode(true)) };
-	return new List(factory, dataKey) //dataKeyMethod??
+ * @function
+ * @param {!Object} obj source
+ * @param {Function} fcn reducer
+ * @param {*} res accumulator
+ * @param {*} [ctx] context
+ * @returns {*} accumulator
+ */
+function reduce(obj, fcn, res, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
+	return res
 }
+
+function each(obj, fcn, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
+}
+
+/**
+ * @function
+ * @param {string|!Object} key keyOrObject
+ * @param {*} [val] value
+ * @returns {!Object} this
+ */
+function assignToThis(key, val) { //eslint-disable-line no-unused-vars
+	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) this[ks[j]] = key[ks[j]];
+	else this[key] = val;
+	return this
+}
+
+/**
+ * @function
+ * @param {*} child nodeLike
+ * @param {Object} [defaults] childDefaults
+ * @return {!Node|!Object} child
+ */
+function initChild(child, defaults) {
+	return child == null ? null
+		: child.create ? child.defaults(defaults).create()
+		: typeof child === 'number' ? exports.D.createTextNode(''+child)
+		: typeof child === 'string' ? exports.D.createTextNode(child)
+		: child
+}
+
+var picoKey = '__pV';
 
 /**
  * @constructor
- * @param {Function} factory - component generating function
- * @param {*} dKey - data key
+ * @extends EventListener
+ * @param {Node} node - DOM node
+ * @param {Array} ops transforms
  */
-function List(factory, dKey) {
-	if (dKey !== undefined) {
-		this.dataKey = typeof dKey === 'function' ? dKey : function(v) { return v[dKey] };
-	}
-	// lookup maps to locate existing component and delete extra ones
-	this.mapKC = {}; // dataKey => component, for updating
-	this.factory = factory;
+function NodeCo(node, ops) {
+	this.node = node;
 
-	//required to keep parent ref when no children.length === 0
-	this.head = DOC.createComment('^');
-	this.foot = DOC.createComment('$');
-	extras.set(this.head, this);
-	extras.set(this.foot, this);
+	// default updater: null || text || value
+	if (node.nodeName === '#text') this.update = this.text;
+	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
+
+	for (var i=0; i<ops.length; ++i) {
+		var op = ops[i];
+		if (Array.isArray(op.arg)) op.fcn.apply(this, op.arg);
+		else op.fcn.call(this, op.arg);
+	}
+
+	node[picoKey] = this.update ? this : null;
 }
 
-var pList = List.prototype;
 
-pList.dataKey = function(v,i) { return i };
-
-/**
-* @function clone
-* @return {!List} new List
-*/
-pList.clone = function() {
-	return new List(this.factory, this.dataKey)
-};
-
-/**
-* @function moveTo
-* @param  {Object} parent destination parent
-* @param  {Object} [before] nextSibling
-* @return {!List} this
-*/
-pList.moveTo = function(parent, before) { //TODO sanitize parent?
-	var foot = this.foot,
-			head = this.head,
-			origin = head.parentNode,
-			target = extras.node(parent),
-			cursor = before || null;
-	// skip case where there is nothing to do
-	if ((origin || target) && cursor !== foot && (origin !== target || cursor !== foot.nextSibling)) {
-		// newParent == null -> remove only -> clear list and dismount head and foot
-		if (!target) {
-			setChildren(origin, null, head, foot);
-			origin.removeChild(head);
-			origin.removeChild(foot);
+var ncProto = NodeCo.prototype = {
+	constructor: NodeCo,
+	state: null,
+	store: null,
+	// INSTANCE UTILITIES
+	call: function(fcn) {
+		fcn(this);
+		return this
+	},
+	assign: assignToThis,
+	// NODE SETTERS
+	text: function(txt) {
+		var first = this.node.firstChild;
+		if (first && !first.nextSibling) {
+			if (first.nodeValue !== txt) first.nodeValue = txt;
 		}
-		// relocate
-		else {
-			target.insertBefore(head, cursor);
-			target.insertBefore(foot, cursor);
-			for (var i=0, ks=Object.keys(this.mapKC); i<ks.length; ++i) {
-				target.insertBefore(this.mapKC[ks[i]].node, foot);
+		else this.node.textContent = txt;
+		return this
+	},
+	attr: function(key, val) {
+		if (val === false) this.node.removeAttribute(key);
+		else this.node.setAttribute(key, val === true ? '' : val);
+		return this
+	},
+	prop: function(key, val) {
+		if (this.node[key] !== val) this.node[key] = val;
+		return this
+	},
+	class: function(val) {
+		this.node.setAttribute('class', val);
+		return this
+	},
+	value: function(val) {
+		if (this.node.value !== val) this.node.value = val;
+		return this
+	},
+	attrs: function(keyVals) {
+		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.attr(ks[i], keyVals[ks[i]]);
+		return this
+	},
+	props: function(keyVals) {
+		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]]);
+		return this
+	},
+	// PLACEMENT
+	append: function() {
+		for (var i=0; i<arguments.length; ++i) {
+			var arg = arguments[i];
+			if (Array.isArray(arg)) this.append.apply(this, arg);
+			else {
+				var child = initChild(arg, {
+					store: this.store,
+					state: this.state,
+				});
+				if (child.moveTo) child.moveTo(this.node);
+				else if (child.nodeType) this.node.appendChild(child);
+				else throw Error('wrond child type:' + typeof child)
 			}
 		}
+		return this
+	},
+	moveTo: function(target, before) {
+		if (this.onmove) this.onmove(target)
+		;(target.node || target).insertBefore(this.node, before || null);
+		return this
+	},
+	// UPDATE
+	update: updateChildren,
+	updateChildren: updateChildren,
+	// EVENT LISTENERS
+	handleEvent: function(event) {
+		var handlers = this._on,
+				handler = handlers && handlers[event.type];
+		if (handler) handler.call(this, event);
+	},
+	on: function(type, handler) {
+		if (typeof type === 'object') each(type, this.registerHandler, this);
+		else this.registerHandler(handler, type);
+		return this
+	},
+	registerHandler: function(handler, type) {
+		if (!handler) {
+			if (this._on && this._on[type]) {
+				delete this._on[type];
+				this.node.removeEventListener(type, this, false);
+			}
+		}
+		else {
+			if (!this._on) this._on = {};
+			this._on[type] = handler;
+			this.node.addEventListener(type, this, false);
+		}
 	}
-	return this
 };
 
-pList.update = pList.updateSelf = function(arr) {
-	var oldKC = this.mapKC,
-			newKC = this.mapKC = {},
-			getK = this.dataKey,
-			after = this.head,
-			foot = this.foot,
-			parent = foot.parentNode;
-	//TODO simplify index keys
-
-	// update the node keyed map
-	for (var i=0; i<arr.length; ++i) {
-		var val = arr[i],
-				key = getK(val, i, arr);
-		// find item, create Item if it does not exits
-		var extra = newKC[key] = oldKC[key] || this.factory(key, i);
-		extra.update(val, i, arr);
-		if (parent) after = placeChild(parent, extra.node, after);
+function updateChildren(v,k,o) {
+	var child = this.node.firstChild;
+	while (child) {
+		var co = child[picoKey];
+		if (co) {
+			co.update(v,k,o);
+			child = (co.foot || child).nextSibling;
+		}
+		else child = child.nextSibling;
 	}
+}
 
-	// update the view
-	if (parent) setChildren(parent, null, after, foot);
-	return this
+/**
+ * @constructor
+ * @param {Node} node - DOM node
+ * @param {Array} [transforms] - configuration
+ */
+function NodeModel(node, transforms) {
+	this.node = node;
+	this._ops = transforms || [];
+}
+
+NodeModel.prototype = {
+	constructor: NodeModel,
+	config: function(config) {
+		return (new NodeModel(this.node, this._ops))._config(config)
+	},
+	assign: function(key, val) {
+		return new NodeModel(this.node, this._ops.concat({
+			fcn: ncProto.assign,
+			arg: val === undefined ? key : [key, val]
+		}))
+	},
+	defaults: function(key, val) {
+		return new NodeModel(this.node, Array.prototype.concat({
+			fcn: ncProto.assign,
+			arg: val === undefined ? key : [key, val]
+		}, this._ops))
+	},
+	create: function(config) {
+		return new NodeCo(
+			this.node.cloneNode(true),
+			(config ? this.config(config) : this)._ops
+		)
+	},
+	_config: function(any) {
+		if (any != null) {
+			if (typeof any === 'function') this._ops.push({fcn: ncProto.call, arg: any});
+			else if (any.constructor === Object) each(any, this.addTransform, this);
+			else this._ops.push({fcn: ncProto.append, arg: any});
+		}
+		return this
+	},
+	addTransform: function(argument, name) {
+		var transforms = this._ops;
+		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
+			transforms.push({fcn: ncProto[name], arg: argument});
+		}
+		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument});
+		else transforms.push({fcn: ncProto.assign, arg: [name, argument]});
+		return transforms
+	}
 };
 
 /**
  * @constructor
- * @param {Object} node - DOM node
- * @param {Object} [extra] - configuration
- * @param {*} [key] - optional data key
- * @param {number} [idx] - optional position index
+ * @param {Object} model model
  */
-function Extra(node, extra) {
-	if (extra) assign(this, extra);
-	this.node = node;
-	extras.set(node, this);
-	//TODO init
+function List(model) {
+	this._items = {};
+	this.head = exports.D.createComment('^');
+	this.foot = exports.D.createComment('$');
+	this.assign(model);
+	this.head[picoKey] = this.update ? this : null;
 }
 
-var extraP = Extra.prototype;
+List.prototype = {
+	constructor: List,
+	state: null,
+	store: null,
+	assign: assignToThis,
 
-extraP.patch = null;
-extraP.init = null; //TODO
+	/**
+	* @function moveTo
+	* @param  {Object} parent destination parent
+	* @param  {Object} [before] nextSibling
+	* @return {!Object} this
+	*/
+	moveTo: function(parent, before) {
+		if (this.onmove) this.onmove(target);
+		var foot = this.foot,
+				next = this.head,
+				origin = next.parentNode,
+				target = parent.node || parent,
+				cursor = before || null;
+		// skip case where there is nothing to do
+		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
 
-extraP.clone = function(deep) {
-	var copy = this.node.cloneNode(false);
-	// copy tree before creating initiating the new Extra
-	if (deep !== false) cloneChildren(this.node, copy);
-	return new Extra(copy, this)
-};
-
-extraP.updateChildren = function(v,k,o) {
-	var ptr = this.node.firstChild;
-	while (ptr) {
-		var extra = extras.get(ptr);
-		if (extra) {
-			extra.update(v,k,o);
-			if (extra.foot) ptr = extra.foot;
+		if (origin) {
+			if (target) { // relocate
+				do next = (cursor = next).nextSibling;
+				while (target.insertBefore(cursor, before) !== foot)
+			}
+			else { // remove all
+				do next = (cursor = next).nextSibling;
+				while (origin.removeChild(cursor) !== foot)
+			}
 		}
-		ptr = ptr.nextSibling;
+		else if (target) { //head and foot only
+			target.insertBefore(next, before);
+			target.insertBefore(foot, before);
+		}
+
+		return this
+	},
+	update: updateChildren$1,
+	updateChildren: updateChildren$1,
+	_placeItem: function(parent, item, spot) {
+		return item.node ? insertChild(parent, item.node, spot)
+		: item.head ? insertList(parent, item, spot).foot
+		: insertChild(parent, item, spot)
+	}
+};
+
+function updateChildren$1(v,k,o) {
+	var foot = this.foot,
+			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
+			spot = this._updateChildren(v,k,o);
+
+	while (spot !== foot) {
+		var next = spot.nextSibling;
+		parent.removeChild(spot);
+		spot = next;
 	}
 	return this
-};
+}
 
-extraP.update = extraP.updateSelf = function(v,k,o) {
-	if (this.patch) for (var i=0; i<this.patch.length; ++i) this.patch[i].call(this, v,k,o);
-	return this
-};
+function insertChild(parent, node, spot) {
+	if (!spot) parent.appendChild(node);
+	else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
+	else if (node !== spot) parent.insertBefore(node, spot);
+	return node
+}
 
-extraP.moveTo = function(parent, before) {
-	var node = this.node,
-			oldParent = node.parentNode;
-	if (parent) extras.node(parent).insertBefore(node, before || null); //TODO getNode
-	else if (oldParent) oldParent.removeChild(node);
-	if (this.onmove) this.onmove(oldParent, parent);
-	return this
-};
 
-extraP.addPatch = function(patch) {
-	var extra = this;
-	if (!extra.patch) extra.patch = [patch];
-	else extra.patch.push(patch);
-	return this
-};
 
-extraP.setProp = function(key, val) {
-	// dynamic patch if value is a getter
-	if (val instanceof Getter) return this.addPatch(function(v,k,o) {
-		return this.setProp(key, val.get(v,k,o))
-	})
+function insertList(parent, list, spot) {
+	if (!spot) return list.moveTo(parent)
+	var head = list.head;
+	if (head === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
+	else if (head !== spot) list.moveTo(parent, spot);
+	return list
+}
 
-	if (this.node[key] !== val) this.node[key] = val;
-	return this
-};
+/**
+ * @constructor
+ * @extends List
+ * @param {Object} model model
+ */
+function ListK(model) {
+	List.call(this, model);
+}
 
-extraP.setText = function(txt) {
-	// dynamic patch if value is a getter
-	if (txt instanceof Getter) return this.addPatch(function(v,k,o) {
-		return this.setText(txt.get(v,k,o))
-	})
+ListK.prototype = Object.create(List.prototype, {
+	getKey: {
+		value: function(v,k) { return k }, // default: indexed
+		writable: true
+	},
+	_updateChildren: {value: function(arr) {
+		var spot = this.head.nextSibling,
+				parent = spot.parentNode,
+				items = this._items,
+				newM = {};
 
-	var child = this.node.firstChild;
-	if (child && !child.nextSibling) {
-		if (child.nodeValue !== txt) child.nodeValue = txt;
+		for (var i=0; i<arr.length; ++i) {
+			var key = this.getKey(arr[i], i, arr);
+			var item = newM[key] = items[key] || initChild(this.template, {
+				store: this.store,
+				state: this.state,
+				key: key
+			});
+			if (item) {
+				if (item.update) item.update(arr[i], i, arr);
+				spot = this._placeItem(parent, item, spot).nextSibling;
+			}
+		}
+
+		this._items = newM;
+		return spot
+	}}
+});
+
+/**
+ * @constructor
+ * @extends {List}
+ * @param {Object} model model
+ */
+function ListS(model) {
+	List.call(this, model);
+
+	var template = model.template;
+
+	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
+		this._items[ks[i]] = initChild(template[ks[i]], {
+			store: this.store,
+			state: this.state,
+			key: ks[i]
+		});
 	}
-	else this.node.textContent = txt;
-	return this
-};
+}
 
-extraP.setAttr = function(key, val) {
-	// dynamic patch if value is a getter
-	if (val instanceof Getter) return this.addPatch(function(v,k,o) {
-		return this.setAttr(key, val.get(v,k,o))
-	})
 
-	if (val === false) this.node.removeAttribute(key);
-	else this.node.setAttribute(key, val === true ? '' : val);
-	return this
-};
+ListS.prototype = Object.create(List.prototype, {
+	select: {
+		/**
+		 * @function
+		 * @param {*} [value]
+		 * @param {string|number} [key]
+		 * @param {!Array|!Object} [source]
+		 * @return {!Array}
+		 *
+		 */
+		value: function() { return Object.keys(this._items) }, // default: select all
+		writable: true
+	},
+	_updateChildren: {value: function(v,k,o) {
+		var spot = this.head.nextSibling,
+				parent = spot.parentNode,
+				items = this._items,
+				keys = this.select(v,k,o);
 
-extraP.addChild = function(child) {
-	if (child instanceof Getter) throw Error('childLens not supported')
-	switch(child == null ? child : child.constructor || Object) { //eslint-disable-line eqeqeq
-		case null: case undefined:
-			return this
-		case Array:
-			for (var i=0; i<child.length; ++i) this.addChild(child[i]);
-			return this
-		case Number:
-			this.addChild(createTextNode(''+child));
-			return this
-		case String:
-			this.addChild(createTextNode(child));
-			return this
-		case Extra: case List:
-			child.moveTo(this.node);
-			return this
-		default:
-			if (child.nodeType) this.node.appendChild(child);
-			else throw Error ('unsupported child type ' + typeof child)
-			return this
+		for (var i=0; i<keys.length; ++i) {
+			var item = items[keys[i]];
+			if (item) {
+				if (item.update) item.update(v,k,o);
+				spot = this._placeItem(parent, item, spot).nextSibling;
+			}
+		}
+
+		return spot
+	}}
+});
+
+//import {ListA} from './ListA'
+/**
+ * @constructor
+ * @param {!Object} model model
+ */
+function ListModel(model) {
+	this._assign(model);
+	var template = this.template;
+	this.template = Array.isArray(template) ? template.map(getModel)
+		: template.constructor === Object ? reduce(template, getModels, {})
+		: getModel(template);
+}
+
+
+function getModels(models, template, key) {
+	models[key] = getModel(template);
+	return models
+}
+
+
+function getModel(template) {
+	if (template.create) return template
+	switch (typeof template) {
+		case 'string' : return text(template)
+		case 'number' : return text(''+template)
 	}
+	throw Error('invalid list template: ' + typeof template)
+}
+
+
+var lmProto = ListModel.prototype;
+
+
+lmProto.config = function(config) {
+	return (new ListModel(this))._config(config)
+};
+
+
+lmProto.assign = function(key, val) {
+	return (new ListModel(this))._assign(key, val)
+};
+
+
+lmProto.defaults = function(key, val) {
+	return new ListModel(
+		this._assign.call(
+			val === undefined ? this._assign.call({}, key) : {key: val},
+			this
+		)
+	)
+};
+
+
+lmProto.create = function(config) {
+	var model = config ? this.config(config) : this;
+	return new (model.template.create ? ListK : ListS)(model)
+};
+
+
+lmProto._assign = assignToThis;
+
+
+lmProto._config = function(any) {
+	if (any != null) {
+		if (typeof any === 'function') any(this);
+		else if (any.constructor === Object) for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
+			var key = ks[i],
+					val = any[key],
+					fcn = this[key];
+			if (typeof fcn === 'function') Array.isArray(val) ? fcn.apply(this, val) : fcn(val);
+			else this._assign(key, val);
+		}
+	}
+	return this
 };
 
 var svgURI = 'http://www.w3.org/2000/svg';
 
+
 /**
-* @function text
-* @param  {string|Getter} text textNode data
-* @return {!Object} textNode
-*/
-function createTextNode(text) {
-	if (text instanceof Getter) return (new Extra(DOC.createTextNode(''))).setText(text)
-	return new Extra(DOC.createTextNode(text || ''))
+ * @function svg
+ * @param {string} tag tagName
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function svg(tag, options) { //eslint-disable-line no-unused-vars
+	var template = new NodeModel(exports.D.createElementNS(svgURI, tag));
+	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
+	return template
 }
 
-function createElement(tag) { //TODO addChild
-	return new Extra(tag.nodeType ? tag : DOC.createElement(tag))
+/**
+ * @function element
+ * @param {string} tagName tagName
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function element(tagName, options) { //eslint-disable-line no-unused-vars
+	var template = new NodeModel(exports.D.createElement(tagName));
+	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
+	return template
 }
 
-function createElementNS(nsURI, tag) {
-	return new Extra(tag.nodeType ? tag : DOC.createElementNS(nsURI, tag))
+/**
+ * @function elementNS
+ * @param {string} nsURI namespace URI
+ * @param {string} tag tagName
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
+	var template = new NodeModel(exports.D.createElementNS(nsURI, tag));
+	for (var i=2; i<arguments.length; ++i) template._config(arguments[i]);
+	return template
 }
 
-function createElementSVG(tag) {
-	return new Extra(tag.nodeType ? tag : DOC.createElementNS(svgURI, tag))
+/**
+ * @function text
+ * @param {string} txt textContent
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function text(txt, options) { //eslint-disable-line no-unused-vars
+	var template = new NodeModel(exports.D.createTextNode(txt));
+	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
+	return template
 }
 
-function update(node, v,k,o) {
-	var extra = node.update ? node : extras.get(node);
-	if (extra) return extra.update(v,k,o)
-	return node
+
+/**
+ * @function list
+ * @param {Object|Array} model template
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function list(model, options) { //eslint-disable-line no-unused-vars
+	var template = new ListModel({template: model});
+	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
+	return template
 }
 
-// DOM
+// @ts-check
 
+// create template
+
+exports.text = text;
+exports.element = element;
+exports.svg = svg;
+exports.elementNS = elementNS;
+exports.list = list;
 exports.setDocument = setDocument;
-exports.cloneNode = cloneNode;
-exports.createElement = createElement;
-exports.createElementNS = createElementNS;
-exports.createElementSVG = createElementSVG;
-exports.createTextNode = createTextNode;
-exports.setChildren = setChildren;
-exports.update = update;
-exports.getter = getter;
-exports.createList = createList;
-exports.extras = extras;
 
 }((this.picoDOM = this.picoDOM || {})));

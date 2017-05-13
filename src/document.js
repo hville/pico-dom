@@ -1,5 +1,10 @@
-export var DOC = typeof document !== 'undefined' ? document : void 0
+export var D = typeof document !== 'undefined' ? document : null
 
+/**
+* @function setDocument
+* @param  {Document} doc DOM document
+* @return {Document} DOM document
+*/
 export function setDocument(doc) {
-	DOC = doc
+	return D = doc
 }

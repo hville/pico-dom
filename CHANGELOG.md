@@ -7,14 +7,14 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-- ~~[?] find(test, after) => node //for cases where node.getElementsb=ByTagNames won't do~~
-- ~~[?] component.appendChild(el(...this.grandChild=xxx)) //sweet but prevents clonning~~
-- list.update = list.updateChildren
-- add docs about prior art and alternatives: redom, hyperscript snabbdom vs lists, decorators, components
-- api docs from jsdoc...
-- examples
-- match dom api names - createTextNode, createDocumentFragment, createElement, createComment
-- dom.defaultView instead of window
+
+## [0.30.0] - 2017-05-14
+### Changed
+- rewrite, simpler API, all components
+- setDocument instead of defaultView
+
+### Added
+- Select List to conditionally display different components
 
 ## [0.20.0] - 2017-04-10
 ### Changed
@@ -23,7 +23,7 @@
 - clear renamed to removeChildren
 
 ### Fixed
-- fix Component and List methods to all return this instead of node
+- fix Component and List methods to all return `this` instead of `Node`
 
 ## [0.19.0] - 2017-04-07
 ### Changed
@@ -42,63 +42,3 @@
 ### Changed
 - change all method names to full names (element, component, fragment, text, comment)
 - list signature changed to (component|factory, dataKey)
-- component option `ondata` changed to `update`
-- component option `oninit` changed to `init`
-- Internal list component to key reference (property instead of weakmap)
-- Removed the custom component decorators
-
-## [0.14.0] - 2017-03-28
-### Changed
-- removed the list fragment magic. list must now be manually mounted before update
-
-### Added
-- `list.clear([after])`
-- `list.moveto(null)` and `component.moveto(null)`
-- `fragment()` => documentFragment
-
-## [0.13.0] - 2017-03-28
-### Changed
-- replaced `component.textContent` getter/setter with `component.setText()`
-- simplified internal component map
-- simplified internal event handling `on(...)` to `setEvent(n,f)` and `delEvent(n)`
-- removed non essential decorators. `class` and `style` decorators must be added manually
-
-## [0.11.0] - 2017-03-15
-### Added
-- `component.clone() => newComponent`
-- `list.clone() => newList`
-
-### Fixed
-- `component.update(...) => this`
-- `list.update(...) => this`
-- documentation for `component.textContent`
-- document fragment to update unmounted list
-
-## [0.9.0] - 2017-03-12
-### Changed
-- Major API change: `.setWindow(window)` replaced `.window = window` to facilitate re-use for full application testing
-- `ns` renamed to `namespaces` for clarity
-
-### Added
-- `component.textContent(text)` utility to avoid the `node.firstChild.nodeValue` boilerplate
-- new `class` decorator
-
-### Fixed
-- documentation for textNodes and commentNodes
-
-## [0.8.0] - 2017-02-26
-### Changed
-- Major API change: intermediate factory step removed
-- `el(#)` and `el(!)` for text and comment nodes
-
-## [0.6.0] - 2017-02-24
-### Changed
-- More major cleanup
-- API change for the Environment setting (was `.global.document = doc`, now `.setWindow(win)`)
-
-### Fixed
-- Documentation
-
-## [0.5.0] - 2017-02-21
-### Changed
-- Full rewrite
