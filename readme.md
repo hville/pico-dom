@@ -1,49 +1,72 @@
-<!-- markdownlint-disable MD004 MD007 MD010 MD012 MD041 MD022 MD024 MD032 -->
+<!-- markdownlint-disable MD004 MD007 MD010 MD012 MD041 MD022 MD024 MD032 MD036 -->
 
 # pico-dom
 
-*minimalist hyperscript-based DOM tree **element**, **component** and **list** functions with svg, namespace and W3 selector support, all in 2kb gzip, no dependencies*
+*minimalist hyperscript-based DOM tree **dynamic component** functions with svg, namespace and list support, all in 2kb gzip, no dependencies. Support direct use in browser, CJS and ES modules*
 
-• [Example](#example) • [Features](#features) • [API](#api) • [License](#license)
+• [Example](#example) • [Why](#why) • [API](#api) • [License](#license)
 
 ## Example
 
-```javascript
-var p = require('pico-dom')
-var el = p.createElement,
-    co = p.createComponent,
-    list = p.createList
+*supports CJS (`require('pico-dom').x`), ES modules (`import {x} from 'pico-dom'`) and browser use (`picoDOM.x`)*
 
-var table = co('table', [
+```javascript
+import {element as el, list} from 'pico-dom'
+import {Store} from 'myStore' // any user store will do
+
+var table = co('table', {
+  update: function() {
+    this.updateChildren(this.store.get())
+  }},
   el('caption', 'data-matrix'),
   co('tbody',
-    list(co('tr',
-      co('td', el.svg('svg', svgIcon)), // title column
-      list(co('td',
-        co('input', {
-          extra: {
-            update: function(val, pos) { this.node.value = val }
-          }
-        })
-      ))
-      co('td', el.svg('svg', svgIcon)), // summary column
-    ))
+    list(
+      el('tr',
+        {class: 'abc'},
+        function(tr) { this.state.i = this.key },
+        el('td', el.svg('svg', svgIcon)), // title column
+        list( // data columns
+          el('td',
+            function(td) { this.state.j = this.key },
+            '$ ',
+            el('input', {
+              function(input) {
+                this.i = this.state.i,
+                this.j = this.state.j
+              },
+              update: function(val) {
+                this.node.value = val
+              },
+              on: {change: function() {
+                this.store.dispatch('set', [this.i, this.j, this.node.value])
+              }}
+            })
+          )
+        )
+      )
+    )
   )
-])
-table.update([['Jane', 'Roe'], ['John', 'Doe']])
-el(document.body, table)
+)
+
+var store = new Store([['Jane', 'Roe'], ['John', 'Doe']])
+
+table.create({store: store})
+.update()
+.moveTo(document.body)
 ```
 
-## Features
+## Why
 
-* dynamic lists and nested lists
-* namespaced tag and namespaced attribute support
-* svg namespace and utility functions pre-defined
-* w3 string selector API, including attributes
-* element decorators for element properties and attributes
+To explore ideas for a flexible and concise API with minimal memory footprint.
+
+
+### Features
+
+* dynamic lists and nested lists (keyed, indexed or select)
+* svg and namespace support
 * ability to inject a `document API` for server and/or testing (e.g. `jsdom`)
 * no virtual DOM, all operations are done on actual nodes
-* around 2.3kb gzip, no dependencies
+* around 2.0 kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
 * All in ES5 with ES modules, CJS module and iife for browsers. Should work on mobile and old browsers (not tested).
@@ -51,111 +74,76 @@ el(document.body, table)
 
 ### Limitations
 
-* still too imperative to be of use for a web application. Beware of foot-guns
-
-### Inspiration and Design Goals
-
+* proof of concept. more example and test required to validate the idea and API.
+* view and event helpers only
 * strictly DOM element creation and manipulation (no router or store)
-* minimal intermediate object. Structure is held by the DOM itself
-* minimal memory profile for mobile use
-* component system to add behaviour
-* dynamic lists similar to documentFragments
 
-## API
 
-### Elements
+## API Overview
 
-Typical hyperscript API `element(selector[, ...configurations][, ...children])` to generate HTMLElements, SVGElements or other namespaced Elements
+This is just an overview. Details can be found in the source code (under 600 lines including comments and jsDocs).
 
-example: `p.createElement('p', {attrs: {style: 'color:blue'}}, '1'))`
+### component Templates
 
-If an Element is provided as a selector, it is simply decorated as-is with additional attributes, properties and/or children.
+Four functions (element, elementNS, svg and text) are available to generate component templates
 
-Only the selector is required, remaining arguments can be in any order. Objects are grouped to apply configurations, all other argument types are added to the children list
-* Object `options` {attrs, props, xmlns}
-  * xmlns: custom namespace for new elements
-  * props & attrs: key:val pairs to add attributes and properties to a new or existing element
-* String|Node|Array|Component|List `children`
-  * adds children to the new or existing element
+* element: `(tagName [, ...options|children|transforms]) => template`
+* elementNS: `(nsURI, tagName [, ...options|children|transforms]) => template`
+* svg: `(tagName [, ...options|children|transforms]) => Template`
+* text: `(textContent [, ...options|transforms]) => Template`
 
-The function has 2 additional properties:
-* `.preset` to create a new function with preset defaults
-  * example: `createSpecial = element.preset({xmlns: specialNamespace})`
-* `.svg` same *hyperscript* function with the svg namespace preset
-  * internaly: `element.svg = element.preset({xmlns: ns.svg})`
+The 4 functions take the following types of arguments:
 
-#### Component Factory
+* options: Object to either assign a key value to the component once created or to run a component method once created
+  * `{someKey: someValue}` assigns component.someKey = someValue. same as `{assign: {someKey: someValue}}`
+  * `{class: 'abc'}` sets the node class once the element is created
+  * `{defaults: {someKey: someValue}}` set component defaults before other operations are carried out
 
-A component is just an additional context tied to an element (via WeakMap) to attach additional properties, methods and lifecycle events. The component hyperscript works the same way as the element function (`component(selector[, ...configurations][, ...children])`). The component context is defined with the additional `extra` decorator.
+### list Templates
 
-```javascript
-co('button[type=button].btn#fire', {
-  props: {
-    onclick: clickHandler
-  },
-  extra: {
-    update: function(val) { this.node.textContent = val }
-  }
-}
-```
+list: `(template|Object<template>|Array<template>, [, ...options|transforms]) => listTemplate`
 
-A component has the following properties and methods:
-* `.node` the associated node
+* `list(template)` creates a dynamic list template
+* `list(template, {getKey: function(v) {return v.id}})` created a dynamic keyed list template
+* `list({a: templateA, b:templateB}, {select: function(v) {return [v.id]}})` created a conditional list template
+
+lists can be nested.
+
+
+### Components
+
+Components are created from templates: `template.create([options])`
+
+Node Components have the following properties and methods for dealing with DOM Nodes
+
+* node: the associated DOM node
+* text(v): to set the node textContent
+* value(v): to set the node value
+* attr(name, value): to set (`attr(name, value)` or `attr(name)`) or remove (`attr(name, false)`) attributes
+* attrs({name: value}): same as attr but for multiple attributes
+* prop(name, value): to set node properties
+* props({name, value}): to set multiple node properties
+* class(string): to set the node class
+
+List and Node Components also have the following properties and methods for dynamic content:
+
+* state: a object passed down to children for shared context within a component
+* store: a user defined store object passed down to children.
 * `.update(...) => this` the function to trigger changes based on external data
 * `.moveTo(parentNode|null[, before])` to move|mount|unmount the component
-* `.setText(text)` helper efficiently and safely change the node text
 * `.updateChildren(..)` to pass down data down the tree. By default, all new components have `update` property set to `updateChildren`. If `update` is specified, children updates must be manually called.
-* `.clone([cfg]) => new instance` to clone a component and underlying tree with optional additional configuration
-* `.key` optional key for identification or list sorting
+* `.key` optional key for identification or list sorting. Set by parent lists
 
-Lifecycle functions
-* `.init()` on object creation
-* `.update(...any)` when new data is available
-* `.onmove(oldParent, newParent)` when the component is moved or removed
+Lifecycle function
+* `.onmove(oldParent, newParent)` triggered just before a component is inserted `(null, target)` is moved `(origin, target)` or removed `(origin, null)`
 
 
-### DOM helpers
-* `text(string)` => TextNode
-* `comment(string)` => commentNodes
-* `fragment()` => documentFragment
+### helpers
+* `setDocument(document)` to set the Document interface for testing or server use
+  * eg. `setDocument((new JSDOM).window.document)`
+* `D` reference to the Document interface for testing or server use
+  * eg. `var body = D.body`
 
-
-#### Lists
-
-`list(component|componentFactory, dataKey)`
-
-A list is a component or component factory that gets repeated on update to match a given array of values.
-
-* `.header` the associated positionning header commentNode
-* `.header` the associated positionning footer commentNode
-* `.update(array) => this` triggers multiple components `component.update(value, index, array)`
-* `.moveTo(parentNode|null[, before])` to move the list and all content
-* `.removeChildren([after])`
-* `.clone() => new instance`
-
-* lists can be nested or stacked
-* list takes on additional `dataKey` argument
-  * if omitted, list items are never swapped but just updated with the new value
-  * if a `string` or a `function` is provided list items will be swapped to match the new data ordering
-    * string example: `list(myfactory, 'uid')`
-    * funtion example: `list(myfactory, function(v,i) { return v.uid })`
-
-### Namespaces
-
-SVG and/or other namespaces are supported. For example, the following are equivalent:
-
-* `el.svg('circle')` (Internally, `el.svg = el.preset({xmlns: ns.svg})`)
-* `el('svg:circle')`
-* `el('circle', {xmlns: ns.svg})`
-* `el.preset({xmlns: ns.svg})('circle')`
-* the same logic applies for `component` (`co.svg`, ...)
-
-
-### testing and configuration helpers
-* `namespaces`: Configurable prefix-URL Object of namespaces. Defaults to `html` and `svg`
-  * example `namespaces.svg = 'http://www.w3.org/2000/svg'}`
-* `setDefaultView`: Getter-Setter to optionally set a custom `window` object for testing or server use
-  * example `picoDOM.setDefaultView(jsdom().defaultView)`
 
 ## License
 

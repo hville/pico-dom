@@ -143,7 +143,7 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 	moveTo: function(target, before) {
-		if (this.onmove) this.onmove(target)
+		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null);
 		return this
 	},
@@ -265,12 +265,12 @@ List.prototype = {
 	* @return {!Object} this
 	*/
 	moveTo: function(parent, before) {
-		if (this.onmove) this.onmove(target);
 		var foot = this.foot,
 				next = this.head,
 				origin = next.parentNode,
 				target = parent.node || parent,
 				cursor = before || null;
+		if (this.onmove) this.onmove(origin, target);
 		// skip case where there is nothing to do
 		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
 

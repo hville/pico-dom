@@ -28,12 +28,12 @@ List.prototype = {
 	* @return {!Object} this
 	*/
 	moveTo: function(parent, before) {
-		if (this.onmove) this.onmove(target)
 		var foot = this.foot,
 				next = this.head,
 				origin = next.parentNode,
 				target = parent.node || parent,
 				cursor = before || null
+		if (this.onmove) this.onmove(origin, target)
 		// skip case where there is nothing to do
 		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
 

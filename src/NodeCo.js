@@ -88,7 +88,7 @@ export var ncProto = NodeCo.prototype = {
 		return this
 	},
 	moveTo: function(target, before) {
-		if (this.onmove) this.onmove(target)
+		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null)
 		return this
 	},
