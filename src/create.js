@@ -63,13 +63,19 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = model.rebase ? model.rebase()
-		: model.node ? new NodeModel(model.node)._config({assign: model})
-		: new NodeModel(model)
+	var modl = new NodeModel(createNode(model))
 	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
 	return modl
 }
 
+
+export function createNode(model) {
+	if (model.cloneNode) return model.cloneNode(true)
+	if (typeof model === 'number' || typeof model === 'string') return D.createTextNode('' + model)
+	if (model.create) return model.create().node
+	if (model.node) return model.node.cloneNode(true)
+	else throw Error('invalid node source' + typeof model)
+}
 
 /**
  * @function list
@@ -90,10 +96,7 @@ function getModel(tmpl) {
 	return Array.isArray(tmpl) ? tmpl.map(getModel)
 		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
 		: tmpl.create ? tmpl // templates are immutable and can be used 'as-is'
-		: tmpl.cloneNode ? tmpl.cloneNode(true)
-		: typeof tmpl === 'string' ? D.createTextNode(tmpl)
-		: typeof tmpl === 'number' ? D.createTextNode(''+tmpl)
-		: null
+		: createNode(tmpl)
 }
 
 

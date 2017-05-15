@@ -62,9 +62,9 @@ ct('element - event', function() {
 
 ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = t0.rebase({attrs: {id: 1}, append: el('h1', 1)}),
-			t2 = X.template(t0.create(el('h2', 2))),
-			h0 = t0.config({attrs: {id: 0}, append: el('h0', 0)}).rebase().create(),
+			t1 = X.template(t0.create({attrs: {id: 1}, append: el('h1', 1)}).node),
+			t2 = X.template(el('h2', 2).create().node),
+			h0 = t0.config({attrs: {id: 0}, append: el('h0', 0)}).create(),
 			h1 = t1.create(),
 			h2 = t2.create({attrs: {id: 2}}),
 			h3 = t0.create({attr: ['id', '3'], append: el('h3', 3)}),
