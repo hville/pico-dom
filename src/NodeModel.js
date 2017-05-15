@@ -15,7 +15,7 @@ export function NodeModel(node, transforms) {
 NodeModel.prototype = {
 	constructor: NodeModel,
 	config: function(config) {
-		return (new NodeModel(this.node, this._ops))._config(config)
+		return (new NodeModel(this.node, this._ops.slice()))._config(config)
 	},
 	assign: function(key, val) {
 		return new NodeModel(this.node, this._ops.concat({
@@ -28,6 +28,10 @@ NodeModel.prototype = {
 			fcn: ncProto.assign,
 			arg: val === undefined ? key : [key, val]
 		}, this._ops))
+	},
+	rebase: function(config) {
+		var co = this.create(config)
+		return new NodeModel(co.node)._config({assign: co})
 	},
 	create: function(config) {
 		return new NodeCo(

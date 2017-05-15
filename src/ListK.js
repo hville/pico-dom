@@ -3,8 +3,8 @@ import {initChild} from './initChild'
 
 /**
  * @constructor
- * @extends List
- * @param {Object} model model
+ * @this {List}
+ * @param {!Object} model model
  */
 export function ListK(model) {
 	List.call(this, model)
@@ -20,7 +20,6 @@ ListK.prototype = Object.create(List.prototype, {
 				parent = spot.parentNode,
 				items = this._items,
 				newM = {}
-
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr)
 			var item = newM[key] = items[key] || initChild(this.template, {

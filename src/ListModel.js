@@ -4,6 +4,7 @@ import {ListK} from './ListK'
 import {ListS} from './ListS'
 import {assignToThis} from './object'
 import {reduce} from './object'
+//import {D} from './document'
 
 
 /**
@@ -12,26 +13,26 @@ import {reduce} from './object'
  */
 export function ListModel(model) {
 	this._assign(model)
-	var template = this.template
-	this.template = Array.isArray(template) ? template.map(getModel)
-		: template.constructor === Object ? reduce(template, getModels, {})
-		: getModel(template)
+	var tmpl = this.template
+	this.template = Array.isArray(tmpl) ? tmpl.map(getModel)
+		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
+		: getModel(tmpl)
 }
 
 
-function getModels(models, template, key) {
-	models[key] = getModel(template)
+function getModels(models, tmpl, key) {
+	models[key] = getModel(tmpl)
 	return models
 }
 
 
-function getModel(template) {
-	if (template.create) return template
-	switch (typeof template) {
-		case 'string' : return text(template)
-		case 'number' : return text(''+template)
+function getModel(tmpl) {
+	if (tmpl.create) return tmpl // templates are immutable and can be used 'as-is'
+	switch (typeof tmpl) {
+		case 'string' : return text(tmpl)
+		case 'number' : return text(''+tmpl)
 	}
-	throw Error('invalid list template: ' + typeof template)
+	throw Error('invalid list template: ' + typeof tmpl)
 }
 
 

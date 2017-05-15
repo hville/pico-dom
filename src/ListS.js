@@ -4,8 +4,8 @@ import {initChild} from './initChild'
 
 /**
  * @constructor
- * @extends {List}
- * @param {Object} model model
+ * @this {List}
+ * @param {!Object} model model
  */
 export function ListS(model) {
 	List.call(this, model)
@@ -25,14 +25,12 @@ export function ListS(model) {
 ListS.prototype = Object.create(List.prototype, {
 	select: {
 		/**
+		 * select all by default
 		 * @function
-		 * @param {*} [value]
-		 * @param {string|number} [key]
-		 * @param {!Array|!Object} [source]
+		 * @param {...*} [v]
 		 * @return {!Array}
-		 *
 		 */
-		value: function() { return Object.keys(this._items) }, // default: select all
+		value: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
 		writable: true
 	},
 	_updateChildren: {value: function(v,k,o) {

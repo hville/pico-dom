@@ -5,7 +5,7 @@ import {assignToThis} from './object'
 
 /**
  * @constructor
- * @param {Object} model model
+ * @param {!Object} model model
  */
 export function List(model) {
 	this._items = {}
@@ -54,8 +54,8 @@ List.prototype = {
 
 		return this
 	},
-	update: updateChildren,
-	updateChildren: updateChildren,
+	update: updateListChildren,
+	updateChildren: updateListChildren,
 	_placeItem: function(parent, item, spot) {
 		return item.node ? insertChild(parent, item.node, spot)
 		: item.head ? insertList(parent, item, spot).foot
@@ -63,7 +63,7 @@ List.prototype = {
 	}
 }
 
-function updateChildren(v,k,o) {
+function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
 			spot = this._updateChildren(v,k,o)

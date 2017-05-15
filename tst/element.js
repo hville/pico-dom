@@ -59,3 +59,31 @@ ct('element - event', function() {
 	elm.dispatchEvent(new win.Event('click'))
 	ct('===', elm.textContent, 'aa')
 })
+
+ct('element - immutable template', function() {
+	var t0 = el('div'),
+			t1 = t0.rebase({attrs: {id: 1}, append: el('h1', 1)}),
+			t2 = X.template(t0.create(el('h2', 2))),
+			h0 = t0.config({attrs: {id: 0}, append: el('h0', 0)}).rebase().create(),
+			h1 = t1.create(),
+			h2 = t2.create({attrs: {id: 2}}),
+			h3 = t0.create({attr: ['id', '3'], append: el('h3', 3)}),
+			h4 = t0.config({attrs: {id: 4}, append: el('h4', 4)}).create()
+
+	ct('===', t1.node.childNodes.length, 1)
+	ct('===', t2.node.childNodes.length, 1)
+
+	ct('===', t0.create().node.childNodes.length, 0)
+	ct('===', h0.node.childNodes.length, 1)
+	ct('===', h1.node.childNodes.length, 1)
+	ct('===', h2.node.childNodes.length, 1)
+	ct('===', h3.node.childNodes.length, 1)
+	ct('===', h4.node.childNodes.length, 1)
+
+	ct('===', t0.create().node.id, '')
+	ct('===', h0.node.id, '0')
+	ct('===', h1.node.id, '1')
+	ct('===', h2.node.id, '2')
+	ct('===', h3.node.id, '3')
+	ct('===', h4.node.id, '4')
+})
