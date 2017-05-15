@@ -1,23 +1,17 @@
 import {List} from './List'
-import {initChild} from './initChild'
 
 
 /**
  * @constructor
  * @this {List}
- * @param {!Object} model model
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-export function ListS(model) {
-	List.call(this, model)
-
-	var template = model.template
+export function ListS(template, options) {
+	List.call(this, template, options)
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		this._items[ks[i]] = initChild(template[ks[i]], {
-			store: this.store,
-			state: this.state,
-			key: ks[i]
-		})
+		this._items[ks[i]] = this._initChild(template[ks[i]], ks[i])
 	}
 }
 

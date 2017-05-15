@@ -1,13 +1,13 @@
 import {List} from './List'
-import {initChild} from './initChild'
 
 /**
  * @constructor
  * @this {List}
- * @param {!Object} model model
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-export function ListK(model) {
-	List.call(this, model)
+export function ListK(template, options) {
+	List.call(this, template, options)
 }
 
 ListK.prototype = Object.create(List.prototype, {
@@ -22,11 +22,7 @@ ListK.prototype = Object.create(List.prototype, {
 				newM = {}
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr)
-			var item = newM[key] = items[key] || initChild(this.template, {
-				store: this.store,
-				state: this.state,
-				key: key
-			})
+			var item = newM[key] = items[key] || this._initChild(this._template, key)
 			if (item) {
 				if (item.update) item.update(arr[i], i, arr)
 				spot = this._placeItem(parent, item, spot).nextSibling

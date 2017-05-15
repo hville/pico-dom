@@ -5,13 +5,15 @@ import {assignToThis} from './object'
 
 /**
  * @constructor
- * @param {!Object} model model
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-export function List(model) {
+export function List(template, options) {
+	this._template = template
 	this._items = {}
 	this.head = D.createComment('^')
 	this.foot = D.createComment('$')
-	this.assign(model)
+	this.assign(options)
 	this.head[picoKey] = this.update ? this : null
 }
 
@@ -60,6 +62,10 @@ List.prototype = {
 		return item.node ? insertChild(parent, item.node, spot)
 		: item.head ? insertList(parent, item, spot).foot
 		: insertChild(parent, item, spot)
+	},
+	_initChild: function(model, key) {
+		return model.cloneNode ? model.cloneNode(true)
+		: model.defaults({store: this.store, state: this.state, key: key}).create()
 	}
 }
 

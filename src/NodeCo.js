@@ -1,6 +1,6 @@
 import {each, assignToThis} from './object'
-import {initChild} from './initChild'
 import {picoKey} from './picoKey'
+import {D} from './document'
 
 
 /**
@@ -75,15 +75,12 @@ export var ncProto = NodeCo.prototype = {
 		for (var i=0; i<arguments.length; ++i) {
 			var arg = arguments[i]
 			if (Array.isArray(arg)) this.append.apply(this, arg)
-			else {
-				var child = initChild(arg, {
-					store: this.store,
-					state: this.state,
-				})
-				if (child.moveTo) child.moveTo(this.node)
-				else if (child.nodeType) this.node.appendChild(child)
-				else throw Error('wrond child type:' + typeof child)
-			}
+			else if (arg == null) continue
+			else if (typeof arg === 'number') this.node.appendChild(D.createTextNode(''+arg))
+			else if (typeof arg === 'string') this.node.appendChild(D.createTextNode(arg))
+			else if (arg.cloneNode) this.node.appendChild(arg.cloneNode(true))
+			else if (arg.create) arg.defaults({store: this.store, state: this.state}).create().moveTo(this.node)
+			else throw Error('wrond child type:' + typeof arg)
 		}
 		return this
 	},

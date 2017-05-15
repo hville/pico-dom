@@ -1,38 +1,19 @@
-import {text} from './create'
 //import {ListA} from './ListA'
 import {ListK} from './ListK'
 import {ListS} from './ListS'
 import {assignToThis} from './object'
-import {reduce} from './object'
+
 //import {D} from './document'
 
 
 /**
  * @constructor
- * @param {!Object} model model
+ * @param {!Object} model
+ * @param {Object} [options]
  */
-export function ListModel(model) {
-	this._assign(model)
-	var tmpl = this.template
-	this.template = Array.isArray(tmpl) ? tmpl.map(getModel)
-		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
-		: getModel(tmpl)
-}
-
-
-function getModels(models, tmpl, key) {
-	models[key] = getModel(tmpl)
-	return models
-}
-
-
-function getModel(tmpl) {
-	if (tmpl.create) return tmpl // templates are immutable and can be used 'as-is'
-	switch (typeof tmpl) {
-		case 'string' : return text(tmpl)
-		case 'number' : return text(''+tmpl)
-	}
-	throw Error('invalid list template: ' + typeof tmpl)
+export function ListModel(model, options) {
+	this._template = model
+	if (options) this._assign(options)
 }
 
 
@@ -40,17 +21,17 @@ var lmProto = ListModel.prototype
 
 
 lmProto.config = function(config) {
-	return (new ListModel(this))._config(config)
+	return (new ListModel(this._template, this))._config(config)
 }
 
 
 lmProto.assign = function(key, val) {
-	return (new ListModel(this))._assign(key, val)
+	return (new ListModel(this._template, this))._assign(key, val)
 }
 
 
 lmProto.defaults = function(key, val) {
-	return new ListModel(
+	return new ListModel(this._template,
 		this._assign.call(
 			val === undefined ? this._assign.call({}, key) : {key: val},
 			this
@@ -61,7 +42,7 @@ lmProto.defaults = function(key, val) {
 
 lmProto.create = function(config) {
 	var model = config ? this.config(config) : this
-	return new (model.template.create ? ListK : ListS)(model)
+	return new (model._template.create || model._template.cloneNode ? ListK : ListS)(model._template, model)
 }
 
 

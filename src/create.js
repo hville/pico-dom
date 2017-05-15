@@ -1,6 +1,7 @@
 import {D} from './document'
 import {NodeModel} from './NodeModel'
 import {ListModel} from './ListModel'
+import {reduce} from './object'
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -56,19 +57,6 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
 
 
 /**
- * @function list
- * @param {Object|Array} model model
- * @param {...*} [options] options
- * @return {!Object} Component
- */
-export function list(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new ListModel({template: model})
-	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
-	return modl
-}
-
-
-/**
  * @function template
  * @param {Node|Object} model source node or template
  * @param {...*} [options] options
@@ -80,4 +68,36 @@ export function template(model, options) { //eslint-disable-line no-unused-vars
 		: new NodeModel(model)
 	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
 	return modl
+}
+
+
+/**
+ * @function list
+ * @param {Object|Array} model model
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+export function list(model, options) { //eslint-disable-line no-unused-vars
+	var modl = getModel(model)
+	if (!modl) throw Error('invalid list template: ' + typeof model)
+	var lst = new ListModel(modl)
+	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
+	return lst
+}
+
+
+function getModel(tmpl) {
+	return Array.isArray(tmpl) ? tmpl.map(getModel)
+		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
+		: tmpl.create ? tmpl // templates are immutable and can be used 'as-is'
+		: tmpl.cloneNode ? tmpl.cloneNode(true)
+		: typeof tmpl === 'string' ? D.createTextNode(tmpl)
+		: typeof tmpl === 'number' ? D.createTextNode(''+tmpl)
+		: null
+}
+
+
+function getModels(models, tmpl, key) {
+	models[key] = getModel(tmpl)
+	return models
 }

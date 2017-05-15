@@ -22,8 +22,10 @@ export function each(obj, fcn, ctx) {
  * @returns {!Object} this
  */
 export function assignToThis(key, val) { //eslint-disable-line no-unused-vars
-	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) this[ks[j]] = key[ks[j]]
-	else this[key] = val
+	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
+		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]]
+	}
+	else if (key[0] !== '_') this[key] = val
 	return this
 }
 
