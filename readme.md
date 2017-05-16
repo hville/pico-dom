@@ -11,48 +11,51 @@
 *supports CJS (`require('pico-dom').x`), ES modules (`import {x} from 'pico-dom'`) and browser use (`picoDOM.x`)*
 
 ```javascript
-import {element as el, list} from 'pico-dom'
-import {Store} from 'myStore' // any user store will do
+import {view, element as el, list} from '../module'
+import {Store} from './Store' // any user store will do
+import {ic_remove, ic_add} from './icons'
 
-var table = co('table', {
-  update: function() {
-    this.updateChildren(this.store.get())
-  }},
-  el('caption', 'data-matrix'),
-  co('tbody',
+
+var tableTemplate = el('table',
+  el('tbody',
     list(
       el('tr',
         {class: 'abc'},
-        function(tr) { this.state.i = this.key },
-        el('td', el.svg('svg', svgIcon)), // title column
+        function(tr) { tr.state = {i: tr.key} },
+        el('td', ic_remove, {
+          on: {click: function() { this.store.delRow(this.state.i)}}
+        }), // title column
         list( // data columns
           el('td',
-            function(td) { this.state.j = this.key },
-            '$ ',
-            el('input', {
-              function(input) {
-                this.i = this.state.i,
-                this.j = this.state.j
-              },
-              update: function(val) {
-                this.node.value = val
-              },
-              on: {change: function() {
-                this.store.dispatch('set', [this.i, this.j, this.node.value])
-              }}
-            })
+            function(td) { td.state.j = td.key },
+            el('input',
+              function(c) { c.i = c.state.i; c.j = c.state.j },
+              {
+                update: function(val) { this.node.value = val },
+                on: {
+                  change: function() { this.store.set(this.node.value, [this.i, this.j]) }
+                }
+              }
+            )
           )
         )
       )
+    ),
+    el('tr',
+      el('td', ic_add, {
+        on: {
+          click: function() { this.store.addRow() }
+        }
+      })
     )
   )
 )
 
-var store = new Store([['Jane', 'Roe'], ['John', 'Doe']])
+var store = new Store([]),
+    table = view(tableTemplate, document.body, store)
 
-table.create({store: store})
-.update()
-.moveTo(document.body)
+store.onchange = function() { table.update( store.get() ) }
+store.set([['Jane', 'Roe'], ['John', 'Doe']])
 ```
 
 ## Why
@@ -66,7 +69,7 @@ To explore ideas for a flexible and concise API with minimal memory footprint.
 * svg and namespace support
 * ability to inject a `document API` for server and/or testing (e.g. `jsdom`)
 * no virtual DOM, all operations are done on actual nodes
-* around 2.0 kb gzip, no dependencies
+* around 2 kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
 * All in ES5 with ES modules, CJS module and iife for browsers. Should work on mobile and old browsers (not tested).
@@ -143,6 +146,9 @@ Lifecycle function
   * eg. `setDocument((new JSDOM).window.document)`
 * `D` reference to the Document interface for testing or server use
   * eg. `var body = D.body`
+* `find(from [, test] [, until])` find a component within a defined and matching the test function
+  * eg. `find(document.body)` to get the first component in the document
+  * eg. `find(tableComponent, function(c) { return c.state.i === 5 } )`
 
 
 ## License
