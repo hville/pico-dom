@@ -1,1 +1,1 @@
-export var picoKey = '__pV'
+export var picoKey = '_pico'
