@@ -90,7 +90,6 @@ function insertChild(parent, node, spot) {
 }
 
 
-
 function insertList(parent, list, spot) {
 	if (!spot) return list.moveTo(parent)
 	var head = list.head

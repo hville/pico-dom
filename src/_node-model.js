@@ -1,4 +1,4 @@
-import {NodeCo, ncProto} from './NodeCo'
+import {NodeCo, ncProto} from './_node-co'
 import {each} from './object'
 
 
@@ -28,10 +28,6 @@ NodeModel.prototype = {
 			fcn: ncProto.assign,
 			arg: val === undefined ? key : [key, val]
 		}, this._ops))
-	},
-	rebase: function(config) {
-		var co = this.create(config)
-		return new NodeModel(co.node)._config({assign: co})
 	},
 	create: function(config) {
 		return new NodeCo(

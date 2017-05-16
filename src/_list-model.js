@@ -1,6 +1,6 @@
 //import {ListA} from './ListA'
-import {ListK} from './ListK'
-import {ListS} from './ListS'
+import {ListK} from './_list-k'
+import {ListS} from './_list-s'
 import {assignToThis} from './object'
 
 //import {D} from './document'

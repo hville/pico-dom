@@ -1,6 +1,6 @@
 import {each, assignToThis} from './object'
 import {picoKey} from './picoKey'
-import {D} from './document'
+import {createNode} from './create'
 
 
 /**
@@ -10,6 +10,7 @@ import {D} from './document'
  * @param {Array} ops transforms
  */
 export function NodeCo(node, ops) {
+	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node
 
 	// default updater: null || text || value
@@ -74,13 +75,12 @@ export var ncProto = NodeCo.prototype = {
 	append: function() {
 		for (var i=0; i<arguments.length; ++i) {
 			var arg = arguments[i]
-			if (Array.isArray(arg)) this.append.apply(this, arg)
-			else if (arg == null) continue
-			else if (typeof arg === 'number') this.node.appendChild(D.createTextNode(''+arg))
-			else if (typeof arg === 'string') this.node.appendChild(D.createTextNode(arg))
-			else if (arg.cloneNode) this.node.appendChild(arg.cloneNode(true))
-			else if (arg.create) arg.defaults({store: this.store, state: this.state}).create().moveTo(this.node)
-			else throw Error('wrond child type:' + typeof arg)
+			if (arg != null) {
+				if (Array.isArray(arg)) this.append.apply(this, arg)
+				else if (arg.create) arg.defaults({store: this.store, state: this.state}).create().moveTo(this.node)
+				else if (arg.moveTo) arg.moveTo(this.node)
+				else this.node.appendChild(createNode(arg))
+			}
 		}
 		return this
 	},

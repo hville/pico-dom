@@ -1,6 +1,6 @@
 import {D} from './document'
-import {NodeModel} from './NodeModel'
-import {ListModel} from './ListModel'
+import {NodeModel} from './_node-model'
+import {ListModel} from './_list-model'
 import {reduce} from './object'
 
 var svgURI = 'http://www.w3.org/2000/svg'
