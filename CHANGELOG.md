@@ -8,6 +8,12 @@
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
+## [0.32.0] - 2017-05-17
+### Added
+- component.common instead of .store and .state
+- template function
+- find function
+
 ## [0.30.0] - 2017-05-14
 ### Changed
 - rewrite, simpler API, all components
