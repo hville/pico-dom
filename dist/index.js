@@ -231,19 +231,23 @@ NodeModel.prototype = {
  * @param {!Object} template
  * @param {Object} [options]
  */
-function List(template, options) {
-	this._template = template;
-	this._items = {};
-	this.head = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$');
-	this.assign(options);
-	this.head[picoKey] = this.update ? this : null;
+function ListK(template, options) {
+	this._init(template, options);
 }
 
-List.prototype = {
-	constructor: List,
+ListK.prototype = {
+	constructor: ListK,
 	common: null,
 	assign: assignToThis,
+
+	_init: function(template, options) {
+		this._template = template;
+		this._items = {};
+		this.head = exports.D.createComment('^');
+		this.foot = exports.D.createComment('$');
+		this.assign(options);
+		this.head[picoKey] = this.update ? this : null;
+	},
 
 	/**
 	* @function moveTo
@@ -278,31 +282,45 @@ List.prototype = {
 
 		return this
 	},
-	update: updateListChildren,
-	updateChildren: updateListChildren,
+
+	getKey: function(v,k) { return k }, // default: indexed
+
+	update: updateKeyedChildren,
+
+	updateChildren: updateKeyedChildren,
+
 	_placeItem: function(parent, item, spot) {
 		return item.node ? insertChild(parent, item.node, spot)
 		: item.head ? insertList(parent, item, spot).foot
 		: insertChild(parent, item, spot)
-	},
-	_initChild: function(model, key) {
-		return model.cloneNode ? model.cloneNode(true)
-		: model.defaults({common: this.common, key: key}).create()
 	}
 };
 
-function updateListChildren(v,k,o) {
+function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
-			spot = this._updateChildren(v,k,o);
+			spot = this.head.nextSibling,
+			items = this._items,
+			newM = {};
 
-	while (spot !== foot) {
-		var next = spot.nextSibling;
-		parent.removeChild(spot);
-		spot = next;
+	for (var i=0; i<arr.length; ++i) {
+		var key = this.getKey(arr[i], i, arr),
+				model = this._template,
+				item = newM[key] = items[key] || (model.cloneNode ? model.cloneNode(true)
+					: model.defaults({common: this.common, key: key}).create());
+
+		if (item) {
+			if (item.update) item.update(arr[i], i, arr);
+			spot = this._placeItem(parent, item, spot).nextSibling;
+		}
 	}
+
+	this._items = newM;
+
+	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this
 }
+
 
 function insertChild(parent, node, spot) {
 	if (!spot) parent.appendChild(node);
@@ -322,81 +340,58 @@ function insertList(parent, list, spot) {
 
 /**
  * @constructor
- * @this {List}
- * @param {!Object} template
- * @param {Object} [options]
- */
-function ListK(template, options) {
-	List.call(this, template, options);
-}
-
-ListK.prototype = Object.create(List.prototype, {
-	getKey: {
-		value: function(v,k) { return k }, // default: indexed
-		writable: true
-	},
-	_updateChildren: {value: function(arr) {
-		var spot = this.head.nextSibling,
-				parent = spot.parentNode,
-				items = this._items,
-				newM = {};
-		for (var i=0; i<arr.length; ++i) {
-			var key = this.getKey(arr[i], i, arr);
-			var item = newM[key] = items[key] || this._initChild(this._template, key);
-			if (item) {
-				if (item.update) item.update(arr[i], i, arr);
-				spot = this._placeItem(parent, item, spot).nextSibling;
-			}
-		}
-
-		this._items = newM;
-		return spot
-	}}
-});
-
-/**
- * @constructor
- * @this {List}
  * @param {!Object} template
  * @param {Object} [options]
  */
 function ListS(template, options) {
-	List.call(this, template, options);
+	this._init(template, options);
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		this._items[ks[i]] = this._initChild(template[ks[i]], ks[i]);
+		var key = ks[i],
+				model = template[ks[i]];
+		this._items[ks[i]] = (model.cloneNode ? model.cloneNode(true)
+			: model.defaults({common: this.common, key: key}).create());
 	}
 }
 
+ListS.prototype = {
+	constructor: ListS,
+	common: null,
+	assign: assignToThis,
+	_init: ListK.prototype._init,
+	moveTo: ListK.prototype.moveTo,
 
-ListS.prototype = Object.create(List.prototype, {
-	select: {
-		/**
-		 * select all by default
-		 * @function
-		 * @param {...*} [v]
-		 * @return {!Array}
-		 */
-		value: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
-		writable: true
-	},
-	_updateChildren: {value: function(v,k,o) {
-		var spot = this.head.nextSibling,
-				parent = spot.parentNode,
-				items = this._items,
-				keys = this.select(v,k,o);
+	/**
+	 * select all by default
+	 * @function
+	 * @param {...*} [v]
+	 * @return {!Array}
+	 */
+	select: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
 
-		for (var i=0; i<keys.length; ++i) {
-			var item = items[keys[i]];
-			if (item) {
-				if (item.update) item.update(v,k,o);
-				spot = this._placeItem(parent, item, spot).nextSibling;
-			}
+	update: updateListChildren,
+	updateChildren: updateListChildren,
+	_placeItem: ListK.prototype._placeItem,
+};
+
+function updateListChildren(v,k,o) {
+	var foot = this.foot,
+			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
+			spot = this.head.nextSibling,
+			items = this._items,
+			keys = this.select(v,k,o);
+
+	for (var i=0; i<keys.length; ++i) {
+		var item = items[keys[i]];
+		if (item) {
+			if (item.update) item.update(v,k,o);
+			spot = this._placeItem(parent, item, spot).nextSibling;
 		}
+	}
 
-		return spot
-	}}
-});
+	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
+	return this
+}
 
 //import {ListA} from './ListA'
 //import {D} from './document'
