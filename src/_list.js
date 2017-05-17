@@ -19,8 +19,7 @@ export function List(template, options) {
 
 List.prototype = {
 	constructor: List,
-	state: null,
-	store: null,
+	common: null,
 	assign: assignToThis,
 
 	/**
@@ -65,7 +64,7 @@ List.prototype = {
 	},
 	_initChild: function(model, key) {
 		return model.cloneNode ? model.cloneNode(true)
-		: model.defaults({store: this.store, state: this.state, key: key}).create()
+		: model.defaults({common: this.common, key: key}).create()
 	}
 }
 

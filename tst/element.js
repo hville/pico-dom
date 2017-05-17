@@ -37,15 +37,14 @@ ct('element - static, multiple mixed arguments', function() {
 	ct('===', p.textContent, '012')
 })
 
-ct('element - state and store', function() {
+ct('element - common', function() {
 	var h1 = {},
 			h2 = {}
-	var h0 = el('h0', el('h1', c => h1=c, el('h2', c=>h2=c)))
-	.defaults({store: {}, state: {a:'a'}}).create()
-	ct('===', h1.state, h0.state)
-	ct('===', h2.state, h0.state)
-	ct('===', h1.store, h0.store)
-	ct('===', h2.store, h0.store)
+	var h0 = el('h0', el('h1', c => h1=c, el('h2', c=>h2=c))).create({common: {a:'a'}})
+	ct('===', h1.common, h0.common)
+	ct('===', h2.common, h0.common)
+	ct('===', h1.common.a, h0.common.a)
+	ct('===', h2.common.a, h0.common.a)
 })
 
 ct('element - event', function() {

@@ -1,18 +1,14 @@
-/* hugov@runbox.com | https://github.com/hville/pico-dom.git | license:MIT */
+document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>');
+(function () {
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
-exports.D = typeof document !== 'undefined' ? document : null;
+var D = typeof document !== 'undefined' ? document : null;
 
 /**
 * @function setDocument
 * @param  {Document} doc DOM document
 * @return {Document} DOM document
 */
-function setDocument(doc) {
-	return exports.D = doc
-}
 
 /**
  * @function
@@ -73,7 +69,8 @@ function NodeCo(node, ops) {
 
 var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	common: null,
+	state: null,
+	store: null,
 	// INSTANCE UTILITIES
 	call: function(fcn) {
 		fcn(this);
@@ -120,7 +117,7 @@ var ncProto = NodeCo.prototype = {
 			var arg = arguments[i];
 			if (arg != null) {
 				if (Array.isArray(arg)) this.append.apply(this, arg);
-				else if (arg.create) arg.defaults({common: this.common}).create().moveTo(this.node);
+				else if (arg.create) arg.defaults({store: this.store, state: this.state}).create().moveTo(this.node);
 				else if (arg.moveTo) arg.moveTo(this.node);
 				else this.node.appendChild(createNode(arg));
 			}
@@ -214,13 +211,12 @@ NodeModel.prototype = {
 		}
 		return this
 	},
-	addTransform: function(argument, name, source) {
+	addTransform: function(argument, name) {
 		var transforms = this._ops;
 		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
 			transforms.push({fcn: ncProto[name], arg: argument});
 		}
 		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument});
-		else if (name === 'common') transforms.unshift({fcn: ncProto.assign, arg: source});
 		else transforms.push({fcn: ncProto.assign, arg: [name, argument]});
 		return transforms
 	}
@@ -234,15 +230,16 @@ NodeModel.prototype = {
 function List(template, options) {
 	this._template = template;
 	this._items = {};
-	this.head = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$');
+	this.head = D.createComment('^');
+	this.foot = D.createComment('$');
 	this.assign(options);
 	this.head[picoKey] = this.update ? this : null;
 }
 
 List.prototype = {
 	constructor: List,
-	common: null,
+	state: null,
+	store: null,
 	assign: assignToThis,
 
 	/**
@@ -287,13 +284,13 @@ List.prototype = {
 	},
 	_initChild: function(model, key) {
 		return model.cloneNode ? model.cloneNode(true)
-		: model.defaults({common: this.common, key: key}).create()
+		: model.defaults({store: this.store, state: this.state, key: key}).create()
 	}
 };
 
 function updateListChildren(v,k,o) {
 	var foot = this.foot,
-			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
+			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
 			spot = this._updateChildren(v,k,o);
 
 	while (spot !== foot) {
@@ -469,7 +466,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElementNS(svgURI, tag));
+	var model = new NodeModel(D.createElementNS(svgURI, tag));
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -481,7 +478,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElement(tagName));
+	var model = new NodeModel(D.createElement(tagName));
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -493,11 +490,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElementNS(nsURI, tag));
-	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
-	return model
-}
+
 
 /**
  * @function text
@@ -505,11 +498,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createTextNode(txt));
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
-	return model
-}
+
 
 
 /**
@@ -524,10 +513,13 @@ function template(model, options) { //eslint-disable-line no-unused-vars
 	return modl
 }
 
+function view(model, target, store) {
+	return (store ? model.defaults({store: store}) : model).create().moveTo(target)
+}
 
 function createNode(model) {
 	if (model.cloneNode) return model.cloneNode(true)
-	if (typeof model === 'number' || typeof model === 'string') return exports.D.createTextNode('' + model)
+	if (typeof model === 'number' || typeof model === 'string') return D.createTextNode('' + model)
 	if (model.create) return model.create().node
 	if (model.node) return model.node.cloneNode(true)
 	else throw Error('invalid node source' + typeof model)
@@ -561,35 +553,146 @@ function getModels(models, tmpl, key) {
 	return models
 }
 
-function find(start, test, until) { //find(test, head=body, foot=null)
-	var spot = start.node || start.head || start,
-			last = until ? (until.node || until.foot || until) : null,
-			comp = spot[picoKey];
-
-	while(!comp || (test && !test(comp))) {
-		if (spot === last) return null // specified end reached
-
-		var next = spot.firstChild;
-		// if no child get sibling, if no sibling, retry with parent
-		if (!next) while(!(next = spot.nextSibling)) {
-			spot = spot.parentNode;
-			if (spot === null) return null // end of tree reached
-		}
-		spot = next;
-		comp = spot[picoKey];
-	}
-	return comp
-}
-
 // @ts-check
 
 // create template
 
-exports.text = text;
-exports.element = element;
-exports.svg = svg;
-exports.elementNS = elementNS;
-exports.list = list;
-exports.template = template;
-exports.setDocument = setDocument;
-exports.find = find;
+// generic simple store for the examples
+
+function Store(config) {
+	this.data = {};
+	for (var i=0, ks=Object.keys(config); i<ks.length; ++i) this[ks[i]] = config[ks[i]];
+}
+
+Store.prototype = {
+	constructor: Store,
+
+	get: function(path) {
+		var data = this.data;
+		switch (arguments.length) {
+			case 0: return data
+			case 1:
+				if (Array.isArray(path)) {
+					for (var i=0; i<path.length; ++i) if ((data = data[path[i]]) === undefined) break
+					return data
+				}
+				else return data[path]
+			default:
+				return this.get.apply(this, arguments)
+		}
+	},
+
+	set: function(value, path) {
+		var data = this.data;
+		switch (arguments.length) {
+			case 0: throw Error('value required')
+			case 1:
+				this.data = value;
+				break
+			case 2:
+				if (Array.isArray(path)) {
+					for (var i=0; i<(path.length-1); ++i) if ((data = data[path[i]]) === undefined) throw Error('invalid path '+path.join())
+					data[path[path.length-1]] = value;
+				}
+				else {
+					data[path] = value;
+				}
+				break
+			default:
+				throw Error('invalid argument')
+		}
+		if (this.onchange) this.onchange();
+	},
+
+	act: function(name, args) {
+		return this[name].apply(this, args)
+	}
+};
+
+// immutable templates, svg elements
+var ic_circle = template( // template used to pre-resolve the node structure
+	svg('svg', {
+		attrs: {
+			fill: '#000000',
+			height: '24',
+			viewBox: '0 0 24 24',
+			width: '24'
+		}},
+		svg('path', {
+			attrs: {
+				d: 'M0 0h24v24H0z',
+				fill: 'none'
+			}}
+		)
+	)
+);
+
+var ic_add = ic_circle.config( //ic_add_circle_outline_black_36px
+	svg('path', {attrs: {
+		d: 'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
+	}})
+);
+
+var ic_clear = ic_circle.config( //ic_clear_black_36px
+	svg('path', {attrs: {
+		d: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
+	}})
+);
+
+var ic_remove = ic_circle.config( //ic_remove_circle_outline_black_36px
+	svg('path', {attrs: {
+		d: 'M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
+	}})
+);
+
+var tableTemplate = element('table',
+	element('tbody',
+		list(
+			element('tr',
+				{class: 'abc'},
+				function(tr) { tr.state = {i: tr.key}; },
+				element('td', ic_remove, {
+					on: {click: function() { this.store.delRow(this.state.i);}}
+				}), // title column
+				list( // data columns
+					element('td',
+						function(td) { td.state.j = td.key; },
+						element('input',
+							function(c) { c.i = c.state.i; c.j = c.state.j; },
+							{
+								update: function(val) { this.node.value = val; },
+								on: {
+									change: function() { this.store.set(this.node.value, [this.i, this.j]); }
+								}
+							}
+						)
+					)
+				)
+			)
+		),
+		element('tr',
+			element('td', ic_add, {
+				on: {
+					click: function() { this.store.addRow(); }
+				}
+			})
+		)
+	)
+);
+
+var store = new Store([]);
+var table = view(tableTemplate, document.body, store);
+
+store.onchange = function() { table.update( store.get() ); };
+store.set([['Jane', 'Roe'], ['John', 'Doe']]);
+
+store.addRow = function() {
+	store.set(['',''], store.get().length);
+};
+store.delRow = function(idx) {
+	var data = store.get().slice();
+	data.splice(idx,1);
+	store.set(data);
+};
+
+}());

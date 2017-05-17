@@ -1,6 +1,6 @@
 {
   "name": "pico-dom",
-  "version": "0.30.0",
+  "version": "0.32.0",
   "main": "./dist/index.js",
   "module": "./module.js",
   "browser": "./dist/browser.js",
@@ -17,7 +17,9 @@
   "author": "Hugo Villeneuve",
   "dependencies": {},
   "devDependencies": {
-    "cotest": "^2.1.1"
+    "cotest": "^2.1.1",
+    "rollup-plugin-livereload": "^0.4.0",
+    "rollup-plugin-serve": "^0.3.0"
   },
   "scripts": {
     "test": "npm run build:main && cotest tst",
@@ -28,7 +30,8 @@
     "build:min": "google-closure-compiler-js --compilationLevel ADVANCED --languageIn ES5 --languageOut ES5 --useTypesForOptimization true ./dist/browser.js > ./dist/browser.min.js",
     "build:gzip": "npm run gzip -- ./dist/browser.min.js ./dist/browser.gz",
     "build": "npm run build:main && npm run build:module && npm run build:browser && npm run build:min",
-    "prepublish": "npm test && npm run build:browser && npm run build:min"
+    "prepublish": "npm test && npm run build:browser && npm run build:min",
+    "example:table": "cd ./examples && rollup simple-table.js -c -w"
   },
   "repository": {
     "type": "git",

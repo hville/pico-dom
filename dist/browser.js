@@ -37,26 +37,14 @@ function each(obj, fcn, ctx) {
  * @returns {!Object} this
  */
 function assignToThis(key, val) { //eslint-disable-line no-unused-vars
-	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) this[ks[j]] = key[ks[j]];
-	else this[key] = val;
+	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
+		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]];
+	}
+	else if (key[0] !== '_') this[key] = val;
 	return this
 }
 
-/**
- * @function
- * @param {*} child nodeLike
- * @param {Object} [defaults] childDefaults
- * @return {!Node|!Object} child
- */
-function initChild(child, defaults) {
-	return child == null ? null
-		: child.create ? child.defaults(defaults).create()
-		: typeof child === 'number' ? exports.D.createTextNode(''+child)
-		: typeof child === 'string' ? exports.D.createTextNode(child)
-		: child
-}
-
-var picoKey = '__pV';
+var picoKey = '_pico';
 
 /**
  * @constructor
@@ -65,6 +53,7 @@ var picoKey = '__pV';
  * @param {Array} ops transforms
  */
 function NodeCo(node, ops) {
+	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
 
 	// default updater: null || text || value
@@ -83,8 +72,7 @@ function NodeCo(node, ops) {
 
 var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	state: null,
-	store: null,
+	common: null,
 	// INSTANCE UTILITIES
 	call: function(fcn) {
 		fcn(this);
@@ -129,15 +117,11 @@ var ncProto = NodeCo.prototype = {
 	append: function() {
 		for (var i=0; i<arguments.length; ++i) {
 			var arg = arguments[i];
-			if (Array.isArray(arg)) this.append.apply(this, arg);
-			else {
-				var child = initChild(arg, {
-					store: this.store,
-					state: this.state,
-				});
-				if (child.moveTo) child.moveTo(this.node);
-				else if (child.nodeType) this.node.appendChild(child);
-				else throw Error('wrond child type:' + typeof child)
+			if (arg != null) {
+				if (Array.isArray(arg)) this.append.apply(this, arg);
+				else if (arg.create) arg.defaults({common: this.common}).create().moveTo(this.node);
+				else if (arg.moveTo) arg.moveTo(this.node);
+				else this.node.appendChild(createNode(arg));
 			}
 		}
 		return this
@@ -201,7 +185,7 @@ function NodeModel(node, transforms) {
 NodeModel.prototype = {
 	constructor: NodeModel,
 	config: function(config) {
-		return (new NodeModel(this.node, this._ops))._config(config)
+		return (new NodeModel(this.node, this._ops.slice()))._config(config)
 	},
 	assign: function(key, val) {
 		return new NodeModel(this.node, this._ops.concat({
@@ -229,12 +213,13 @@ NodeModel.prototype = {
 		}
 		return this
 	},
-	addTransform: function(argument, name) {
+	addTransform: function(argument, name, source) {
 		var transforms = this._ops;
 		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
 			transforms.push({fcn: ncProto[name], arg: argument});
 		}
 		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument});
+		else if (name === 'common') transforms.unshift({fcn: ncProto.assign, arg: source});
 		else transforms.push({fcn: ncProto.assign, arg: [name, argument]});
 		return transforms
 	}
@@ -242,20 +227,21 @@ NodeModel.prototype = {
 
 /**
  * @constructor
- * @param {Object} model model
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-function List(model) {
+function List(template, options) {
+	this._template = template;
 	this._items = {};
 	this.head = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
-	this.assign(model);
+	this.assign(options);
 	this.head[picoKey] = this.update ? this : null;
 }
 
 List.prototype = {
 	constructor: List,
-	state: null,
-	store: null,
+	common: null,
 	assign: assignToThis,
 
 	/**
@@ -291,16 +277,20 @@ List.prototype = {
 
 		return this
 	},
-	update: updateChildren$1,
-	updateChildren: updateChildren$1,
+	update: updateListChildren,
+	updateChildren: updateListChildren,
 	_placeItem: function(parent, item, spot) {
 		return item.node ? insertChild(parent, item.node, spot)
 		: item.head ? insertList(parent, item, spot).foot
 		: insertChild(parent, item, spot)
+	},
+	_initChild: function(model, key) {
+		return model.cloneNode ? model.cloneNode(true)
+		: model.defaults({common: this.common, key: key}).create()
 	}
 };
 
-function updateChildren$1(v,k,o) {
+function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this._updateChildren(v,k,o);
@@ -321,7 +311,6 @@ function insertChild(parent, node, spot) {
 }
 
 
-
 function insertList(parent, list, spot) {
 	if (!spot) return list.moveTo(parent)
 	var head = list.head;
@@ -332,11 +321,12 @@ function insertList(parent, list, spot) {
 
 /**
  * @constructor
- * @extends List
- * @param {Object} model model
+ * @this {List}
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-function ListK(model) {
-	List.call(this, model);
+function ListK(template, options) {
+	List.call(this, template, options);
 }
 
 ListK.prototype = Object.create(List.prototype, {
@@ -349,14 +339,9 @@ ListK.prototype = Object.create(List.prototype, {
 				parent = spot.parentNode,
 				items = this._items,
 				newM = {};
-
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr);
-			var item = newM[key] = items[key] || initChild(this.template, {
-				store: this.store,
-				state: this.state,
-				key: key
-			});
+			var item = newM[key] = items[key] || this._initChild(this._template, key);
 			if (item) {
 				if (item.update) item.update(arr[i], i, arr);
 				spot = this._placeItem(parent, item, spot).nextSibling;
@@ -370,20 +355,15 @@ ListK.prototype = Object.create(List.prototype, {
 
 /**
  * @constructor
- * @extends {List}
- * @param {Object} model model
+ * @this {List}
+ * @param {!Object} template
+ * @param {Object} [options]
  */
-function ListS(model) {
-	List.call(this, model);
-
-	var template = model.template;
+function ListS(template, options) {
+	List.call(this, template, options);
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		this._items[ks[i]] = initChild(template[ks[i]], {
-			store: this.store,
-			state: this.state,
-			key: ks[i]
-		});
+		this._items[ks[i]] = this._initChild(template[ks[i]], ks[i]);
 	}
 }
 
@@ -391,14 +371,12 @@ function ListS(model) {
 ListS.prototype = Object.create(List.prototype, {
 	select: {
 		/**
+		 * select all by default
 		 * @function
-		 * @param {*} [value]
-		 * @param {string|number} [key]
-		 * @param {!Array|!Object} [source]
+		 * @param {...*} [v]
 		 * @return {!Array}
-		 *
 		 */
-		value: function() { return Object.keys(this._items) }, // default: select all
+		value: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
 		writable: true
 	},
 	_updateChildren: {value: function(v,k,o) {
@@ -420,32 +398,17 @@ ListS.prototype = Object.create(List.prototype, {
 });
 
 //import {ListA} from './ListA'
+//import {D} from './document'
+
+
 /**
  * @constructor
- * @param {!Object} model model
+ * @param {!Object} model
+ * @param {Object} [options]
  */
-function ListModel(model) {
-	this._assign(model);
-	var template = this.template;
-	this.template = Array.isArray(template) ? template.map(getModel)
-		: template.constructor === Object ? reduce(template, getModels, {})
-		: getModel(template);
-}
-
-
-function getModels(models, template, key) {
-	models[key] = getModel(template);
-	return models
-}
-
-
-function getModel(template) {
-	if (template.create) return template
-	switch (typeof template) {
-		case 'string' : return text(template)
-		case 'number' : return text(''+template)
-	}
-	throw Error('invalid list template: ' + typeof template)
+function ListModel(model, options) {
+	this._template = model;
+	if (options) this._assign(options);
 }
 
 
@@ -453,17 +416,17 @@ var lmProto = ListModel.prototype;
 
 
 lmProto.config = function(config) {
-	return (new ListModel(this))._config(config)
+	return (new ListModel(this._template, this))._config(config)
 };
 
 
 lmProto.assign = function(key, val) {
-	return (new ListModel(this))._assign(key, val)
+	return (new ListModel(this._template, this))._assign(key, val)
 };
 
 
 lmProto.defaults = function(key, val) {
-	return new ListModel(
+	return new ListModel(this._template,
 		this._assign.call(
 			val === undefined ? this._assign.call({}, key) : {key: val},
 			this
@@ -474,7 +437,7 @@ lmProto.defaults = function(key, val) {
 
 lmProto.create = function(config) {
 	var model = config ? this.config(config) : this;
-	return new (model.template.create ? ListK : ListS)(model)
+	return new (model._template.create || model._template.cloneNode ? ListK : ListS)(model._template, model)
 };
 
 
@@ -505,9 +468,9 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var template = new NodeModel(exports.D.createElementNS(svgURI, tag));
-	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
-	return template
+	var model = new NodeModel(exports.D.createElementNS(svgURI, tag));
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	return model
 }
 
 /**
@@ -517,9 +480,9 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var template = new NodeModel(exports.D.createElement(tagName));
-	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
-	return template
+	var model = new NodeModel(exports.D.createElement(tagName));
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	return model
 }
 
 /**
@@ -530,9 +493,9 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var template = new NodeModel(exports.D.createElementNS(nsURI, tag));
-	for (var i=2; i<arguments.length; ++i) template._config(arguments[i]);
-	return template
+	var model = new NodeModel(exports.D.createElementNS(nsURI, tag));
+	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
+	return model
 }
 
 /**
@@ -542,22 +505,79 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
-	var template = new NodeModel(exports.D.createTextNode(txt));
-	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
-	return template
+	var model = new NodeModel(exports.D.createTextNode(txt));
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	return model
 }
 
 
 /**
+ * @function template
+ * @param {Node|Object} model source node or template
+ * @param {...*} [options] options
+ * @return {!Object} Component
+ */
+function template(model, options) { //eslint-disable-line no-unused-vars
+	var modl = new NodeModel(createNode(model));
+	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
+	return modl
+}
+
+
+function createNode(model) {
+	if (model.cloneNode) return model.cloneNode(true)
+	if (typeof model === 'number' || typeof model === 'string') return exports.D.createTextNode('' + model)
+	if (model.create) return model.create().node
+	if (model.node) return model.node.cloneNode(true)
+	else throw Error('invalid node source' + typeof model)
+}
+
+/**
  * @function list
- * @param {Object|Array} model template
+ * @param {Object|Array} model model
  * @param {...*} [options] options
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var template = new ListModel({template: model});
-	for (var i=1; i<arguments.length; ++i) template._config(arguments[i]);
-	return template
+	var modl = getModel(model);
+	if (!modl) throw Error('invalid list template: ' + typeof model)
+	var lst = new ListModel(modl);
+	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
+	return lst
+}
+
+
+function getModel(tmpl) {
+	return Array.isArray(tmpl) ? tmpl.map(getModel)
+		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
+		: tmpl.create ? tmpl // templates are immutable and can be used 'as-is'
+		: createNode(tmpl)
+}
+
+
+function getModels(models, tmpl, key) {
+	models[key] = getModel(tmpl);
+	return models
+}
+
+function find(start, test, until) { //find(test, head=body, foot=null)
+	var spot = start.node || start.head || start,
+			last = until ? (until.node || until.foot || until) : null,
+			comp = spot[picoKey];
+
+	while(!comp || (test && !test(comp))) {
+		if (spot === last) return null // specified end reached
+
+		var next = spot.firstChild;
+		// if no child get sibling, if no sibling, retry with parent
+		if (!next) while(!(next = spot.nextSibling)) {
+			spot = spot.parentNode;
+			if (spot === null) return null // end of tree reached
+		}
+		spot = next;
+		comp = spot[picoKey];
+	}
+	return comp
 }
 
 // @ts-check
@@ -569,6 +589,8 @@ exports.element = element;
 exports.svg = svg;
 exports.elementNS = elementNS;
 exports.list = list;
+exports.template = template;
 exports.setDocument = setDocument;
+exports.find = find;
 
 }((this.picoDOM = this.picoDOM || {})));

@@ -43,12 +43,13 @@ NodeModel.prototype = {
 		}
 		return this
 	},
-	addTransform: function(argument, name) {
+	addTransform: function(argument, name, source) {
 		var transforms = this._ops
 		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
 			transforms.push({fcn: ncProto[name], arg: argument})
 		}
 		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument})
+		else if (name === 'common') transforms.unshift({fcn: ncProto.assign, arg: source})
 		else transforms.push({fcn: ncProto.assign, arg: [name, argument]})
 		return transforms
 	}

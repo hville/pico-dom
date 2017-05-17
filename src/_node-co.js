@@ -29,8 +29,7 @@ export function NodeCo(node, ops) {
 
 export var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	state: null,
-	store: null,
+	common: null,
 	// INSTANCE UTILITIES
 	call: function(fcn) {
 		fcn(this)
@@ -77,7 +76,7 @@ export var ncProto = NodeCo.prototype = {
 			var arg = arguments[i]
 			if (arg != null) {
 				if (Array.isArray(arg)) this.append.apply(this, arg)
-				else if (arg.create) arg.defaults({store: this.store, state: this.state}).create().moveTo(this.node)
+				else if (arg.create) arg.defaults({common: this.common}).create().moveTo(this.node)
 				else if (arg.moveTo) arg.moveTo(this.node)
 				else this.node.appendChild(createNode(arg))
 			}

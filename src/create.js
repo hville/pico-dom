@@ -68,9 +68,6 @@ export function template(model, options) { //eslint-disable-line no-unused-vars
 	return modl
 }
 
-export function view(model, target, store) {
-	return (store ? model.defaults({store: store}) : model).create().moveTo(target)
-}
 
 export function createNode(model) {
 	if (model.cloneNode) return model.cloneNode(true)

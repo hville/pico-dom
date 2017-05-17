@@ -11,7 +11,7 @@
 *supports CJS (`require('pico-dom').x`), ES modules (`import {x} from 'pico-dom'`) and browser use (`picoDOM.x`)*
 
 ```javascript
-import {view, element as el, list} from '../module'
+import {element as el, list} from '../module'
 import {Store} from './Store' // any user store will do
 import {ic_remove, ic_add} from './icons'
 
@@ -21,19 +21,19 @@ var tableTemplate = el('table',
     list(
       el('tr',
         {class: 'abc'},
-        function(tr) { tr.state = {i: tr.key} },
+        function(tr) { tr.common.i = tr.key },
         el('td', ic_remove, {
-          on: {click: function() { this.store.delRow(this.state.i)}}
+          on: {click: function() { this.common.store.delRow(this.common.i)}}
         }), // title column
         list( // data columns
           el('td',
-            function(td) { td.state.j = td.key },
+            function(td) { td.common.j = td.key },
             el('input',
-              function(c) { c.i = c.state.i; c.j = c.state.j },
+              function(c) { c.i = c.common.i; c.j = c.common.j },
               {
                 update: function(val) { this.node.value = val },
                 on: {
-                  change: function() { this.store.set(this.node.value, [this.i, this.j]) }
+                  change: function() { this.common.store.set(this.node.value, [this.i, this.j]) }
                 }
               }
             )
@@ -44,7 +44,7 @@ var tableTemplate = el('table',
     el('tr',
       el('td', ic_add, {
         on: {
-          click: function() { this.store.addRow() }
+          click: function() { this.common.store.addRow() }
         }
       })
     )
@@ -52,10 +52,7 @@ var tableTemplate = el('table',
 )
 
 var store = new Store([]),
-    table = view(tableTemplate, document.body, store)
-
-store.onchange = function() { table.update( store.get() ) }
-store.set([['Jane', 'Roe'], ['John', 'Doe']])
+    table = tableTemplate.create({common: {store: store}}).moveTo(document.body)
 ```
 
 ## Why
@@ -149,6 +146,7 @@ Lifecycle function
 * `find(from [, test] [, until])` find a component within a defined and matching the test function
   * eg. `find(document.body)` to get the first component in the document
   * eg. `find(tableComponent, function(c) { return c.state.i === 5 } )`
+
 
 
 ## License
