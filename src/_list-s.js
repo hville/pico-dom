@@ -14,7 +14,7 @@ export function ListS(template, options) {
 		var key = ks[i],
 				model = template[ks[i]]
 		this._items[ks[i]] = (model.cloneNode ? model.cloneNode(true)
-			: model.defaults({common: this.common, key: key}).create())
+			: model.create({common: this.common, key: key}))
 	}
 }
 

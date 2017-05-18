@@ -61,12 +61,12 @@ ct('element - event', function() {
 
 ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = X.template(t0.create({attrs: {id: 1}, append: el('h1', 1)}).node),
+			t1 = X.template(t0.config({attrs: {id: 1}, append: el('h1', 1)}).create().node),
 			t2 = X.template(el('h2', 2).create().node),
 			h0 = t0.config({attrs: {id: 0}, append: el('h0', 0)}).create(),
 			h1 = t1.create(),
-			h2 = t2.create({attrs: {id: 2}}),
-			h3 = t0.create({attr: ['id', '3'], append: el('h3', 3)}),
+			h2 = t2.config({attrs: {id: 2}}).create(),
+			h3 = t0.config({attr: ['id', '3'], append: el('h3', 3)}).create(),
 			h4 = t0.config({attrs: {id: 4}, append: el('h4', 4)}).create()
 
 	ct('===', t1.node.childNodes.length, 1)

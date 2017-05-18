@@ -30,16 +30,6 @@ lmProto.assign = function(key, val) {
 }
 
 
-lmProto.defaults = function(key, val) {
-	return new ListModel(this._template,
-		this._assign.call(
-			val === undefined ? this._assign.call({}, key) : {key: val},
-			this
-		)
-	)
-}
-
-
 lmProto.create = function(config) {
 	var model = config ? this.config(config) : this
 	return new (model._template.create || model._template.cloneNode ? ListK : ListS)(model._template, model)

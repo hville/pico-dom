@@ -83,7 +83,7 @@ function updateKeyedChildren(arr) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this._template,
 				item = newM[key] = items[key] || (model.cloneNode ? model.cloneNode(true)
-					: model.defaults({common: this.common, key: key}).create())
+					: model.create({common: this.common, key: key}))
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr)

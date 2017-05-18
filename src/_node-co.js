@@ -9,19 +9,13 @@ import {createNode} from './create'
  * @param {Node} node - DOM node
  * @param {Array} ops transforms
  */
-export function NodeCo(node, ops) {
+export function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node
 
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text
 	if ('value' in node) this.update = this.value //TODO fail on input.type = select
-
-	for (var i=0; i<ops.length; ++i) {
-		var op = ops[i]
-		if (Array.isArray(op.arg)) op.fcn.apply(this, op.arg)
-		else op.fcn.call(this, op.arg)
-	}
 
 	node[picoKey] = this.update ? this : null
 }
@@ -76,7 +70,7 @@ export var ncProto = NodeCo.prototype = {
 			var arg = arguments[i]
 			if (arg != null) {
 				if (Array.isArray(arg)) this.append.apply(this, arg)
-				else if (arg.create) arg.defaults({common: this.common}).create().moveTo(this.node)
+				else if (arg.create) arg.create({common: this.common}).moveTo(this.node)
 				else if (arg.moveTo) arg.moveTo(this.node)
 				else this.node.appendChild(createNode(arg))
 			}

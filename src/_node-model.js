@@ -23,18 +23,20 @@ NodeModel.prototype = {
 			arg: val === undefined ? key : [key, val]
 		}))
 	},
-	defaults: function(key, val) {
-		return new NodeModel(this.node, Array.prototype.concat({
-			fcn: ncProto.assign,
-			arg: val === undefined ? key : [key, val]
-		}, this._ops))
+
+	create: function(keyVal) {
+		var co = new NodeCo(this.node.cloneNode(true)),
+				ops = this._ops
+
+		if (keyVal) co.assign(keyVal)
+		for (var i=0; i<ops.length; ++i) {
+			var op = ops[i]
+			if (Array.isArray(op.arg)) op.fcn.apply(co, op.arg)
+			else op.fcn.call(co, op.arg)
+		}
+		return co
 	},
-	create: function(config) {
-		return new NodeCo(
-			this.node.cloneNode(true),
-			(config ? this.config(config) : this)._ops
-		)
-	},
+
 	_config: function(any) {
 		if (any != null) {
 			if (typeof any === 'function') this._ops.push({fcn: ncProto.call, arg: any})
@@ -48,7 +50,6 @@ NodeModel.prototype = {
 		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
 			transforms.push({fcn: ncProto[name], arg: argument})
 		}
-		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument})
 		else if (name === 'common') transforms.unshift({fcn: ncProto.assign, arg: source})
 		else transforms.push({fcn: ncProto.assign, arg: [name, argument]})
 		return transforms
