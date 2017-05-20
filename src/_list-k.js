@@ -19,10 +19,10 @@ ListK.prototype = {
 	_init: function(template, options) {
 		this._template = template
 		this._items = {}
-		this.head = D.createComment('^')
+		this.node = D.createComment('^')
 		this.foot = D.createComment('$')
 		this.assign(options)
-		this.head[picoKey] = this.update ? this : null
+		this.node[picoKey] = this.update ? this : null
 	},
 
 	/**
@@ -33,10 +33,11 @@ ListK.prototype = {
 	*/
 	moveTo: function(parent, before) {
 		var foot = this.foot,
-				next = this.head,
+				next = this.node,
 				origin = next.parentNode,
 				target = parent.node || parent,
 				cursor = before || null
+		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch')
 		if (this.onmove) this.onmove(origin, target)
 		// skip case where there is nothing to do
 		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
@@ -65,9 +66,9 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_placeItem: function(parent, item, spot) {
-		return item.node ? insertChild(parent, item.node, spot)
-		: item.head ? insertList(parent, item, spot).foot
+	_placeItem: function(parent, item, spot) { //TODO
+		return item._template ? insertList(parent, item, spot).foot //TODO move behaviour to component
+		: item.node ? insertChild(parent, item.node, spot)
 		: insertChild(parent, item, spot)
 	}
 }
@@ -75,9 +76,10 @@ ListK.prototype = {
 function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
-			spot = this.head.nextSibling,
+			spot = this.node.nextSibling,
 			items = this._items,
-			newM = {}
+			newM = Object.create(null)
+	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
@@ -108,7 +110,7 @@ function insertChild(parent, node, spot) {
 
 function insertList(parent, list, spot) {
 	if (!spot) return list.moveTo(parent)
-	var head = list.head
+	var head = list.node
 	if (head === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
 	else if (head !== spot) list.moveTo(parent, spot)
 	return list

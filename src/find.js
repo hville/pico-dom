@@ -1,7 +1,7 @@
 import {picoKey} from './picoKey'
 
 export function find(start, test, until) { //find(test, head=body, foot=null)
-	var spot = start.node || start.head || start,
+	var spot = start.node || start,
 			last = until ? (until.node || until.foot || until) : null,
 			comp = spot[picoKey]
 

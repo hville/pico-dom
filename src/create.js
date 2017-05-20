@@ -18,6 +18,7 @@ export function svg(tag, options) { //eslint-disable-line no-unused-vars
 	return model
 }
 
+
 /**
  * @function element
  * @param {string} tagName tagName

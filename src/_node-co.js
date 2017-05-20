@@ -25,11 +25,8 @@ export var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
 	common: null,
 	// INSTANCE UTILITIES
-	call: function(fcn) {
-		fcn(this)
-		return this
-	},
-	assign: assignToThis,
+	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
+
 	// NODE SETTERS
 	text: function(txt) {
 		var first = this.node.firstChild

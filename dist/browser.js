@@ -52,19 +52,13 @@ var picoKey = '_pico';
  * @param {Node} node - DOM node
  * @param {Array} ops transforms
  */
-function NodeCo(node, ops) {
+function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
 
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
-
-	for (var i=0; i<ops.length; ++i) {
-		var op = ops[i];
-		if (Array.isArray(op.arg)) op.fcn.apply(this, op.arg);
-		else op.fcn.call(this, op.arg);
-	}
 
 	node[picoKey] = this.update ? this : null;
 }
@@ -74,11 +68,8 @@ var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
 	common: null,
 	// INSTANCE UTILITIES
-	call: function(fcn) {
-		fcn(this);
-		return this
-	},
-	assign: assignToThis,
+	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
+
 	// NODE SETTERS
 	text: function(txt) {
 		var first = this.node.firstChild;
@@ -119,7 +110,7 @@ var ncProto = NodeCo.prototype = {
 			var arg = arguments[i];
 			if (arg != null) {
 				if (Array.isArray(arg)) this.append.apply(this, arg);
-				else if (arg.create) arg.defaults({common: this.common}).create().moveTo(this.node);
+				else if (arg.create) arg.create({common: this.common}).moveTo(this.node);
 				else if (arg.moveTo) arg.moveTo(this.node);
 				else this.node.appendChild(createNode(arg));
 			}
@@ -172,6 +163,19 @@ function updateChildren(v,k,o) {
 	}
 }
 
+function Op(fcn, a, b) {
+	this.f = fcn;
+	this.a = a;
+	this.b = b;
+}
+
+Op.prototype = {
+	call: function(ctx) {
+		var op = this;
+		return op.b === undefined ? op.f.call(ctx, op.a) : op.f.call(ctx, op.a, op.b)
+	}
+};
+
 /**
  * @constructor
  * @param {Node} node - DOM node
@@ -179,51 +183,94 @@ function updateChildren(v,k,o) {
  */
 function NodeModel(node, transforms) {
 	this.node = node;
-	this._ops = transforms || [];
+	this.ops = transforms || [];
 }
 
 NodeModel.prototype = {
 	constructor: NodeModel,
-	config: function(config) {
-		return (new NodeModel(this.node, this._ops.slice()))._config(config)
-	},
+
 	assign: function(key, val) {
-		return new NodeModel(this.node, this._ops.concat({
-			fcn: ncProto.assign,
-			arg: val === undefined ? key : [key, val]
-		}))
+		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.assign, key, val)))
 	},
-	defaults: function(key, val) {
-		return new NodeModel(this.node, Array.prototype.concat({
-			fcn: ncProto.assign,
-			arg: val === undefined ? key : [key, val]
-		}, this._ops))
+
+	create: function(keyVal) {
+		var co = new NodeCo(this.node.cloneNode(true)),
+				ops = this.ops;
+		if (keyVal) co.assign(keyVal);
+		for (var i=0; i<ops.length; ++i) ops[i].call(co);
+		return co
 	},
-	create: function(config) {
-		return new NodeCo(
-			this.node.cloneNode(true),
-			(config ? this.config(config) : this)._ops
-		)
+
+	on: function(name, handler) {
+		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.on, name, handler)))
 	},
+
+	attr: function(name, value) {
+		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.attr, name, value)))
+	},
+
+	prop: function(key, val) {
+		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.prop, key, val)))
+	},
+
+	class: function(name) {
+		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.class, name)))
+	},
+
+	call: function(fcn) {
+		return new NodeModel(this.node, this.ops.concat(new Op(call, fcn)))
+	},
+
 	_config: function(any) {
 		if (any != null) {
-			if (typeof any === 'function') this._ops.push({fcn: ncProto.call, arg: any});
+			if (typeof any === 'function') this.ops.push(new Op(call, any));
 			else if (any.constructor === Object) each(any, this.addTransform, this);
-			else this._ops.push({fcn: ncProto.append, arg: any});
+			else childOps.call(this.ops, any);
 		}
 		return this
 	},
-	addTransform: function(argument, name, source) {
-		var transforms = this._ops;
-		if ((name[0] !== 'u' || name[1] !== 'p') && typeof ncProto[name] === 'function') { //methodCall, exclude /^up.*/
-			transforms.push({fcn: ncProto[name], arg: argument});
-		}
-		else if (name === 'defaults') transforms.unshift({fcn: ncProto.assign, arg: argument});
-		else if (name === 'common') transforms.unshift({fcn: ncProto.assign, arg: source});
-		else transforms.push({fcn: ncProto.assign, arg: [name, argument]});
-		return transforms
+
+	child: function() {
+		return new NodeModel(this.node, childOps.apply(this.ops.slice(), arguments))
+	},
+
+	addTransform: function(argument, name) {
+		if (Array.isArray(argument)) this.ops.push(new Op(ncProto[name], argument[0], argument[1]));
+		else this.ops.push(new Op(ncProto[name], argument));
 	}
 };
+
+function appendChild(node) { //mode to co._appendXXX
+	this.node.appendChild(node.cloneNode(true));
+}
+
+function appendTemplate(template) { //mode to co._appendXXX
+	template.create({common: this.common}).moveTo(this.node);
+}
+
+function appendText(txt) { //mode to co._appendXXX
+	this.node.appendChild(exports.D.createTextNode(txt));
+}
+
+function call(fcn) {
+	fcn.call(this, this.node);
+}
+
+
+function childOps() {
+	for (var i=0; i<arguments.length; ++i) {
+		var child = arguments[i];
+		if (child != null) {
+			if (Array.isArray(child)) childOps.apply(this, child);
+			else this.push(
+				child.create ? new Op(appendTemplate, child)
+				: child.cloneNode ? new Op(appendChild, child)
+				: new Op(appendText, ''+child)
+			);
+		}
+	}
+	return this
+}
 
 /**
  * @constructor
@@ -242,10 +289,10 @@ ListK.prototype = {
 	_init: function(template, options) {
 		this._template = template;
 		this._items = {};
-		this.head = exports.D.createComment('^');
+		this.node = exports.D.createComment('^');
 		this.foot = exports.D.createComment('$');
 		this.assign(options);
-		this.head[picoKey] = this.update ? this : null;
+		this.node[picoKey] = this.update ? this : null;
 	},
 
 	/**
@@ -256,10 +303,11 @@ ListK.prototype = {
 	*/
 	moveTo: function(parent, before) {
 		var foot = this.foot,
-				next = this.head,
+				next = this.node,
 				origin = next.parentNode,
 				target = parent.node || parent,
 				cursor = before || null;
+		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch')
 		if (this.onmove) this.onmove(origin, target);
 		// skip case where there is nothing to do
 		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
@@ -288,9 +336,9 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_placeItem: function(parent, item, spot) {
-		return item.node ? insertChild(parent, item.node, spot)
-		: item.head ? insertList(parent, item, spot).foot
+	_placeItem: function(parent, item, spot) { //TODO
+		return item._template ? insertList(parent, item, spot).foot //TODO move behaviour to component
+		: item.node ? insertChild(parent, item.node, spot)
 		: insertChild(parent, item, spot)
 	}
 };
@@ -298,15 +346,16 @@ ListK.prototype = {
 function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
-			spot = this.head.nextSibling,
+			spot = this.node.nextSibling,
 			items = this._items,
 			newM = {};
+	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this._template,
 				item = newM[key] = items[key] || (model.cloneNode ? model.cloneNode(true)
-					: model.defaults({common: this.common, key: key}).create());
+					: model.create({common: this.common, key: key}));
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -331,7 +380,7 @@ function insertChild(parent, node, spot) {
 
 function insertList(parent, list, spot) {
 	if (!spot) return list.moveTo(parent)
-	var head = list.head;
+	var head = list.node;
 	if (head === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
 	else if (head !== spot) list.moveTo(parent, spot);
 	return list
@@ -349,7 +398,7 @@ function ListS(template, options) {
 		var key = ks[i],
 				model = template[ks[i]];
 		this._items[ks[i]] = (model.cloneNode ? model.cloneNode(true)
-			: model.defaults({common: this.common, key: key}).create());
+			: model.create({common: this.common, key: key}));
 	}
 }
 
@@ -376,15 +425,16 @@ ListS.prototype = {
 function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
-			spot = this.head.nextSibling,
+			spot = this.node.nextSibling,
 			items = this._items,
 			keys = this.select(v,k,o);
+	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
 	for (var i=0; i<keys.length; ++i) {
 		var item = items[keys[i]];
 		if (item) {
 			if (item.update) item.update(v,k,o);
-			spot = this._placeItem(parent, item, spot).nextSibling;
+			spot = this._placeItem(parent, item, spot).nextSibling; //TODO
 		}
 	}
 
@@ -410,23 +460,13 @@ function ListModel(model, options) {
 var lmProto = ListModel.prototype;
 
 
-lmProto.config = function(config) {
+lmProto.config = function(config) { //TODO delete
 	return (new ListModel(this._template, this))._config(config)
 };
 
 
 lmProto.assign = function(key, val) {
 	return (new ListModel(this._template, this))._assign(key, val)
-};
-
-
-lmProto.defaults = function(key, val) {
-	return new ListModel(this._template,
-		this._assign.call(
-			val === undefined ? this._assign.call({}, key) : {key: val},
-			this
-		)
-	)
 };
 
 
@@ -467,6 +507,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
+
 
 /**
  * @function element
@@ -556,7 +597,7 @@ function getModels(models, tmpl, key) {
 }
 
 function find(start, test, until) { //find(test, head=body, foot=null)
-	var spot = start.node || start.head || start,
+	var spot = start.node || start,
 			last = until ? (until.node || until.foot || until) : null,
 			comp = spot[picoKey];
 

@@ -16,19 +16,26 @@ function toString(nodes) {
 
 ct('element - static', function() {
 	ct('===', el('p').create().node.nodeType, 1)
+
+	// explicit
+	ct('===', toString(el('p').child('ab').create().node.childNodes), 'ab')
+	ct('===', el('p').call(p => {p.id = 'A'}).create().node.id, 'A')
+	ct('===', el('p').attr('id', 'A').create().node.id, 'A')
+
+	// automagic
 	ct('===', toString(el('p', 'ab').create().node.childNodes), 'ab')
-	ct('===', el('p', p => p.prop('id', 'A')).create().node.id, 'A')
-	ct('===', el('p', {attrs: {id: 'A'}}).create().node.id, 'A')
+	ct('===', el('p', p => {p.id = 'A'}).create().node.id, 'A')
+	ct('===', el('p', {attr: ['id', 'A']}).create().node.id, 'A')
 })
 
 ct('element - mixed children', function() {
-	ct('===', el('p', [0, el('p')], el('p'), [el('p')]).create().node.childNodes.length, 4)
-	ct('===', el('p', el('p'), [], el('p'), [el('p'), 0]).create().node.childNodes.length, 4)
-	ct('===', el('p', el('p'), null, 0, [el('p'), el('p')]).create().node.childNodes.length, 4)
+	ct('===', el('p').child([0, el('p')], el('p'), [el('p')]).create().node.childNodes.length, 4)
+	ct('===', el('p').child(el('p'), [], el('p'), [el('p'), 0]).create().node.childNodes.length, 4)
+	ct('===', el('p').child(el('p'), null, 0, [el('p'), el('p')]).create().node.childNodes.length, 4)
 })
 
 ct('element - static, multiple mixed arguments', function() {
-	var p = el('p', c => c.append(0), c => c.class('A'), 1, {props: {id: 'B'}}, 2).create().node
+	var p = el('p').child(0).class('A').child(1).prop('id', 'B').child(2).create().node
 	ct('===', p.nodeType, 1)
 	ct('===', p.firstChild.nodeValue, '0')
 	ct('===', p.className, 'A')
@@ -40,7 +47,10 @@ ct('element - static, multiple mixed arguments', function() {
 ct('element - common', function() {
 	var h1 = {},
 			h2 = {}
-	var h0 = el('h0', el('h1', c => h1=c, el('h2', c=>h2=c))).create({common: {a:'a'}})
+	var h0 = el('h0').child(
+		el('h1').call(function() {h1 = this}),
+		el('h2').call(function() {h2 = this})
+	).create({common: {a:'a'}})
 	ct('===', h1.common, h0.common)
 	ct('===', h2.common, h0.common)
 	ct('===', h1.common.a, h0.common.a)
@@ -48,7 +58,7 @@ ct('element - common', function() {
 })
 
 ct('element - event', function() {
-	var tpl = el('h0', {on: {click: function(e) { e.target.textContent += 'a' } }}),
+	var tpl = el('h0').on('click', function(e) { e.target.textContent += 'a' }),
 			cmp = tpl.create(),
 			elm = cmp.node
 
@@ -61,13 +71,13 @@ ct('element - event', function() {
 
 ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = X.template(t0.config({attrs: {id: 1}, append: el('h1', 1)}).create().node),
+			t1 = X.template(t0.attr('id', 1).child(el('h1').child(1)).create().node),
 			t2 = X.template(el('h2', 2).create().node),
-			h0 = t0.config({attrs: {id: 0}, append: el('h0', 0)}).create(),
+			h0 = t0.attr('id', 0).child(el('h0').child(0)).create(),
 			h1 = t1.create(),
-			h2 = t2.config({attrs: {id: 2}}).create(),
-			h3 = t0.config({attr: ['id', '3'], append: el('h3', 3)}).create(),
-			h4 = t0.config({attrs: {id: 4}, append: el('h4', 4)}).create()
+			h2 = t2.attr('id', 2).create(),
+			h3 = t0.attr('id', '3').child(el('h3').child(3)).create(),
+			h4 = t0.attr('id', 4).child(el('h4').child(4)).create()
 
 	ct('===', t1.node.childNodes.length, 1)
 	ct('===', t2.node.childNodes.length, 1)

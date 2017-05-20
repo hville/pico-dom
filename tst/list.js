@@ -16,7 +16,10 @@ function toString(nodes) {
 }
 
 ct('list static', function() {
-	var co = el('div', list(el('p', text('x')))).create(),
+	var listChildTemplate = el('p', text('x')),
+			listTemplate = list(listChildTemplate),
+			mainTemplate = el('div', listTemplate),
+			co = mainTemplate.create(),
 			elem = co.node
 	ct('===', toString(elem.childNodes), '^$')
 
@@ -103,11 +106,8 @@ ct('list nested', function() {
 ct('list keyed', function() {
 	var co = el('h0',
 		list(
-			text('', {
-				update: function(v) { this.text(v.v) },
-				getKey: v => v.k
-			})
-		)
+			text('').assign('update', function(v) { this.text(v.v) })
+		).assign('getKey', v => v.k)
 	).create()
 	var elem = co.node
 
@@ -123,8 +123,8 @@ ct('list keyed', function() {
 ct('list select', function() {
 	var co = el('h0',
 		list({
-			a: text('', {update: function(v) { this.text('a'+v) }}),
-			b: text('', t => t.update = function(v) { this.text('b'+v) })
+			a: text('').assign('update', function(v) { this.text('a'+v) }),
+			b: text('').assign('update', function(v) { this.text('b'+v) })
 		}, {
 			select: v => v
 		})

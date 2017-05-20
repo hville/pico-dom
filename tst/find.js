@@ -15,16 +15,16 @@ ct('find', function() {
 			h0 = {},
 			h01 = {},
 			h10 = {}
-	el('h0', c => h = c,
+	el('h0').call(function() {h = this}).child(
 		'H',
-		el('h1', c => h0 = c,
+		el('h1', function() {h0 = this},
 			'H0',
 			el('h2', 'H00'),
-			el('h2', 'H01', c => h01 = c)
+			el('h2', 'H01', function() {h01 = this})
 		),
 		el('h1',
 			'H1',
-			el('h2', 'H10', c => h10 = c),
+			el('h2', 'H10', function() {h10 = this}),
 			el('h2', 'H11')
 		)
 	).create()

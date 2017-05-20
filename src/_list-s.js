@@ -41,15 +41,16 @@ ListS.prototype = {
 function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
-			spot = this.head.nextSibling,
+			spot = this.node.nextSibling,
 			items = this._items,
 			keys = this.select(v,k,o)
+	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
 	for (var i=0; i<keys.length; ++i) {
 		var item = items[keys[i]]
 		if (item) {
 			if (item.update) item.update(v,k,o)
-			spot = this._placeItem(parent, item, spot).nextSibling
+			spot = this._placeItem(parent, item, spot).nextSibling //TODO
 		}
 	}
 

@@ -20,7 +20,7 @@ export function ListModel(model, options) {
 var lmProto = ListModel.prototype
 
 
-lmProto.config = function(config) {
+lmProto.config = function(config) { //TODO delete
 	return (new ListModel(this._template, this))._config(config)
 }
 
