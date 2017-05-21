@@ -4,14 +4,12 @@ import {Op} from './_op'
 import {D} from './document'
 
 
-
 /**
  * @constructor
- * @param {Node} node - DOM node
  * @param {Array} [transforms] - configuration
  */
-export function NodeModel(node, transforms) {
-	this.node = node
+export function NodeModel(transforms) {
+	//this.constructor = constructor //TODO
 	this.ops = transforms || []
 }
 
@@ -19,35 +17,39 @@ NodeModel.prototype = {
 	constructor: NodeModel,
 
 	assign: function(key, val) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.assign, key, val)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.assign, key, val)))
 	},
 
 	create: function(keyVal) {
-		var co = new NodeCo(this.node.cloneNode(true)),
-				ops = this.ops
-		if (keyVal) co.assign(keyVal)
-		for (var i=0; i<ops.length; ++i) ops[i].call(co)
-		return co
+		var ops = this.ops,
+				cmp = new NodeCo(ops[0].call(D))
+		if (keyVal) cmp.assign(keyVal)
+		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
+		return cmp
 	},
 
+	/*key: function(key) { //TODO name
+		return new Template(this.ops.concat(new Op(setKey, key)))
+	},*/
+
 	on: function(name, handler) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.on, name, handler)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.on, name, handler)))
 	},
 
 	attr: function(name, value) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.attr, name, value)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.attr, name, value)))
 	},
 
 	prop: function(key, val) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.prop, key, val)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.prop, key, val)))
 	},
 
 	class: function(name) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.class, name)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.class, name)))
 	},
 
 	call: function(fcn) {
-		return new NodeModel(this.node, this.ops.concat(new Op(call, fcn)))
+		return new NodeModel(this.ops.concat(new Op(call, fcn)))
 	},
 
 	_config: function(any) {
@@ -60,10 +62,11 @@ NodeModel.prototype = {
 	},
 
 	child: function() {
-		return new NodeModel(this.node, childOps.apply(this.ops.slice(), arguments))
+		return new NodeModel(childOps.apply(this.ops.slice(), arguments))
 	},
 
 	addTransform: function(argument, name) {
+		if (!ncProto[name]) throw Error('invalid method name: ' + name)
 		if (Array.isArray(argument)) this.ops.push(new Op(ncProto[name], argument[0], argument[1]))
 		else this.ops.push(new Op(ncProto[name], argument))
 	}
@@ -79,10 +82,6 @@ function appendTemplate(template) { //mode to co._appendXXX
 
 function appendText(txt) { //mode to co._appendXXX
 	this.node.appendChild(D.createTextNode(txt))
-}
-
-function identity(node) {
-	return node
 }
 
 function call(fcn) {

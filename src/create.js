@@ -2,6 +2,8 @@ import {D} from './document'
 import {NodeModel} from './_node-model'
 import {ListModel} from './_list-model'
 import {reduce} from './object'
+import {Op} from './_op'
+
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -13,7 +15,7 @@ var svgURI = 'http://www.w3.org/2000/svg'
  * @return {!Object} Component
  */
 export function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(D.createElementNS(svgURI, tag))
+	var model = new NodeModel([new Op(D.createElementNS, svgURI, tag)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -26,7 +28,7 @@ export function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(D.createElement(tagName))
+	var model = new NodeModel([new Op(D.createElement, tagName)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -39,7 +41,7 @@ export function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(D.createElementNS(nsURI, tag))
+	var model = new NodeModel([new Op(D.createElementNS, nsURI, tag)])
 	for (var i=2; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -51,7 +53,7 @@ export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused
  * @return {!Object} Component
  */
 export function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(D.createTextNode(txt))
+	var model = new NodeModel([new Op(D.createTextNode, txt)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -64,9 +66,20 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new NodeModel(createNode(model))
+	var modl = new NodeModel([
+		model.cloneNode ? new Op(cloneNode, model)
+		: typeof model === 'number' ? new Op(D.createTextNode, '' + model)
+		: typeof model === 'string' ? new Op(D.createTextNode, model)
+		: model.create ? new Op(cloneNode, model.create().node)
+		: model.node ? new Op(cloneNode, model.node)
+		: model
+	])
 	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
 	return modl
+}
+
+function cloneNode(node) {
+	return node.cloneNode(true)
 }
 
 

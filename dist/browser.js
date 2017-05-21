@@ -105,18 +105,18 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 	// PLACEMENT
-	append: function() {
+/*	append: function() {
 		for (var i=0; i<arguments.length; ++i) {
-			var arg = arguments[i];
+			var arg = arguments[i]
 			if (arg != null) {
-				if (Array.isArray(arg)) this.append.apply(this, arg);
-				else if (arg.create) arg.create({common: this.common}).moveTo(this.node);
-				else if (arg.moveTo) arg.moveTo(this.node);
-				else this.node.appendChild(createNode(arg));
+				if (Array.isArray(arg)) this.append.apply(this, arg)
+				else if (arg.create) arg.create({common: this.common}).moveTo(this.node)
+				else if (arg.moveTo) arg.moveTo(this.node)
+				else this.node.appendChild(createNode(arg))
 			}
 		}
 		return this
-	},
+	},*/
 	moveTo: function(target, before) {
 		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null);
@@ -178,11 +178,10 @@ Op.prototype = {
 
 /**
  * @constructor
- * @param {Node} node - DOM node
  * @param {Array} [transforms] - configuration
  */
-function NodeModel(node, transforms) {
-	this.node = node;
+function NodeModel(transforms) {
+	//this.constructor = constructor //TODO
 	this.ops = transforms || [];
 }
 
@@ -190,35 +189,39 @@ NodeModel.prototype = {
 	constructor: NodeModel,
 
 	assign: function(key, val) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.assign, key, val)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.assign, key, val)))
 	},
 
 	create: function(keyVal) {
-		var co = new NodeCo(this.node.cloneNode(true)),
-				ops = this.ops;
-		if (keyVal) co.assign(keyVal);
-		for (var i=0; i<ops.length; ++i) ops[i].call(co);
-		return co
+		var ops = this.ops,
+				cmp = new NodeCo(ops[0].call(exports.D));
+		if (keyVal) cmp.assign(keyVal);
+		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
+		return cmp
 	},
 
+	/*key: function(key) { //TODO name
+		return new Template(this.ops.concat(new Op(setKey, key)))
+	},*/
+
 	on: function(name, handler) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.on, name, handler)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.on, name, handler)))
 	},
 
 	attr: function(name, value) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.attr, name, value)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.attr, name, value)))
 	},
 
 	prop: function(key, val) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.prop, key, val)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.prop, key, val)))
 	},
 
 	class: function(name) {
-		return new NodeModel(this.node, this.ops.concat(new Op(ncProto.class, name)))
+		return new NodeModel(this.ops.concat(new Op(ncProto.class, name)))
 	},
 
 	call: function(fcn) {
-		return new NodeModel(this.node, this.ops.concat(new Op(call, fcn)))
+		return new NodeModel(this.ops.concat(new Op(call, fcn)))
 	},
 
 	_config: function(any) {
@@ -231,10 +234,11 @@ NodeModel.prototype = {
 	},
 
 	child: function() {
-		return new NodeModel(this.node, childOps.apply(this.ops.slice(), arguments))
+		return new NodeModel(childOps.apply(this.ops.slice(), arguments))
 	},
 
 	addTransform: function(argument, name) {
+		if (!ncProto[name]) throw Error('invalid method name: ' + name)
 		if (Array.isArray(argument)) this.ops.push(new Op(ncProto[name], argument[0], argument[1]));
 		else this.ops.push(new Op(ncProto[name], argument));
 	}
@@ -348,7 +352,7 @@ function updateKeyedChildren(arr) {
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
 			items = this._items,
-			newM = {};
+			newM = Object.create(null);
 	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
 	for (var i=0; i<arr.length; ++i) {
@@ -503,7 +507,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElementNS(svgURI, tag));
+	var model = new NodeModel([new Op(exports.D.createElementNS, svgURI, tag)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -516,7 +520,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElement(tagName));
+	var model = new NodeModel([new Op(exports.D.createElement, tagName)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -529,7 +533,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createElementNS(nsURI, tag));
+	var model = new NodeModel([new Op(exports.D.createElementNS, nsURI, tag)]);
 	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -541,7 +545,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel(exports.D.createTextNode(txt));
+	var model = new NodeModel([new Op(exports.D.createTextNode, txt)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -554,9 +558,20 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new NodeModel(createNode(model));
+	var modl = new NodeModel([
+		model.cloneNode ? new Op(cloneNode, model)
+		: typeof model === 'number' ? new Op(exports.D.createTextNode, '' + model)
+		: typeof model === 'string' ? new Op(exports.D.createTextNode, model)
+		: model.create ? new Op(cloneNode, model.create().node)
+		: model.node ? new Op(cloneNode, model.node)
+		: model
+	]);
 	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
 	return modl
+}
+
+function cloneNode(node) {
+	return node.cloneNode(true)
 }
 
 

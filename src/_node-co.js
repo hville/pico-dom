@@ -1,6 +1,5 @@
 import {each, assignToThis} from './object'
 import {picoKey} from './picoKey'
-import {createNode} from './create'
 
 
 /**
@@ -62,7 +61,7 @@ export var ncProto = NodeCo.prototype = {
 		return this
 	},
 	// PLACEMENT
-	append: function() {
+/*	append: function() {
 		for (var i=0; i<arguments.length; ++i) {
 			var arg = arguments[i]
 			if (arg != null) {
@@ -73,7 +72,7 @@ export var ncProto = NodeCo.prototype = {
 			}
 		}
 		return this
-	},
+	},*/
 	moveTo: function(target, before) {
 		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null)
