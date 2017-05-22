@@ -2,7 +2,7 @@
 import {ListK} from './_list-k'
 import {ListS} from './_list-s'
 import {assignToThis} from './object'
-
+import {Op} from './_op'
 //import {D} from './document'
 
 

@@ -88,11 +88,9 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
-	appendNode: wrapMethod('appendNode'),
-	appendTemplate: wrapMethod('appendTemplate'),
-	appendText: wrapMethod('appendText'),
-
-
+	_childNode: wrapMethod('_childNode'),
+	_childTemplate: wrapMethod('_childTemplate'),
+	_childText: wrapMethod('_childText'),
 
 
 	call: function(fcn) {
@@ -136,9 +134,9 @@ function childOps() {
 		if (child != null) {
 			if (Array.isArray(child)) childOps.apply(this, child);
 			else this.ops.push(
-				child.create ? new Op(proto.appendTemplate, child)
-				: child.cloneNode ? new Op(proto.appendNode, child)
-				: new Op(proto.appendText, ''+child)
+				child.create ? new Op(proto._childTemplate, child)
+				: child.cloneNode ? new Op(proto._childNode, child)
+				: new Op(proto._childText, ''+child)
 			);
 		}
 	}
@@ -215,15 +213,15 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 
-	appendNode: function (node) {
+	_childNode: function (node) {
 		this.node.appendChild(node.cloneNode(true));
 	},
 
-	appendTemplate: function (template) {
+	_childTemplate: function (template) {
 		template.create({common: this.common}).moveTo(this.node); //TODO common
 	},
 
-	appendText: function appendText(txt) {
+	_childText: function appendText(txt) {
 		this.node.appendChild(exports.D.createTextNode(txt)); //TODO components only?
 	},
 
@@ -291,7 +289,7 @@ ListK.prototype = {
 	assign: assignToThis,
 
 	_init: function(template, options) {
-		this._template = template;
+		this._template = template; //TODO delete
 		this._items = {};
 		this.node = exports.D.createComment('^');
 		this.foot = exports.D.createComment('$');
@@ -339,6 +337,11 @@ ListK.prototype = {
 	update: updateKeyedChildren,
 
 	updateChildren: updateKeyedChildren,
+
+	_childTemplate: function (template) {
+		this._template = template; //TODO reset or disallow if already set
+		return this
+	},
 
 	_placeItem: function(parent, item, spot) {
 		if (item.foot) {
@@ -417,6 +420,7 @@ ListS.prototype = {
 	update: updateListChildren,
 	updateChildren: updateListChildren,
 	_placeItem: ListK.prototype._placeItem,
+	_childTemplate: ListK.prototype._childTemplate
 };
 
 function updateListChildren(v,k,o) {

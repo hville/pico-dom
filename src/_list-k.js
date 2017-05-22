@@ -17,7 +17,7 @@ ListK.prototype = {
 	assign: assignToThis,
 
 	_init: function(template, options) {
-		this._template = template
+		this._template = template //TODO delete
 		this._items = {}
 		this.node = D.createComment('^')
 		this.foot = D.createComment('$')
@@ -65,6 +65,11 @@ ListK.prototype = {
 	update: updateKeyedChildren,
 
 	updateChildren: updateKeyedChildren,
+
+	_childTemplate: function (template) {
+		this._template = template //TODO reset or disallow if already set
+		return this
+	},
 
 	_placeItem: function(parent, item, spot) {
 		if (item.foot) {

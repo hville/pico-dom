@@ -33,9 +33,9 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
-	appendNode: wrapMethod('appendNode'),
-	appendTemplate: wrapMethod('appendTemplate'),
-	appendText: wrapMethod('appendText'),
+	_childNode: wrapMethod('_childNode'),
+	_childTemplate: wrapMethod('_childTemplate'),
+	_childText: wrapMethod('_childText'),
 
 
 	call: function(fcn) {
@@ -79,9 +79,9 @@ function childOps() {
 		if (child != null) {
 			if (Array.isArray(child)) childOps.apply(this, child)
 			else this.ops.push(
-				child.create ? new Op(proto.appendTemplate, child)
-				: child.cloneNode ? new Op(proto.appendNode, child)
-				: new Op(proto.appendText, ''+child)
+				child.create ? new Op(proto._childTemplate, child)
+				: child.cloneNode ? new Op(proto._childNode, child)
+				: new Op(proto._childText, ''+child)
 			)
 		}
 	}

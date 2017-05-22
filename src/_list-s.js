@@ -36,6 +36,7 @@ ListS.prototype = {
 	update: updateListChildren,
 	updateChildren: updateListChildren,
 	_placeItem: ListK.prototype._placeItem,
+	_childTemplate: ListK.prototype._childTemplate
 }
 
 function updateListChildren(v,k,o) {

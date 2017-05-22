@@ -63,15 +63,15 @@ export var ncProto = NodeCo.prototype = {
 		return this
 	},
 
-	appendNode: function (node) {
+	_childNode: function (node) {
 		this.node.appendChild(node.cloneNode(true))
 	},
 
-	appendTemplate: function (template) {
+	_childTemplate: function (template) {
 		template.create({common: this.common}).moveTo(this.node) //TODO common
 	},
 
-	appendText: function appendText(txt) {
+	_childText: function appendText(txt) {
 		this.node.appendChild(D.createTextNode(txt)) //TODO components only?
 	},
 
