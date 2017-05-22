@@ -1,5 +1,6 @@
 import {D} from './document'
-import {NodeModel} from './_node-model'
+import {Template} from './_template'
+import {NodeCo} from './_node-co'
 import {ListModel} from './_list-model'
 import {reduce} from './object'
 import {Op} from './_op'
@@ -15,7 +16,7 @@ var svgURI = 'http://www.w3.org/2000/svg'
  * @return {!Object} Component
  */
 export function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel([new Op(D.createElementNS, svgURI, tag)])
+	var model = new Template(NodeCo, [new Op(D.createElementNS, svgURI, tag)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -28,7 +29,7 @@ export function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel([new Op(D.createElement, tagName)])
+	var model = new Template(NodeCo, [new Op(D.createElement, tagName)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -41,7 +42,7 @@ export function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel([new Op(D.createElementNS, nsURI, tag)])
+	var model = new Template(NodeCo, [new Op(D.createElementNS, nsURI, tag)])
 	for (var i=2; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -53,7 +54,7 @@ export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused
  * @return {!Object} Component
  */
 export function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new NodeModel([new Op(D.createTextNode, txt)])
+	var model = new Template(NodeCo, [new Op(D.createTextNode, txt)])
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
@@ -66,7 +67,7 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new NodeModel([
+	var modl = new Template(NodeCo, [
 		model.cloneNode ? new Op(cloneNode, model)
 		: typeof model === 'number' ? new Op(D.createTextNode, '' + model)
 		: typeof model === 'string' ? new Op(D.createTextNode, model)

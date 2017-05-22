@@ -25,7 +25,7 @@ ct('element - static', function() {
 	// automagic
 	ct('===', toString(el('p', 'ab').create().node.childNodes), 'ab')
 	ct('===', el('p', p => {p.id = 'A'}).create().node.id, 'A')
-	ct('===', el('p', {attr: ['id', 'A']}).create().node.id, 'A')
+	ct('===', el('p', {attr: ['data-id', 'A'], prop: ['id', 'A']}).create().node.id, 'A')
 })
 
 ct('element - mixed children', function() {

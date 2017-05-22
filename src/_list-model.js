@@ -35,7 +35,6 @@ lmProto.create = function(config) {
 	return new (model._template.create || model._template.cloneNode ? ListK : ListS)(model._template, model)
 }
 
-
 lmProto._assign = assignToThis
 
 

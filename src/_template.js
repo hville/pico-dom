@@ -1,4 +1,4 @@
-import {NodeCo, ncProto} from './_node-co'
+//import {NodeCo, ncProto} from './_node-co'
 import {each} from './object'
 import {Op} from './_op'
 import {D} from './document'
@@ -6,23 +6,20 @@ import {D} from './document'
 
 /**
  * @constructor
- * @param {Array} [transforms] - configuration
+ * @param {!Object} constructor
+ * @param {!Array} transforms
  */
-export function NodeModel(transforms) {
-	//this.constructor = constructor //TODO
+export function Template(constructor, transforms) {
+	this.Co = constructor
 	this.ops = transforms || []
 }
 
-NodeModel.prototype = {
-	constructor: NodeModel,
-
-	assign: function(key, val) {
-		return new NodeModel(this.ops.concat(new Op(ncProto.assign, key, val)))
-	},
+Template.prototype = {
+	constructor: Template,
 
 	create: function(keyVal) {
 		var ops = this.ops,
-				cmp = new NodeCo(ops[0].call(D))
+				cmp = new this.Co(ops[0].call(D))
 		if (keyVal) cmp.assign(keyVal)
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
 		return cmp
@@ -31,25 +28,14 @@ NodeModel.prototype = {
 	/*key: function(key) { //TODO name
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
-
-	on: function(name, handler) {
-		return new NodeModel(this.ops.concat(new Op(ncProto.on, name, handler)))
-	},
-
-	attr: function(name, value) {
-		return new NodeModel(this.ops.concat(new Op(ncProto.attr, name, value)))
-	},
-
-	prop: function(key, val) {
-		return new NodeModel(this.ops.concat(new Op(ncProto.prop, key, val)))
-	},
-
-	class: function(name) {
-		return new NodeModel(this.ops.concat(new Op(ncProto.class, name)))
-	},
+	assign: wrapMethod('assign'), //TODO RENAME
+	on: wrapMethod('on'),
+	attr: wrapMethod('attr'),
+	prop: wrapMethod('prop'),
+	class: wrapMethod('class'),
 
 	call: function(fcn) {
-		return new NodeModel(this.ops.concat(new Op(call, fcn)))
+		return new Template(this.Co, this.ops.concat(new Op(call, fcn)))
 	},
 
 	_config: function(any) {
@@ -62,13 +48,14 @@ NodeModel.prototype = {
 	},
 
 	child: function() {
-		return new NodeModel(childOps.apply(this.ops.slice(), arguments))
+		return new Template(this.Co, childOps.apply(this.ops.slice(), arguments))
 	},
 
 	addTransform: function(argument, name) {
-		if (!ncProto[name]) throw Error('invalid method name: ' + name)
-		if (Array.isArray(argument)) this.ops.push(new Op(ncProto[name], argument[0], argument[1]))
-		else this.ops.push(new Op(ncProto[name], argument))
+		var proto = this.Co.prototype
+		if (!proto[name]) throw Error('invalid method name: ' + name)
+		if (Array.isArray(argument)) this.ops.push(new Op(proto[name], argument[0], argument[1]))
+		else this.ops.push(new Op(proto[name], argument))
 	}
 }
 
@@ -102,4 +89,12 @@ function childOps() {
 		}
 	}
 	return this
+}
+
+function wrapMethod(name) {
+	return function(a, b) {
+		var proto = this.Co.prototype
+		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
+		return new Template(this.Co, this.ops.concat(new Op(proto[name], a, b)))
+	}
 }
