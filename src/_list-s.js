@@ -7,8 +7,8 @@ import {assignToThis} from './object'
  * @param {!Object} template
  * @param {Object} [options]
  */
-export function ListS(template, options) {
-	this._init(template, options)
+export function ListS(template) {
+	this._init(template)
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],

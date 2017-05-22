@@ -1,7 +1,7 @@
 import {D} from './document'
 import {Template} from './_template'
 import {NodeCo} from './_node-co'
-import {ListModel} from './_list-model'
+//import {ListModel} from './_list-model'
 import {reduce} from './object'
 import {Op} from './_op'
 import {ListK} from './_list-k'
@@ -92,8 +92,8 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = model.create ? new ListModel(ListK, model)
-	: new ListModel(ListS, reduce(model, getModels, {}))
+	var lst = model.create ? new Template(ListK, [new Op(null, model)])
+		: new Template(ListS, [new Op(null, reduce(model, getModels, {}))])
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst

@@ -7,8 +7,8 @@ import {assignToThis} from './object'
  * @param {!Object} template
  * @param {Object} [options]
  */
-export function ListK(template, options) {
-	this._init(template, options)
+export function ListK(template) {
+	this._init(template)
 }
 
 ListK.prototype = {
@@ -16,12 +16,11 @@ ListK.prototype = {
 	common: null,
 	assign: assignToThis,
 
-	_init: function(template, options) {
+	_init: function(template) {
 		this._template = template //TODO delete
 		this._items = {}
 		this.node = D.createComment('^')
 		this.foot = D.createComment('$')
-		this.assign(options)
 		this.node[picoKey] = this.update ? this : null
 	},
 

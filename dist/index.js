@@ -54,11 +54,12 @@ function Op(fcn, a, b) {
 Op.prototype = {
 	call: function(ctx) {
 		var op = this;
-		return op.b === undefined ? op.f.call(ctx, op.a) : op.f.call(ctx, op.a, op.b)
+		return !op.f ? op.a
+			: op.b === undefined ? op.f.call(ctx, op.a)
+			: op.f.call(ctx, op.a, op.b)
 	}
 };
 
-//import {NodeCo, ncProto} from './_node-co'
 /**
  * @constructor
  * @param {!Object} constructor
@@ -274,65 +275,13 @@ function updateChildren(v,k,o) {
 	}
 }
 
-//import {ListA} from './ListA'
-//import {Op} from './_op'
-//import {D} from './document'
-
-
-/**
- * @constructor
- * @param {!Object} model
- * @param {Object} [options]
- */
-function ListModel(constructor, model, options) {
-	this.Co = constructor;
-	this._template = model;
-	if (options) this._assign(options);
-}
-
-
-var lmProto = ListModel.prototype;
-
-
-lmProto.config = function(config) { //TODO delete
-	return (new ListModel(this.Co, this._template, this))._config(config)
-};
-
-
-lmProto.assign = function(key, val) {
-	return (new ListModel(this.Co, this._template, this))._assign(key, val)
-};
-
-
-lmProto.create = function(config) {
-	var model = config ? this.config(config) : this;
-	return new this.Co(model._template, model)
-};
-
-lmProto._assign = assignToThis;
-
-
-lmProto._config = function(any) {
-	if (any != null) {
-		if (typeof any === 'function') any(this);
-		else if (any.constructor === Object) for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-			var key = ks[i],
-					val = any[key],
-					fcn = this[key];
-			if (typeof fcn === 'function') Array.isArray(val) ? fcn.apply(this, val) : fcn(val);
-			else this._assign(key, val);
-		}
-	}
-	return this
-};
-
 /**
  * @constructor
  * @param {!Object} template
  * @param {Object} [options]
  */
-function ListK(template, options) {
-	this._init(template, options);
+function ListK(template) {
+	this._init(template);
 }
 
 ListK.prototype = {
@@ -340,12 +289,11 @@ ListK.prototype = {
 	common: null,
 	assign: assignToThis,
 
-	_init: function(template, options) {
+	_init: function(template) {
 		this._template = template; //TODO delete
 		this._items = {};
 		this.node = exports.D.createComment('^');
 		this.foot = exports.D.createComment('$');
-		this.assign(options);
 		this.node[picoKey] = this.update ? this : null;
 	},
 
@@ -443,8 +391,8 @@ function updateKeyedChildren(arr) {
  * @param {!Object} template
  * @param {Object} [options]
  */
-function ListS(template, options) {
-	this._init(template, options);
+function ListS(template) {
+	this._init(template);
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
@@ -495,6 +443,7 @@ function updateListChildren(v,k,o) {
 	return this
 }
 
+//import {ListModel} from './_list-model'
 var svgURI = 'http://www.w3.org/2000/svg';
 
 
@@ -580,8 +529,8 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = model.create ? new ListModel(ListK, model)
-	: new ListModel(ListS, reduce(model, getModels, {}));
+	var lst = model.create ? new Template(ListK, [new Op(null, model)])
+		: new Template(ListS, [new Op(null, reduce(model, getModels, {}))]);
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst

@@ -1,4 +1,3 @@
-//import {NodeCo, ncProto} from './_node-co'
 import {each} from './object'
 import {Op} from './_op'
 import {D} from './document'

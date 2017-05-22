@@ -125,9 +125,7 @@ ct('list select', function() {
 		list({
 			a: text('').assign('update', function(v) { this.text('a'+v) }),
 			b: text('').assign('update', function(v) { this.text('b'+v) })
-		}, {
-			select: v => v
-		})
+		}).assign('select', v => v)
 	).create()
 	var elem = co.node
 
