@@ -62,18 +62,7 @@ export var ncProto = NodeCo.prototype = {
 		return this
 	},
 	// PLACEMENT
-/*	append: function() {
-		for (var i=0; i<arguments.length; ++i) {
-			var arg = arguments[i]
-			if (arg != null) {
-				if (Array.isArray(arg)) this.append.apply(this, arg)
-				else if (arg.create) arg.create({common: this.common}).moveTo(this.node)
-				else if (arg.moveTo) arg.moveTo(this.node)
-				else this.node.appendChild(createNode(arg))
-			}
-		}
-		return this
-	},*/
+
 	moveTo: function(target, before) {
 		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null)

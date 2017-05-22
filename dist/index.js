@@ -62,6 +62,7 @@ function NodeCo(node) {
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
 
 	node[picoKey] = this.update ? this : null;
+	//TODO oncreate, ondestroy, onmove, ...
 }
 
 
@@ -106,18 +107,7 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 	// PLACEMENT
-/*	append: function() {
-		for (var i=0; i<arguments.length; ++i) {
-			var arg = arguments[i]
-			if (arg != null) {
-				if (Array.isArray(arg)) this.append.apply(this, arg)
-				else if (arg.create) arg.create({common: this.common}).moveTo(this.node)
-				else if (arg.moveTo) arg.moveTo(this.node)
-				else this.node.appendChild(createNode(arg))
-			}
-		}
-		return this
-	},*/
+
 	moveTo: function(target, before) {
 		if (this.onmove) this.onmove(this.node.parentNode, target)
 		;(target.node || target).insertBefore(this.node, before || null);
@@ -341,12 +331,22 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_placeItem: function(parent, item, spot) { //TODO
-		return item._template ? insertList(parent, item, spot).foot //TODO move behaviour to component
-		: item.node ? insertChild(parent, item.node, spot)
-		: insertChild(parent, item, spot)
+	_placeItem: function(parent, item, spot) {
+		if (item.foot) {
+			if (!spot) return item.moveTo(parent)
+			var head = item.node;
+			if (head === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
+			else if (head !== spot) item.moveTo(parent, spot);
+			return item.foot
+		}
+		var node = item.node || item; //TODO Component Only with lifecycle
+		if (!spot) parent.appendChild(node);
+		else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
+		else if (node !== spot) parent.insertBefore(node, spot);
+		return node
 	}
 };
+
 
 function updateKeyedChildren(arr) {
 	var foot = this.foot,
@@ -372,23 +372,6 @@ function updateKeyedChildren(arr) {
 
 	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this
-}
-
-
-function insertChild(parent, node, spot) {
-	if (!spot) parent.appendChild(node);
-	else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
-	else if (node !== spot) parent.insertBefore(node, spot);
-	return node
-}
-
-
-function insertList(parent, list, spot) {
-	if (!spot) return list.moveTo(parent)
-	var head = list.node;
-	if (head === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
-	else if (head !== spot) list.moveTo(parent, spot);
-	return list
 }
 
 /**
@@ -465,9 +448,9 @@ function ListModel(model, options) {
 var lmProto = ListModel.prototype;
 
 
-lmProto.config = function(config) { //TODO delete
+/*lmProto.config = function(config) { //TODO delete
 	return (new ListModel(this._template, this))._config(config)
-};
+}*/
 
 
 lmProto.assign = function(key, val) {
@@ -576,14 +559,6 @@ function cloneNode(node) {
 }
 
 
-function createNode(model) {
-	if (model.cloneNode) return model.cloneNode(true)
-	if (typeof model === 'number' || typeof model === 'string') return exports.D.createTextNode('' + model)
-	if (model.create) return model.create().node
-	if (model.node) return model.node.cloneNode(true)
-	else throw Error('invalid node source' + typeof model)
-}
-
 /**
  * @function list
  * @param {Object|Array} model model
@@ -591,24 +566,15 @@ function createNode(model) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var modl = getModel(model);
-	if (!modl) throw Error('invalid list template: ' + typeof model)
-	var lst = new ListModel(modl);
+	var lst = new ListModel(model.create ? model : reduce(model, getModels, {}));
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst
 }
 
 
-function getModel(tmpl) {
-	return Array.isArray(tmpl) ? tmpl.map(getModel)
-		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
-		: tmpl.create ? tmpl // templates are immutable and can be used 'as-is'
-		: createNode(tmpl)
-}
-
-
 function getModels(models, tmpl, key) {
-	models[key] = getModel(tmpl);
+	if (tmpl.create) models[key] = tmpl;
+	else throw Error('list item must be a template of a collection of templates')
 	return models
 }
 

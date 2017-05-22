@@ -61,22 +61,22 @@ ct('list stacked', function() {
 ct('list stacked and grouped', function() {
 	var co = el('div', list([
 		list(text('')),
-		list('x'),
-		list('y')
+		list(text('x')),
+		list(text('y'))
 	])).create()
 	var elem = co.node
 
 	co.update([1,2,3])
-	ct('===', toString(elem.childNodes), '^^123$^xxx$^yyy$$')
+	ct('===', toString(elem.childNodes), '^^123$^123$^123$$')
 
 	co.update([4,3,1,2])
-	ct('===', toString(elem.childNodes), '^^4312$^xxxx$^yyyy$$')
+	ct('===', toString(elem.childNodes), '^^4312$^4312$^4312$$')
 
 	co.update([])
 	ct('===', toString(elem.childNodes), '^^$^$^$$')
 
 	co.update([1,5,3])
-	ct('===', toString(elem.childNodes), '^^153$^xxx$^yyy$$')
+	ct('===', toString(elem.childNodes), '^^153$^153$^153$$')
 })
 
 ct('list nested', function() {

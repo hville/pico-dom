@@ -83,14 +83,6 @@ function cloneNode(node) {
 }
 
 
-export function createNode(model) {
-	if (model.cloneNode) return model.cloneNode(true)
-	if (typeof model === 'number' || typeof model === 'string') return D.createTextNode('' + model)
-	if (model.create) return model.create().node
-	if (model.node) return model.node.cloneNode(true)
-	else throw Error('invalid node source' + typeof model)
-}
-
 /**
  * @function list
  * @param {Object|Array} model model
@@ -98,23 +90,14 @@ export function createNode(model) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var modl = getModel(model)
-	if (!modl) throw Error('invalid list template: ' + typeof model)
-	var lst = new ListModel(modl)
+	var lst = new ListModel(model.create ? model : reduce(model, getModels, {}))
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst
 }
 
 
-function getModel(tmpl) {
-	return Array.isArray(tmpl) ? tmpl.map(getModel)
-		: tmpl.constructor === Object ? reduce(tmpl, getModels, {})
-		: tmpl.create ? tmpl // templates are immutable and can be used 'as-is'
-		: createNode(tmpl)
-}
-
-
 function getModels(models, tmpl, key) {
-	models[key] = getModel(tmpl)
+	if (tmpl.create) models[key] = tmpl
+	else throw Error('list item must be a template of a collection of templates')
 	return models
 }

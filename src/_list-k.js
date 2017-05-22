@@ -66,12 +66,22 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_placeItem: function(parent, item, spot) { //TODO
-		return item._template ? insertList(parent, item, spot).foot //TODO move behaviour to component
-		: item.node ? insertChild(parent, item.node, spot)
-		: insertChild(parent, item, spot)
+	_placeItem: function(parent, item, spot) {
+		if (item.foot) {
+			if (!spot) return item.moveTo(parent)
+			var head = item.node
+			if (head === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
+			else if (head !== spot) item.moveTo(parent, spot)
+			return item.foot
+		}
+		var node = item.node || item //TODO Component Only with lifecycle
+		if (!spot) parent.appendChild(node)
+		else if (node === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
+		else if (node !== spot) parent.insertBefore(node, spot)
+		return node
 	}
 }
+
 
 function updateKeyedChildren(arr) {
 	var foot = this.foot,
@@ -97,21 +107,4 @@ function updateKeyedChildren(arr) {
 
 	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this
-}
-
-
-function insertChild(parent, node, spot) {
-	if (!spot) parent.appendChild(node)
-	else if (node === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
-	else if (node !== spot) parent.insertBefore(node, spot)
-	return node
-}
-
-
-function insertList(parent, list, spot) {
-	if (!spot) return list.moveTo(parent)
-	var head = list.node
-	if (head === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
-	else if (head !== spot) list.moveTo(parent, spot)
-	return list
 }
