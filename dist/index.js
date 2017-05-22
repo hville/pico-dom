@@ -88,6 +88,12 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
+	appendNode: wrapMethod('appendNode'),
+	appendTemplate: wrapMethod('appendTemplate'),
+	appendText: wrapMethod('appendText'),
+
+
+
 
 	call: function(fcn) {
 		return new Template(this.Co, this.ops.concat(new Op(call, fcn)))
@@ -97,13 +103,16 @@ Template.prototype = {
 		if (any != null) {
 			if (typeof any === 'function') this.ops.push(new Op(call, any));
 			else if (any.constructor === Object) each(any, this.addTransform, this);
-			else childOps.call(this.ops, any);
+			else childOps.call(this, any);
 		}
 		return this
 	},
 
 	child: function() {
-		return new Template(this.Co, childOps.apply(this.ops.slice(), arguments))
+		return childOps.apply(
+			new Template(this.Co, this.ops.slice()),
+			arguments
+		)
 	},
 
 	addTransform: function(argument, name) {
@@ -114,17 +123,6 @@ Template.prototype = {
 	}
 };
 
-function appendChild(node) { //mode to co._appendXXX
-	this.node.appendChild(node.cloneNode(true));
-}
-
-function appendTemplate(template) { //mode to co._appendXXX
-	template.create({common: this.common}).moveTo(this.node);
-}
-
-function appendText(txt) { //mode to co._appendXXX
-	this.node.appendChild(exports.D.createTextNode(txt));
-}
 
 function call(fcn) {
 	fcn.call(this, this.node);
@@ -132,14 +130,15 @@ function call(fcn) {
 
 
 function childOps() {
+	var proto = this.Co.prototype;
 	for (var i=0; i<arguments.length; ++i) {
 		var child = arguments[i];
 		if (child != null) {
 			if (Array.isArray(child)) childOps.apply(this, child);
-			else this.push(
-				child.create ? new Op(appendTemplate, child)
-				: child.cloneNode ? new Op(appendChild, child)
-				: new Op(appendText, ''+child)
+			else this.ops.push(
+				child.create ? new Op(proto.appendTemplate, child)
+				: child.cloneNode ? new Op(proto.appendNode, child)
+				: new Op(proto.appendText, ''+child)
 			);
 		}
 	}
@@ -215,6 +214,20 @@ var ncProto = NodeCo.prototype = {
 		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]]);
 		return this
 	},
+
+	appendNode: function (node) {
+		this.node.appendChild(node.cloneNode(true));
+	},
+
+	appendTemplate: function (template) {
+		template.create({common: this.common}).moveTo(this.node); //TODO common
+	},
+
+	appendText: function appendText(txt) {
+		this.node.appendChild(exports.D.createTextNode(txt)); //TODO components only?
+	},
+
+
 	// PLACEMENT
 
 	moveTo: function(target, before) {

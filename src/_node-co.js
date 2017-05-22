@@ -1,5 +1,6 @@
 import {each, assignToThis} from './object'
 import {picoKey} from './picoKey'
+import {D} from './document'
 
 
 /**
@@ -61,6 +62,20 @@ export var ncProto = NodeCo.prototype = {
 		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]])
 		return this
 	},
+
+	appendNode: function (node) {
+		this.node.appendChild(node.cloneNode(true))
+	},
+
+	appendTemplate: function (template) {
+		template.create({common: this.common}).moveTo(this.node) //TODO common
+	},
+
+	appendText: function appendText(txt) {
+		this.node.appendChild(D.createTextNode(txt)) //TODO components only?
+	},
+
+
 	// PLACEMENT
 
 	moveTo: function(target, before) {
