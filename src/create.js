@@ -4,7 +4,8 @@ import {NodeCo} from './_node-co'
 import {ListModel} from './_list-model'
 import {reduce} from './object'
 import {Op} from './_op'
-
+import {ListK} from './_list-k'
+import {ListS} from './_list-s'
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -91,7 +92,9 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new ListModel(model.create ? model : reduce(model, getModels, {}))
+	var lst = model.create ? new ListModel(ListK, model)
+	: new ListModel(ListS, reduce(model, getModels, {}))
+
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst
 }

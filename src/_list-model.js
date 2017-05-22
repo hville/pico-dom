@@ -1,17 +1,16 @@
 //import {ListA} from './ListA'
-import {ListK} from './_list-k'
-import {ListS} from './_list-s'
 import {assignToThis} from './object'
-import {Op} from './_op'
+//import {Op} from './_op'
 //import {D} from './document'
 
 
 /**
  * @constructor
- * @param {!Object} model
- * @param {Object} [options]
+ * @param {!Object} constructor
+ * @param {!Array} transforms
  */
-export function ListModel(model, options) {
+export function ListModel(constructor, model, options) {
+	this.Co = constructor
 	this._template = model
 	if (options) this._assign(options)
 }
@@ -21,18 +20,18 @@ var lmProto = ListModel.prototype
 
 
 lmProto.config = function(config) { //TODO delete
-	return (new ListModel(this._template, this))._config(config)
+	return (new ListModel(this.Co, this._template, this))._config(config)
 }
 
 
 lmProto.assign = function(key, val) {
-	return (new ListModel(this._template, this))._assign(key, val)
+	return (new ListModel(this.Co, this._template, this))._assign(key, val)
 }
 
 
 lmProto.create = function(config) {
 	var model = config ? this.config(config) : this
-	return new (model._template.create || model._template.cloneNode ? ListK : ListS)(model._template, model)
+	return new this.Co(model._template, model)
 }
 
 lmProto._assign = assignToThis
