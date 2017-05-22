@@ -17,6 +17,7 @@ export function NodeCo(node) {
 	if ('value' in node) this.update = this.value //TODO fail on input.type = select
 
 	node[picoKey] = this.update ? this : null
+	//TODO oncreate, ondestroy, onmove, ...
 }
 
 
