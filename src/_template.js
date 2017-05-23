@@ -55,7 +55,7 @@ Template.prototype = {
 	_childText: wrapMethod('_childText'),
 
 
-	call: function(fcn) { //TODO oncreate
+	oncreate: function(fcn) { //TODO oncreate
 		this.ops.push(new Op(call, fcn))
 		return this
 	},

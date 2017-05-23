@@ -52,6 +52,20 @@ Template.prototype = {
 		return new Template(this.Co, this.ops.slice())
 	},
 
+	update: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'update', fcn));
+		return this
+	},
+
+	select: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'select', fcn));
+		return this
+	},
+
+	getKey: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'getKey', fcn));
+		return this
+	},
 	/*key: function(key) { //TODO name
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
@@ -66,7 +80,7 @@ Template.prototype = {
 	_childText: wrapMethod('_childText'),
 
 
-	call: function(fcn) { //TODO oncreate
+	oncreate: function(fcn) { //TODO oncreate
 		this.ops.push(new Op(call, fcn));
 		return this
 	},

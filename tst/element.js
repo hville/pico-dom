@@ -19,7 +19,7 @@ ct('element - static', function() {
 
 	// explicit
 	ct('===', toString(el('p').child('ab').create().node.childNodes), 'ab')
-	ct('===', el('p').call(p => {p.id = 'A'}).create().node.id, 'A')
+	ct('===', el('p').oncreate(p => {p.id = 'A'}).create().node.id, 'A')
 	ct('===', el('p').attr('id', 'A').create().node.id, 'A')
 
 	// automagic
@@ -48,8 +48,8 @@ ct('element - common', function() {
 	var h1 = {},
 			h2 = {}
 	var h0 = el('h0').child(
-		el('h1').call(function() {h1 = this}),
-		el('h2').call(function() {h2 = this})
+		el('h1').oncreate(function() {h1 = this}),
+		el('h2').oncreate(function() {h2 = this})
 	).create({common: {a:'a'}})
 	ct('===', h1.common, h0.common)
 	ct('===', h2.common, h0.common)
