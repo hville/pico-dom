@@ -309,21 +309,17 @@ function updateChildren(v,k,o) {
  * @param {Object} [options]
  */
 function ListK(template) {
-	this._init(template);
+	this.template = template;
+	this.refs = {};
+	this.node = exports.D.createComment('^');
+	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.node[picoKey] = this;
 }
 
 ListK.prototype = {
 	constructor: ListK,
 	common: null,
 	assign: assignToThis,
-
-	_init: function(template) {
-		this._template = template; //TODO delete
-		this.refs = {}; //TODO common refs
-		this.node = exports.D.createComment('^');
-		this.foot = exports.D.createComment('$'); //TODO dynamic
-		this.node[picoKey] = this.update ? this : null;
-	},
 
 	/**
 	* @function moveTo
@@ -367,7 +363,7 @@ ListK.prototype = {
 	updateChildren: updateKeyedChildren,
 
 	_childTemplate: function (template) {
-		this._template = template; //TODO reset or disallow if already set
+		this.template = template; //TODO reset or disallow if already set
 		return this
 	},
 
@@ -398,7 +394,7 @@ function updateKeyedChildren(arr) {
 
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
-				model = this._template,
+				model = this.template,
 				item = newM[key] = items[key] || model.create({common: this.common, key: key});
 
 		if (item) {
@@ -419,8 +415,12 @@ function updateKeyedChildren(arr) {
  * @param {Object} [options]
  */
 function ListS(template) {
-	this._init(template);
-	// TODO template validation
+	this.template = template;
+	this.refs = {};
+	this.node = exports.D.createComment('^');
+	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.node[picoKey] = this;
+
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
@@ -432,7 +432,6 @@ ListS.prototype = {
 	constructor: ListS,
 	common: null,
 	assign: assignToThis, //TODO needed?
-	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 
 	/**

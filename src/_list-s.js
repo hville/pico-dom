@@ -1,5 +1,6 @@
 import {ListK} from './_list-k'
 import {D} from './document'
+import {picoKey} from './picoKey'
 import {assignToThis} from './object'
 
 /**
@@ -8,8 +9,12 @@ import {assignToThis} from './object'
  * @param {Object} [options]
  */
 export function ListS(template) {
-	this._init(template)
-	// TODO template validation
+	this.template = template
+	this.refs = {}
+	this.node = D.createComment('^')
+	this.foot = D.createComment('$') //TODO dynamic
+	this.node[picoKey] = this
+
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
@@ -21,7 +26,6 @@ ListS.prototype = {
 	constructor: ListS,
 	common: null,
 	assign: assignToThis, //TODO needed?
-	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 
 	/**
