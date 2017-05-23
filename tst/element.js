@@ -71,7 +71,7 @@ ct('element - event', function() {
 
 ct('element - clone template', function() {
 	var t0 = el('div'),
-			t1 = X.template(t0.clone({attr: ['id', 1]}).child(el('h1').child(1))),
+			t1 = X.template(t0.clone({attr: ['id', 1]}).child(el('h1').child(1)).create().node),
 			t2 = X.template(el('h2', 2).create().node),
 			h0 = t0.clone().attr('id', 0).child(el('h0').child(0)).create(),
 			h1 = t1.create(),

@@ -399,8 +399,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this._template,
-				item = newM[key] = items[key] || (model.cloneNode ? model.cloneNode(true)
-					: model.create({common: this.common, key: key}));
+				item = newM[key] = items[key] || model.create({common: this.common, key: key});
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -531,15 +530,10 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function template(model, options) { //eslint-disable-line no-unused-vars //TODO simplify
-	var modl = new Template(NodeCo, [
-		model.cloneNode ? new Op(cloneNode, model)
-		: typeof model === 'number' ? new Op(exports.D.createTextNode, '' + model)
-		: typeof model === 'string' ? new Op(exports.D.createTextNode, model)
-		: model.create ? new Op(cloneNode, model.create().node)
-		: model.node ? new Op(cloneNode, model.node)
-		: model
-	]);
+function template(node, options) { //eslint-disable-line no-unused-vars
+	if (!node.cloneNode) throw Error('invalid node')
+
+	var modl = new Template(NodeCo, [new Op(cloneNode, node)]);
 	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i]);
 	return modl
 }

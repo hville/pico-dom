@@ -65,15 +65,10 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-export function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new Template(NodeCo, [ //TODO simplify
-		model.cloneNode ? new Op(cloneNode, model)
-		: typeof model === 'number' ? new Op(D.createTextNode, '' + model)
-		: typeof model === 'string' ? new Op(D.createTextNode, model)
-		: model.create ? new Op(cloneNode, model.create().node)
-		: model.node ? new Op(cloneNode, model.node)
-		: model
-	])
+export function template(node, options) { //eslint-disable-line no-unused-vars
+	if (!node.cloneNode) throw Error('invalid node')
+
+	var modl = new Template(NodeCo, [new Op(cloneNode, node)])
 	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i])
 	return modl
 }
