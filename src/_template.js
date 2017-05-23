@@ -74,12 +74,10 @@ Template.prototype = {
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
-							arg = any[ks[i]],
-							fcn = this.Co.prototype[key]
-					if (!fcn) throw Error('invalid method name: ' + key)
-					if (Array.isArray(arg)) this.ops.push(new Op(fcn, arg[0], arg[1]))
-					else this.ops.push(new Op(fcn, arg))
-
+							arg = any[ks[i]]
+					if (!this[key]) throw Error('invalid method name: ' + key)
+					if (Array.isArray(arg)) this[key](arg[0], arg[1])
+					else this[key](arg)
 				}
 			}
 			else this.child(any)
