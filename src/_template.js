@@ -23,8 +23,10 @@ Template.prototype = {
 		return cmp
 	},
 
-	clone: function() {
-		return new Template(this.Co, this.ops.slice())
+	clone: function(options) {
+		var template = new Template(this.Co, this.ops.slice())
+		if (options) template.config(options)
+		return template
 	},
 
 	update: function(fcn) {

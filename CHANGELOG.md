@@ -9,10 +9,12 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 
 ## [0.34.0] - 2017-05-23
+### Changed
+- templates are now mutable and must be cloned manually
+- template.call changed to template.oncreate
+
 ### Added
-- component.common instead of .store and .state
-- template function
-- find function
+- template methods `select`, `update` and `getKey`
 
 ## [0.33.0] - 2017-05-17
 ### Added
