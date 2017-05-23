@@ -65,8 +65,8 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-export function template(model, options) { //eslint-disable-line no-unused-vars //TODO simplify
-	var modl = new Template(NodeCo, [
+export function template(model, options) { //eslint-disable-line no-unused-vars
+	var modl = new Template(NodeCo, [ //TODO simplify
 		model.cloneNode ? new Op(cloneNode, model)
 		: typeof model === 'number' ? new Op(D.createTextNode, '' + model)
 		: typeof model === 'string' ? new Op(D.createTextNode, model)

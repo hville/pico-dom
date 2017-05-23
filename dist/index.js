@@ -59,6 +59,12 @@ Template.prototype = {
 		return this
 	},
 
+	updateOnce: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn));
+		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce));
+		return this
+	},
+
 	select: function(fcn) {
 		this.ops.push(new Op(this.Co.prototype.assign, 'select', fcn));
 		return this
@@ -135,6 +141,12 @@ function wrapMethod(name) {
 		this.ops.push(new Op(proto[name], a, b));
 		return this
 	}
+}
+
+function updateOnce(v,k,o) {
+	this.updateOnce(v,k,o);
+	this.update = null;
+	return this
 }
 
 /**
@@ -284,7 +296,7 @@ function updateChildren(v,k,o) {
 	while (child) {
 		var co = child[picoKey];
 		if (co) {
-			co.update(v,k,o);
+			if (co.update) co.update(v,k,o);
 			child = (co.foot || child).nextSibling;
 		}
 		else child = child.nextSibling;

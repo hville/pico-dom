@@ -91,3 +91,17 @@ ct('element - clone template', function() {
 	ct('===', h3.node.id, '3')
 	ct('===', h4.node.id, '4')
 })
+
+ct('element - update', function() {
+	var co = el('h0').child(
+		X.text('a'),
+		X.text('b').update(function(v) { this.text(v.toUpperCase()) }),
+		X.text('c').updateOnce(function(v) { this.text(v.toUpperCase()) })
+	).create()
+	ct('===', co.node.textContent, 'abc')
+
+	co.update('d')
+	ct('===', co.node.textContent, 'dDD')
+	co.update('e')
+	ct('===', co.node.textContent, 'eED')
+})

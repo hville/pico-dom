@@ -117,7 +117,7 @@ function updateChildren(v,k,o) {
 	while (child) {
 		var co = child[picoKey]
 		if (co) {
-			co.update(v,k,o)
+			if (co.update) co.update(v,k,o)
 			child = (co.foot || child).nextSibling
 		}
 		else child = child.nextSibling
