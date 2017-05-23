@@ -51,13 +51,11 @@ function Op(fcn, a, b) {
 	this.b = b;
 }
 
-Op.prototype = {
-	call: function(ctx) {
-		var op = this;
-		return !op.f ? op.a
-			: op.b === undefined ? op.f.call(ctx, op.a)
-			: op.f.call(ctx, op.a, op.b)
-	}
+Op.prototype.call = function(ctx) {
+	var op = this;
+	return !op.f ? op.a
+		: op.b === undefined ? op.f.call(ctx, op.a)
+		: op.f.call(ctx, op.a, op.b)
 };
 
 /**
@@ -291,9 +289,9 @@ ListK.prototype = {
 
 	_init: function(template) {
 		this._template = template; //TODO delete
-		this._items = {};
+		this._items = {}; //TODO common refs
 		this.node = exports.D.createComment('^');
-		this.foot = exports.D.createComment('$');
+		this.foot = exports.D.createComment('$'); //TODO dynamic
 		this.node[picoKey] = this.update ? this : null;
 	},
 
@@ -405,7 +403,7 @@ function ListS(template) {
 ListS.prototype = {
 	constructor: ListS,
 	common: null,
-	assign: assignToThis,
+	assign: assignToThis, //TODO needed?
 	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 

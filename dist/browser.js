@@ -50,18 +50,12 @@ function Op(fcn, a, b) {
 	this.b = b;
 }
 
-Op.prototype = {
-	call: function(ctx) {
-		var op = this;
-		return !op.f ? op.a
-			: op.b === undefined ? op.f.call(ctx, op.a)
-			: op.f.call(ctx, op.a, op.b)
-	}
+Op.prototype.call = function(ctx) {
+	var op = this;
+	return !op.f ? op.a
+		: op.b === undefined ? op.f.call(ctx, op.a)
+		: op.f.call(ctx, op.a, op.b)
 };
-
-//import {NodeCo, ncProto} from './_node-co'
-//import {D} from './document'
-
 
 /**
  * @constructor
@@ -78,7 +72,7 @@ Template.prototype = {
 
 	create: function(keyVal) {
 		var ops = this.ops,
-				cmp = new this.Co(ops[0].call());
+				cmp = new this.Co(ops[0].call(exports.D));
 		if (keyVal) cmp.assign(keyVal);
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		return cmp
@@ -98,12 +92,21 @@ Template.prototype = {
 
 
 	call: function(fcn) {
-		return new Template(this.Co, this.ops.concat(new Op(call, fcn)))
+		return this.op(call, fcn)
+	},
+
+	_op: function(f,a,b) {
+		this.ops.push(new Op(f,a,b));
+		return this
+	},
+
+	op: function(f,a,b) {
+		return new Template(this.Co, this.ops.concat(new Op(f,a,b)))
 	},
 
 	_config: function(any) {
 		if (any != null) {
-			if (typeof any === 'function') this.ops.push(new Op(call, any));
+			if (typeof any === 'function') this._op(call, any);
 			else if (any.constructor === Object) each(any, this.addTransform, this);
 			else childOps.call(this, any);
 		}
@@ -120,8 +123,8 @@ Template.prototype = {
 	addTransform: function(argument, name) {
 		var proto = this.Co.prototype;
 		if (!proto[name]) throw Error('invalid method name: ' + name)
-		if (Array.isArray(argument)) this.ops.push(new Op(proto[name], argument[0], argument[1]));
-		else this.ops.push(new Op(proto[name], argument));
+		if (Array.isArray(argument)) this._op(proto[name], argument[0], argument[1]);
+		else this._op(proto[name], argument);
 	}
 };
 
@@ -151,7 +154,7 @@ function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		return new Template(this.Co, this.ops.concat(new Op(proto[name], a, b)))
+		return this.op(proto[name], a, b)
 	}
 }
 
@@ -294,9 +297,9 @@ ListK.prototype = {
 
 	_init: function(template) {
 		this._template = template; //TODO delete
-		this._items = {};
+		this._items = {}; //TODO common refs
 		this.node = exports.D.createComment('^');
-		this.foot = exports.D.createComment('$');
+		this.foot = exports.D.createComment('$'); //TODO dynamic
 		this.node[picoKey] = this.update ? this : null;
 	},
 
@@ -408,7 +411,7 @@ function ListS(template) {
 ListS.prototype = {
 	constructor: ListS,
 	common: null,
-	assign: assignToThis,
+	assign: assignToThis, //TODO needed?
 	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 
@@ -449,9 +452,6 @@ function updateListChildren(v,k,o) {
 //import {ListModel} from './_list-model'
 var svgURI = 'http://www.w3.org/2000/svg';
 
-function createElement(tag) { return exports.D.createElement(tag) }
-function createElementNS(nsURI, tag) { return exports.D.createElementNS(nsURI, tag) }
-function createTextNode(txt) { return exports.D.createTextNode(txt) }
 
 /**
  * @function svg
@@ -460,7 +460,7 @@ function createTextNode(txt) { return exports.D.createTextNode(txt) }
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(createElementNS, svgURI, tag)]);
+	var model = new Template(NodeCo, [new Op(exports.D.createElementNS, svgURI, tag)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -473,7 +473,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(createElement, tagName)]);
+	var model = new Template(NodeCo, [new Op(exports.D.createElement, tagName)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -486,7 +486,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(createElementNS, nsURI, tag)]);
+	var model = new Template(NodeCo, [new Op(exports.D.createElementNS, nsURI, tag)]);
 	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -498,7 +498,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(createTextNode, txt)]);
+	var model = new Template(NodeCo, [new Op(exports.D.createTextNode, txt)]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -513,8 +513,8 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
 function template(model, options) { //eslint-disable-line no-unused-vars
 	var modl = new Template(NodeCo, [
 		model.cloneNode ? new Op(cloneNode, model)
-		: typeof model === 'number' ? new Op(createTextNode, '' + model)
-		: typeof model === 'string' ? new Op(createTextNode, model)
+		: typeof model === 'number' ? new Op(exports.D.createTextNode, '' + model)
+		: typeof model === 'string' ? new Op(exports.D.createTextNode, model)
 		: model.create ? new Op(cloneNode, model.create().node)
 		: model.node ? new Op(cloneNode, model.node)
 		: model

@@ -21,7 +21,7 @@ export function ListS(template) {
 ListS.prototype = {
 	constructor: ListS,
 	common: null,
-	assign: assignToThis,
+	assign: assignToThis, //TODO needed?
 	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 

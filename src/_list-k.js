@@ -18,9 +18,9 @@ ListK.prototype = {
 
 	_init: function(template) {
 		this._template = template //TODO delete
-		this._items = {}
+		this._items = {} //TODO common refs
 		this.node = D.createComment('^')
-		this.foot = D.createComment('$')
+		this.foot = D.createComment('$') //TODO dynamic
 		this.node[picoKey] = this.update ? this : null
 	},
 
