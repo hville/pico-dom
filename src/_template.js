@@ -4,7 +4,7 @@ import {D} from './document'
 
 /**
  * @constructor
- * @param {!Object} constructor
+ * @param {!Function} constructor
  * @param {!Array} transforms
  */
 export function Template(constructor, transforms) {

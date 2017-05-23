@@ -7,7 +7,6 @@ import {D} from './document'
  * @constructor
  * @extends EventListener
  * @param {Node} node - DOM node
- * @param {Array} ops transforms
  */
 export function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')

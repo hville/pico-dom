@@ -13,8 +13,14 @@ function setDocument(doc) {
 	return exports.D = doc
 }
 
-function Op(fcn, a, b) {
-	this.f = fcn;
+/**
+ * @constructor
+ * @param {Function} method
+ * @param {*} [a]
+ * @param {*} [b]
+ */
+function Op(method, a, b) {
+	this.f = method;
 	this.a = a;
 	this.b = b;
 }
@@ -28,7 +34,7 @@ Op.prototype.call = function(ctx) {
 
 /**
  * @constructor
- * @param {!Object} constructor
+ * @param {!Function} constructor
  * @param {!Array} transforms
  */
 function Template(constructor, transforms) {
@@ -156,11 +162,15 @@ function updateOnce(v,k,o) {
  * @param {*} [ctx] context
  * @returns {*} accumulator
  */
-/*export function reduce(obj, fcn, res, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj)
-	return res
-}*/
 
+
+/**
+ * @function
+ * @param {!Object} obj
+ * @param {Function} fcn
+ * @param {*} [ctx]
+ * @returns {void}
+ */
 function each(obj, fcn, ctx) {
 	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
 }
@@ -185,7 +195,6 @@ var picoKey = '_pico';
  * @constructor
  * @extends EventListener
  * @param {Node} node - DOM node
- * @param {Array} ops transforms
  */
 function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
@@ -304,7 +313,6 @@ function updateChildren(v,k,o) {
 /**
  * @constructor
  * @param {!Object} template
- * @param {Object} [options]
  */
 function ListK(template) {
 	this.template = template;
@@ -405,7 +413,6 @@ function updateKeyedChildren(arr) {
 /**
  * @constructor
  * @param {!Object} template
- * @param {Object} [options]
  */
 function ListS(template) {
 	this.template = template;
@@ -516,7 +523,7 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
 
 /**
  * @function template
- * @param {Node|Object} model source node or template
+ * @param {!Node} node source node
  * @param {...*} [options] options
  * @return {!Object} Component
  */

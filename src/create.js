@@ -61,7 +61,7 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
 
 /**
  * @function template
- * @param {Node|Object} model source node or template
+ * @param {!Node} node source node
  * @param {...*} [options] options
  * @return {!Object} Component
  */

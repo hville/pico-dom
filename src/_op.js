@@ -1,5 +1,11 @@
-export function Op(fcn, a, b) {
-	this.f = fcn
+/**
+ * @constructor
+ * @param {Function} method
+ * @param {*} [a]
+ * @param {*} [b]
+ */
+export function Op(method, a, b) {
+	this.f = method
 	this.a = a
 	this.b = b
 }

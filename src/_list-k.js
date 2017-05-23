@@ -5,7 +5,6 @@ import {assignToThis} from './object'
 /**
  * @constructor
  * @param {!Object} template
- * @param {Object} [options]
  */
 export function ListK(template) {
 	this.template = template

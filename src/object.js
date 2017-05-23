@@ -6,11 +6,18 @@
  * @param {*} [ctx] context
  * @returns {*} accumulator
  */
-/*export function reduce(obj, fcn, res, ctx) {
+export function reduce(obj, fcn, res, ctx) { //TODO unused?
 	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj)
 	return res
-}*/
+}
 
+/**
+ * @function
+ * @param {!Object} obj
+ * @param {Function} fcn
+ * @param {*} [ctx]
+ * @returns {void}
+ */
 export function each(obj, fcn, ctx) {
 	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj)
 }
