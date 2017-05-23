@@ -12,7 +12,7 @@ import {D} from './document'
 export function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node
-
+	// TODO this.refs: {key: co}
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text
 	if ('value' in node) this.update = this.value //TODO fail on input.type = select

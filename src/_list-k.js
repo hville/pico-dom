@@ -18,7 +18,7 @@ ListK.prototype = {
 
 	_init: function(template) {
 		this._template = template //TODO delete
-		this._items = {} //TODO common refs
+		this.refs = {} //TODO common refs
 		this.node = D.createComment('^')
 		this.foot = D.createComment('$') //TODO dynamic
 		this.node[picoKey] = this.update ? this : null
@@ -91,7 +91,7 @@ function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			newM = Object.create(null)
 	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
@@ -106,7 +106,7 @@ function updateKeyedChildren(arr) {
 		}
 	}
 
-	this._items = newM
+	this.refs = newM
 
 	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this

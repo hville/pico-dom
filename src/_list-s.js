@@ -13,7 +13,7 @@ export function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
-		this._items[ks[i]] = model.create({common: this.common, key: key})
+		this.refs[ks[i]] = model.create({common: this.common, key: key})
 	}
 }
 
@@ -30,7 +30,7 @@ ListS.prototype = {
 	 * @param {...*} [v]
 	 * @return {!Array}
 	 */
-	select: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
@@ -42,7 +42,7 @@ function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			keys = this.select(v,k,o)
 	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
