@@ -13,37 +13,6 @@ function setDocument(doc) {
 	return exports.D = doc
 }
 
-/**
- * @function
- * @param {!Object} obj source
- * @param {Function} fcn reducer
- * @param {*} res accumulator
- * @param {*} [ctx] context
- * @returns {*} accumulator
- */
-function reduce(obj, fcn, res, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj);
-	return res
-}
-
-function each(obj, fcn, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
-}
-
-/**
- * @function
- * @param {string|!Object} key keyOrObject
- * @param {*} [val] value
- * @returns {!Object} this
- */
-function assignToThis(key, val) { //eslint-disable-line no-unused-vars
-	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
-		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]];
-	}
-	else if (key[0] !== '_') this[key] = val;
-	return this
-}
-
 function Op(fcn, a, b) {
 	this.f = fcn;
 	this.a = a;
@@ -73,7 +42,7 @@ Template.prototype = {
 	create: function(keyVal) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(exports.D));
-		if (keyVal) cmp.assign(keyVal);
+		if (keyVal) cmp.assign(keyVal); //TODO common
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		return cmp
 	},
@@ -82,6 +51,7 @@ Template.prototype = {
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
 	assign: wrapMethod('assign'), //TODO RENAME
+	//TODO replace assign with update, select, getKey
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
@@ -92,22 +62,23 @@ Template.prototype = {
 
 
 	call: function(fcn) {
-		return this.op(call, fcn)
-	},
-
-	_op: function(f,a,b) {
-		this.ops.push(new Op(f,a,b));
-		return this
-	},
-
-	op: function(f,a,b) {
-		return new Template(this.Co, this.ops.concat(new Op(f,a,b)))
+		return new Template(this.Co, this.ops.concat(new Op(call, fcn)))
 	},
 
 	_config: function(any) {
 		if (any != null) {
-			if (typeof any === 'function') this._op(call, any);
-			else if (any.constructor === Object) each(any, this.addTransform, this);
+			if (typeof any === 'function') this.ops.push(new Op(call, any));
+			else if (any.constructor === Object) {
+				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
+					var key = ks[i],
+							arg = any[ks[i]],
+							fcn = this.Co.prototype[key];
+					if (!fcn) throw Error('invalid method name: ' + key)
+					if (Array.isArray(arg)) this.ops.push(new Op(fcn, arg[0], arg[1]));
+					else this.ops.push(new Op(fcn, arg));
+
+				}
+			}
 			else childOps.call(this, any);
 		}
 		return this
@@ -118,13 +89,6 @@ Template.prototype = {
 			new Template(this.Co, this.ops.slice()),
 			arguments
 		)
-	},
-
-	addTransform: function(argument, name) {
-		var proto = this.Co.prototype;
-		if (!proto[name]) throw Error('invalid method name: ' + name)
-		if (Array.isArray(argument)) this._op(proto[name], argument[0], argument[1]);
-		else this._op(proto[name], argument);
 	}
 };
 
@@ -154,8 +118,39 @@ function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		return this.op(proto[name], a, b)
+		return new Template(this.Co, this.ops.concat(new Op(proto[name], a, b)))
 	}
+}
+
+/**
+ * @function
+ * @param {!Object} obj source
+ * @param {Function} fcn reducer
+ * @param {*} res accumulator
+ * @param {*} [ctx] context
+ * @returns {*} accumulator
+ */
+/*export function reduce(obj, fcn, res, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) res = fcn.call(ctx, res, obj[ks[i]], ks[i], obj)
+	return res
+}*/
+
+function each(obj, fcn, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
+}
+
+/**
+ * @function
+ * @param {string|!Object} key keyOrObject
+ * @param {*} [val] value
+ * @returns {!Object} this
+ */
+function assignToThis(key, val) { //eslint-disable-line no-unused-vars
+	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
+		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]];
+	}
+	else if (key[0] !== '_') this[key] = val;
+	return this
 }
 
 var picoKey = '_pico';
@@ -250,7 +245,7 @@ var ncProto = NodeCo.prototype = {
 		if (handler) handler.call(this, event);
 	},
 	on: function(type, handler) {
-		if (typeof type === 'object') each(type, this.registerHandler, this);
+		if (typeof type === 'object') each(type, this.registerHandler, this); //TODO inline each
 		else this.registerHandler(handler, type);
 		return this
 	},
@@ -399,7 +394,7 @@ function updateKeyedChildren(arr) {
  */
 function ListS(template) {
 	this._init(template);
-
+	// TODO template validation
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
@@ -449,7 +444,6 @@ function updateListChildren(v,k,o) {
 	return this
 }
 
-//import {ListModel} from './_list-model'
 var svgURI = 'http://www.w3.org/2000/svg';
 
 
@@ -535,18 +529,13 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = model.create ? new Template(ListK, [new Op(null, model)])
-		: new Template(ListS, [new Op(null, reduce(model, getModels, {}))]);
+	var lst = new Template(
+		model.create ? ListK : ListS,
+		[new Op(null, model)]
+	);
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst
-}
-
-
-function getModels(models, tmpl, key) {
-	if (tmpl.create) models[key] = tmpl;
-	else throw Error('list item must be a template of a collection of templates')
-	return models
 }
 
 function find(start, test, until) { //find(test, head=body, foot=null)

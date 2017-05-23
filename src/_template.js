@@ -1,4 +1,3 @@
-import {each} from './object'
 import {Op} from './_op'
 import {D} from './document'
 
@@ -19,7 +18,7 @@ Template.prototype = {
 	create: function(keyVal) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(D))
-		if (keyVal) cmp.assign(keyVal)
+		if (keyVal) cmp.assign(keyVal) //TODO common
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
 		return cmp
 	},
@@ -28,6 +27,7 @@ Template.prototype = {
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
 	assign: wrapMethod('assign'), //TODO RENAME
+	//TODO replace assign with update, select, getKey
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
@@ -44,7 +44,17 @@ Template.prototype = {
 	_config: function(any) {
 		if (any != null) {
 			if (typeof any === 'function') this.ops.push(new Op(call, any))
-			else if (any.constructor === Object) each(any, this.addTransform, this)
+			else if (any.constructor === Object) {
+				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
+					var key = ks[i],
+							arg = any[ks[i]],
+							fcn = this.Co.prototype[key]
+					if (!fcn) throw Error('invalid method name: ' + key)
+					if (Array.isArray(arg)) this.ops.push(new Op(fcn, arg[0], arg[1]))
+					else this.ops.push(new Op(fcn, arg))
+
+				}
+			}
 			else childOps.call(this, any)
 		}
 		return this
@@ -55,13 +65,6 @@ Template.prototype = {
 			new Template(this.Co, this.ops.slice()),
 			arguments
 		)
-	},
-
-	addTransform: function(argument, name) {
-		var proto = this.Co.prototype
-		if (!proto[name]) throw Error('invalid method name: ' + name)
-		if (Array.isArray(argument)) this.ops.push(new Op(proto[name], argument[0], argument[1]))
-		else this.ops.push(new Op(proto[name], argument))
 	}
 }
 

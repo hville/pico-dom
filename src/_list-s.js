@@ -9,7 +9,7 @@ import {assignToThis} from './object'
  */
 export function ListS(template) {
 	this._init(template)
-
+	// TODO template validation
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]

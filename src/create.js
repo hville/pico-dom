@@ -1,8 +1,6 @@
 import {D} from './document'
 import {Template} from './_template'
 import {NodeCo} from './_node-co'
-//import {ListModel} from './_list-model'
-import {reduce} from './object'
 import {Op} from './_op'
 import {ListK} from './_list-k'
 import {ListS} from './_list-s'
@@ -67,7 +65,7 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-export function template(model, options) { //eslint-disable-line no-unused-vars
+export function template(model, options) { //eslint-disable-line no-unused-vars //TODO simplify
 	var modl = new Template(NodeCo, [
 		model.cloneNode ? new Op(cloneNode, model)
 		: typeof model === 'number' ? new Op(D.createTextNode, '' + model)
@@ -92,16 +90,11 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = model.create ? new Template(ListK, [new Op(null, model)])
-		: new Template(ListS, [new Op(null, reduce(model, getModels, {}))])
+	var lst = new Template(
+		model.create ? ListK : ListS,
+		[new Op(null, model)]
+	)
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst
-}
-
-
-function getModels(models, tmpl, key) {
-	if (tmpl.create) models[key] = tmpl
-	else throw Error('list item must be a template of a collection of templates')
-	return models
 }
