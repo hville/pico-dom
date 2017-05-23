@@ -13,8 +13,7 @@ export function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
-		this._items[ks[i]] = (model.cloneNode ? model.cloneNode(true)
-			: model.create({common: this.common, key: key}))
+		this._items[ks[i]] = model.create({common: this.common, key: key})
 	}
 }
 
