@@ -63,7 +63,7 @@ Template.prototype = {
 	_childText: wrapMethod('_childText'),
 
 
-	oncreate: function(fcn) { //TODO oncreate
+	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
 		this.ops.push(new Op(call, fcn))
 		return this
 	},

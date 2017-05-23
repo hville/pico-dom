@@ -88,7 +88,7 @@ Template.prototype = {
 	_childText: wrapMethod('_childText'),
 
 
-	oncreate: function(fcn) { //TODO oncreate
+	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
@@ -191,7 +191,7 @@ var picoKey = '_pico';
 function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
-
+	// TODO this.refs: {key: co}
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
@@ -319,7 +319,7 @@ ListK.prototype = {
 
 	_init: function(template) {
 		this._template = template; //TODO delete
-		this._items = {}; //TODO common refs
+		this.refs = {}; //TODO common refs
 		this.node = exports.D.createComment('^');
 		this.foot = exports.D.createComment('$'); //TODO dynamic
 		this.node[picoKey] = this.update ? this : null;
@@ -392,7 +392,7 @@ function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			newM = Object.create(null);
 	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
@@ -407,7 +407,7 @@ function updateKeyedChildren(arr) {
 		}
 	}
 
-	this._items = newM;
+	this.refs = newM;
 
 	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this
@@ -424,7 +424,7 @@ function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this._items[ks[i]] = model.create({common: this.common, key: key});
+		this.refs[ks[i]] = model.create({common: this.common, key: key});
 	}
 }
 
@@ -441,7 +441,7 @@ ListS.prototype = {
 	 * @param {...*} [v]
 	 * @return {!Array}
 	 */
-	select: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
@@ -453,7 +453,7 @@ function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			keys = this.select(v,k,o);
 	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
