@@ -16,7 +16,7 @@ var svgURI = 'http://www.w3.org/2000/svg'
  */
 export function svg(tag, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(D.createElementNS, svgURI, tag)])
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
 	return model
 }
 
@@ -29,7 +29,7 @@ export function svg(tag, options) { //eslint-disable-line no-unused-vars
  */
 export function element(tagName, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(D.createElement, tagName)])
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
 	return model
 }
 
@@ -42,7 +42,7 @@ export function element(tagName, options) { //eslint-disable-line no-unused-vars
  */
 export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(D.createElementNS, nsURI, tag)])
-	for (var i=2; i<arguments.length; ++i) model._config(arguments[i])
+	for (var i=2; i<arguments.length; ++i) model.config(arguments[i])
 	return model
 }
 
@@ -54,7 +54,7 @@ export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused
  */
 export function text(txt, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(D.createTextNode, txt)])
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
 	return model
 }
 
@@ -74,7 +74,7 @@ export function template(model, options) { //eslint-disable-line no-unused-vars 
 		: model.node ? new Op(cloneNode, model.node)
 		: model
 	])
-	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i])
 	return modl
 }
 
@@ -95,6 +95,6 @@ export function list(model, options) { //eslint-disable-line no-unused-vars
 		[new Op(null, model)]
 	)
 
-	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i])
 	return lst
 }

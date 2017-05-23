@@ -1,6 +1,6 @@
 {
   "name": "pico-dom",
-  "version": "0.33.0",
+  "version": "0.34.0",
   "main": "./dist/index.js",
   "module": "./module.js",
   "browser": "./dist/browser.js",
