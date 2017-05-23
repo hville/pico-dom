@@ -61,11 +61,6 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_childTemplate: function (template) {
-		this.template = template //TODO reset or disallow if already set
-		return this
-	},
-
 	_placeItem: function(parent, item, spot) {
 		if (item.foot) {
 			if (!spot) return item.moveTo(parent)

@@ -362,11 +362,6 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_childTemplate: function (template) {
-		this.template = template; //TODO reset or disallow if already set
-		return this
-	},
-
 	_placeItem: function(parent, item, spot) {
 		if (item.foot) {
 			if (!spot) return item.moveTo(parent)
@@ -444,8 +439,7 @@ ListS.prototype = {
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_childTemplate: ListK.prototype._childTemplate
+	_placeItem: ListK.prototype._placeItem
 };
 
 function updateListChildren(v,k,o) {
