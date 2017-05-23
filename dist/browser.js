@@ -47,11 +47,37 @@ Template.prototype = {
 		return cmp
 	},
 
+	clone: function(options) {
+		var template = new Template(this.Co, this.ops.slice());
+		if (options) template.config(options);
+		return template
+	},
+
+	update: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'update', fcn));
+		return this
+	},
+
+	updateOnce: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn));
+		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce));
+		return this
+	},
+
+	select: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'select', fcn));
+		return this
+	},
+
+	getKey: function(fcn) {
+		this.ops.push(new Op(this.Co.prototype.assign, 'getKey', fcn));
+		return this
+	},
 	/*key: function(key) { //TODO name
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
 	assign: wrapMethod('assign'), //TODO RENAME
-	//TODO replace assign with update, select, getKey
+
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
@@ -61,11 +87,12 @@ Template.prototype = {
 	_childText: wrapMethod('_childText'),
 
 
-	call: function(fcn) {
-		return new Template(this.Co, this.ops.concat(new Op(call, fcn)))
+	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
+		this.ops.push(new Op(call, fcn));
+		return this
 	},
 
-	_config: function(any) {
+	config: function(any) {
 		if (any != null) {
 			if (typeof any === 'function') this.ops.push(new Op(call, any));
 			else if (any.constructor === Object) {
@@ -79,16 +106,25 @@ Template.prototype = {
 
 				}
 			}
-			else childOps.call(this, any);
+			else this.child(any);
 		}
 		return this
 	},
 
 	child: function() {
-		return childOps.apply(
-			new Template(this.Co, this.ops.slice()),
-			arguments
-		)
+		var proto = this.Co.prototype;
+		for (var i=0; i<arguments.length; ++i) {
+			var child = arguments[i];
+			if (child != null) {
+				if (Array.isArray(child)) this.child.apply(this, child);
+				else this.ops.push(
+					child.create ? new Op(proto._childTemplate, child)
+					: child.cloneNode ? new Op(proto._childNode, child)
+					: new Op(proto._childText, ''+child)
+				);
+			}
+		}
+		return this
 	}
 };
 
@@ -97,29 +133,19 @@ function call(fcn) {
 	fcn.call(this, this.node);
 }
 
-
-function childOps() {
-	var proto = this.Co.prototype;
-	for (var i=0; i<arguments.length; ++i) {
-		var child = arguments[i];
-		if (child != null) {
-			if (Array.isArray(child)) childOps.apply(this, child);
-			else this.ops.push(
-				child.create ? new Op(proto._childTemplate, child)
-				: child.cloneNode ? new Op(proto._childNode, child)
-				: new Op(proto._childText, ''+child)
-			);
-		}
-	}
-	return this
-}
-
 function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		return new Template(this.Co, this.ops.concat(new Op(proto[name], a, b)))
+		this.ops.push(new Op(proto[name], a, b));
+		return this
 	}
+}
+
+function updateOnce(v,k,o) {
+	this.updateOnce(v,k,o);
+	this.update = null;
+	return this
 }
 
 /**
@@ -164,7 +190,6 @@ var picoKey = '_pico';
 function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
-
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
@@ -224,7 +249,7 @@ var ncProto = NodeCo.prototype = {
 	},
 
 	_childText: function appendText(txt) {
-		this.node.appendChild(exports.D.createTextNode(txt)); //TODO components only?
+		this.node.appendChild(exports.D.createTextNode(txt));
 	},
 
 
@@ -269,7 +294,7 @@ function updateChildren(v,k,o) {
 	while (child) {
 		var co = child[picoKey];
 		if (co) {
-			co.update(v,k,o);
+			if (co.update) co.update(v,k,o);
 			child = (co.foot || child).nextSibling;
 		}
 		else child = child.nextSibling;
@@ -282,21 +307,17 @@ function updateChildren(v,k,o) {
  * @param {Object} [options]
  */
 function ListK(template) {
-	this._init(template);
+	this.template = template;
+	this.refs = {};
+	this.node = exports.D.createComment('^');
+	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.node[picoKey] = this;
 }
 
 ListK.prototype = {
 	constructor: ListK,
 	common: null,
 	assign: assignToThis,
-
-	_init: function(template) {
-		this._template = template; //TODO delete
-		this._items = {}; //TODO common refs
-		this.node = exports.D.createComment('^');
-		this.foot = exports.D.createComment('$'); //TODO dynamic
-		this.node[picoKey] = this.update ? this : null;
-	},
 
 	/**
 	* @function moveTo
@@ -339,11 +360,6 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_childTemplate: function (template) {
-		this._template = template; //TODO reset or disallow if already set
-		return this
-	},
-
 	_placeItem: function(parent, item, spot) {
 		if (item.foot) {
 			if (!spot) return item.moveTo(parent)
@@ -365,15 +381,14 @@ function updateKeyedChildren(arr) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			newM = Object.create(null);
 	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
-				model = this._template,
-				item = newM[key] = items[key] || (model.cloneNode ? model.cloneNode(true)
-					: model.create({common: this.common, key: key}));
+				model = this.template,
+				item = newM[key] = items[key] || model.create({common: this.common, key: key});
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -381,7 +396,7 @@ function updateKeyedChildren(arr) {
 		}
 	}
 
-	this._items = newM;
+	this.refs = newM;
 
 	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
 	return this
@@ -393,13 +408,16 @@ function updateKeyedChildren(arr) {
  * @param {Object} [options]
  */
 function ListS(template) {
-	this._init(template);
-	// TODO template validation
+	this.template = template;
+	this.refs = {};
+	this.node = exports.D.createComment('^');
+	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.node[picoKey] = this;
+
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this._items[ks[i]] = (model.cloneNode ? model.cloneNode(true)
-			: model.create({common: this.common, key: key}));
+		this.refs[ks[i]] = model.create({common: this.common, key: key});
 	}
 }
 
@@ -407,7 +425,6 @@ ListS.prototype = {
 	constructor: ListS,
 	common: null,
 	assign: assignToThis, //TODO needed?
-	_init: ListK.prototype._init,
 	moveTo: ListK.prototype.moveTo,
 
 	/**
@@ -416,19 +433,18 @@ ListS.prototype = {
 	 * @param {...*} [v]
 	 * @return {!Array}
 	 */
-	select: function(v) { return Object.keys(this._items) }, //eslint-disable-line no-unused-vars
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_childTemplate: ListK.prototype._childTemplate
+	_placeItem: ListK.prototype._placeItem
 };
 
 function updateListChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
-			items = this._items,
+			items = this.refs,
 			keys = this.select(v,k,o);
 	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
@@ -455,7 +471,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(exports.D.createElementNS, svgURI, tag)]);
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
 
@@ -468,7 +484,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(exports.D.createElement, tagName)]);
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
 
@@ -481,7 +497,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(exports.D.createElementNS, nsURI, tag)]);
-	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
+	for (var i=2; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
 
@@ -493,7 +509,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
 	var model = new Template(NodeCo, [new Op(exports.D.createTextNode, txt)]);
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
 
@@ -504,16 +520,11 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function template(model, options) { //eslint-disable-line no-unused-vars
-	var modl = new Template(NodeCo, [
-		model.cloneNode ? new Op(cloneNode, model)
-		: typeof model === 'number' ? new Op(exports.D.createTextNode, '' + model)
-		: typeof model === 'string' ? new Op(exports.D.createTextNode, model)
-		: model.create ? new Op(cloneNode, model.create().node)
-		: model.node ? new Op(cloneNode, model.node)
-		: model
-	]);
-	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
+function template(node, options) { //eslint-disable-line no-unused-vars
+	if (!node.cloneNode) throw Error('invalid node')
+
+	var modl = new Template(NodeCo, [new Op(cloneNode, node)]);
+	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i]);
 	return modl
 }
 
@@ -534,7 +545,7 @@ function list(model, options) { //eslint-disable-line no-unused-vars
 		[new Op(null, model)]
 	);
 
-	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
+	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i]);
 	return lst
 }
 

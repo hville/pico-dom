@@ -53,7 +53,7 @@ Template.prototype = {
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
 	assign: wrapMethod('assign'), //TODO RENAME
-	//TODO replace assign with update, select, getKey
+
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),

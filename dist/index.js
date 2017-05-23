@@ -78,7 +78,7 @@ Template.prototype = {
 		return new Template(this.ops.concat(new Op(setKey, key)))
 	},*/
 	assign: wrapMethod('assign'), //TODO RENAME
-	//TODO replace assign with update, select, getKey
+
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
@@ -191,7 +191,6 @@ var picoKey = '_pico';
 function NodeCo(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
-	// TODO this.refs: {key: co}
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
@@ -251,7 +250,7 @@ var ncProto = NodeCo.prototype = {
 	},
 
 	_childText: function appendText(txt) {
-		this.node.appendChild(exports.D.createTextNode(txt)); //TODO components only?
+		this.node.appendChild(exports.D.createTextNode(txt));
 	},
 
 
