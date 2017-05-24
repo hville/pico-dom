@@ -26,6 +26,7 @@ Template.prototype = {
 		if (parent) cmp.root = parent.root || parent
 		if (key !== undefined) cmp.key = key
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
+		if (cmp.oncreate) cmp.oncreate()
 		return cmp
 	},
 
@@ -36,7 +37,7 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
+	call: function(fcn) {
 		this.ops.push(new Op(call, fcn))
 		return this
 	},

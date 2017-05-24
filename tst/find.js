@@ -15,7 +15,7 @@ ct('find', function() {
 			h0 = {},
 			h01 = {},
 			h10 = {}
-	el('h0').oncreate(function() {h = this}).child(
+	el('h0').call(function() {h = this}).child(
 		'H',
 		el('h1', function() {h0 = this},
 			'H0',

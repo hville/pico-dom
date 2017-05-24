@@ -19,7 +19,7 @@ ct('element - static', function() {
 
 	// explicit
 	ct('===', toString(el('p').child('ab').create().node.childNodes), 'ab')
-	ct('===', el('p').oncreate(function() {this.node.id = 'A'}).create().node.id, 'A')
+	ct('===', el('p').call(function() {this.node.id = 'A'}).create().node.id, 'A')
 	ct('===', el('p').attr('id', 'A').create().node.id, 'A')
 
 	// automagic
@@ -48,8 +48,8 @@ ct('element - root', function() {
 	var h1 = {},
 			h2 = {}
 	var h0 = el('h0').child(
-		el('h1').oncreate(function() {h1 = this}),
-		el('h2').oncreate(function() {h2 = this})
+		el('h1').call(function() {h1 = this}),
+		el('h2').call(function() {h2 = this})
 	).create().set('a', 'a')
 	ct('===', h1.root, h0)
 	ct('===', h2.root, h0)
@@ -109,7 +109,7 @@ ct('element - update', function() {
 ct('element - custom element', function() {
 	var co = el('h0').child(
 		el('h1').child(
-			el('h2', 'x').oncreate(
+			el('h2', 'x').call(
 				function() {
 					this.root.update = this.text.bind(this)
 				}
