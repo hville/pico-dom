@@ -16,10 +16,10 @@ export function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	create: function(keyVal) {
+	create: function(parent) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(D))
-		if (keyVal) cmp.assign(keyVal) //TODO common
+		if (parent) cmp.root = parent.root || parent
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
 		return cmp
 	},

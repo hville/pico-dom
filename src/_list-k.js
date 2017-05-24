@@ -16,7 +16,6 @@ export function ListK(template) {
 
 ListK.prototype = {
 	constructor: ListK,
-	common: null,
 	assign: assignToThis,
 
 	/**
@@ -88,7 +87,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create({common: this.common, key: key})
+				item = newM[key] = items[key] || model.create(this).assign('key', key)
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr)

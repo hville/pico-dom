@@ -22,7 +22,6 @@ export function NodeCo(node) {
 
 export var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	common: null,
 	// INSTANCE UTILITIES
 	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
 
@@ -66,7 +65,7 @@ export var ncProto = NodeCo.prototype = {
 	},
 
 	_childTemplate: function (template) {
-		template.create({common: this.common}).moveTo(this.node) //TODO common
+		template.create(this).moveTo(this.node) //TODO common
 	},
 
 	_childText: function appendText(txt) {

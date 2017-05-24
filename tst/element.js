@@ -44,17 +44,17 @@ ct('element - static, multiple mixed arguments', function() {
 	ct('===', p.textContent, '012')
 })
 
-ct('element - common', function() {
+ct('element - root', function() {
 	var h1 = {},
 			h2 = {}
 	var h0 = el('h0').child(
 		el('h1').oncreate(function() {h1 = this}),
 		el('h2').oncreate(function() {h2 = this})
-	).create({common: {a:'a'}})
-	ct('===', h1.common, h0.common)
-	ct('===', h2.common, h0.common)
-	ct('===', h1.common.a, h0.common.a)
-	ct('===', h2.common.a, h0.common.a)
+	).create().assign('a', 'a')
+	ct('===', h1.root, h0)
+	ct('===', h2.root, h0)
+	ct('===', h1.root.a, 'a')
+	ct('===', h2.root.a, 'a')
 })
 
 ct('element - event', function() {
@@ -106,11 +106,22 @@ ct('element - update', function() {
 	ct('===', co.node.textContent, 'eED')
 })
 
-ct('element - custom element', function() {
+ct.only('element - custom element', function() {
 	var co = el('h0').child(
 		el('h1').child(
-			el('h2', 'x')
+			el('h2', 'x').oncreate(
+				function() {
+					this.root.update = this.text.bind(this)
+				}
+			)
 		)
 	).create()
 	ct('===', co.node.textContent, 'x')
+	ct('===', co.node.firstChild.textContent, 'x')
+	ct('===', co.node.firstChild.firstChild.textContent, 'x')
+
+	co.update('Y')
+	ct('===', co.node.textContent, 'Y')
+	ct('===', co.node.firstChild.textContent, 'Y')
+	ct('===', co.node.firstChild.firstChild.textContent, 'Y')
 })

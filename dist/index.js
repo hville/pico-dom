@@ -47,10 +47,10 @@ function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	create: function(keyVal) {
+	create: function(parent) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(exports.D));
-		if (keyVal) cmp.assign(keyVal); //TODO common
+		if (parent) cmp.root = parent.root || parent;
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		return cmp
 	},
@@ -214,7 +214,6 @@ function NodeCo(node) {
 
 var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	common: null,
 	// INSTANCE UTILITIES
 	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
 
@@ -258,7 +257,7 @@ var ncProto = NodeCo.prototype = {
 	},
 
 	_childTemplate: function (template) {
-		template.create({common: this.common}).moveTo(this.node); //TODO common
+		template.create(this).moveTo(this.node); //TODO common
 	},
 
 	_childText: function appendText(txt) {
@@ -328,7 +327,6 @@ function ListK(template) {
 
 ListK.prototype = {
 	constructor: ListK,
-	common: null,
 	assign: assignToThis,
 
 	/**
@@ -400,7 +398,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create({common: this.common, key: key});
+				item = newM[key] = items[key] || model.create(this).assign('key', key);
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -428,13 +426,12 @@ function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this.refs[ks[i]] = model.create({common: this.common, key: key});
+		this.refs[ks[i]] = model.create(this).assign('key', key);
 	}
 }
 
 ListS.prototype = {
 	constructor: ListS,
-	common: null,
 	assign: assignToThis, //TODO needed?
 	moveTo: ListK.prototype.moveTo,
 

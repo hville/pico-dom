@@ -17,13 +17,12 @@ export function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
-		this.refs[ks[i]] = model.create({common: this.common, key: key})
+		this.refs[ks[i]] = model.create(this).assign('key', key)
 	}
 }
 
 ListS.prototype = {
 	constructor: ListS,
-	common: null,
 	assign: assignToThis, //TODO needed?
 	moveTo: ListK.prototype.moveTo,
 
