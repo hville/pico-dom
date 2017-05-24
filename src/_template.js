@@ -12,6 +12,7 @@ export function Template(constructor, transforms) {
 	this.ops = transforms || []
 }
 
+
 Template.prototype = {
 	constructor: Template,
 
@@ -29,8 +30,18 @@ Template.prototype = {
 		return template
 	},
 
-	update: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'update', fcn))
+	// COMPONENT OPERATIONS
+	update: assignKey('update'),
+	select: assignKey('select'),
+	getKey: assignKey('getKey'),
+
+	/*key: function(key) { //TODO name
+		return new Template(this.ops.concat(new Op(setKey, key)))
+	},*/
+	assign: wrapMethod('assign'), //TODO RENAME
+
+	default: function(key, val) { //TODO added once on list templates, DELETE?
+		this.ops.splice(1,0,new Op(this.Co.prototype.assign, key, val))
 		return this
 	},
 
@@ -39,30 +50,6 @@ Template.prototype = {
 		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce))
 		return this
 	},
-
-	select: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'select', fcn))
-		return this
-	},
-
-	getKey: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'getKey', fcn))
-		return this
-	},
-	/*key: function(key) { //TODO name
-		return new Template(this.ops.concat(new Op(setKey, key)))
-	},*/
-	assign: wrapMethod('assign'), //TODO RENAME
-
-	on: wrapMethod('on'),
-	attr: wrapMethod('attr'),
-	prop: wrapMethod('prop'),
-	class: wrapMethod('class'),
-	_childNode: wrapMethod('_childNode'),
-	_childTemplate: wrapMethod('_childTemplate'),
-	_childText: wrapMethod('_childText'),
-
-
 	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
 		this.ops.push(new Op(call, fcn))
 		return this
@@ -84,6 +71,17 @@ Template.prototype = {
 		}
 		return this
 	},
+
+	// ELEMENT OPERATIONS
+
+	on: wrapMethod('on'),
+	attr: wrapMethod('attr'),
+	prop: wrapMethod('prop'),
+	class: wrapMethod('class'),
+
+	_childNode: wrapMethod('_childNode'),
+	_childTemplate: wrapMethod('_childTemplate'),
+	_childText: wrapMethod('_childText'),
 
 	child: function() {
 		var proto = this.Co.prototype
@@ -112,6 +110,13 @@ function wrapMethod(name) {
 		var proto = this.Co.prototype
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
 		this.ops.push(new Op(proto[name], a, b))
+		return this
+	}
+}
+
+function assignKey(key) {
+	return function(val) {
+		this.ops.push(new Op(this.Co.prototype.assign, key, val))
 		return this
 	}
 }

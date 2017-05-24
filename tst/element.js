@@ -105,3 +105,12 @@ ct('element - update', function() {
 	co.update('e')
 	ct('===', co.node.textContent, 'eED')
 })
+
+ct('element - custom element', function() {
+	var co = el('h0').child(
+		el('h1').child(
+			el('h2', 'x')
+		)
+	).create()
+	ct('===', co.node.textContent, 'x')
+})
