@@ -61,12 +61,12 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
+	oncreate: function(fcn) { //TODO
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
 
-	set: wrapMethod('set'), //TODO RENAME
+	set: wrapMethod('set'),
 
 	config: function(any) {
 		if (any != null) {
@@ -99,7 +99,7 @@ Template.prototype = {
 			if (child != null) {
 				if (Array.isArray(child)) this.child.apply(this, child);
 				else this.ops.push(
-					child.create ? new Op(proto._childTemplate, child)
+					child.create ? new Op(proto._childTemplate, child) //TODO
 					: child.cloneNode ? new Op(proto._childNode, child)
 					: new Op(proto._childText, ''+child)
 				);
@@ -111,7 +111,7 @@ Template.prototype = {
 
 
 function call(fcn) {
-	fcn.call(this, this.node);
+	fcn.call(this, this.node); //TODO
 }
 
 function wrapMethod(name) {
@@ -146,10 +146,10 @@ function NodeCo(node) {
 	this.node = node;
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
-	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
+	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
 
 	node[picoKey] = this.update ? this : null;
-	//TODO ondestroy
+	//TODO destroy, ondestroy
 }
 
 
@@ -210,11 +210,39 @@ var ncProto = NodeCo.prototype = {
 
 	// PLACEMENT
 
-	moveTo: function(target, before) {
-		if (this.onmove) this.onmove(this.node.parentNode, target)
-		;(target.node || target).insertBefore(this.node, before || null);
+	/**
+	* @function
+	* @return {!Object} this
+	*/
+	remove: function() {
+		var node = this.node,
+				origin = node.parentNode;
+		if (origin) {
+			if (this.onmove) this.onmove(origin, null);
+			origin.removeChild(node);
+		}
 		return this
 	},
+
+	/**
+	* @function
+	* @param  {!Object} parent destination parent
+	* @param  {Object} [before] nextSibling
+	* @return {!Object} this
+	*/
+	moveTo: function(parent, before) { //TODO not variadic, nodes only...
+		var node = this.node,
+				origin = node.parentNode,
+				anchor = before || null;
+		if (!parent) throw Error('parent node or component must be specified') //TODO
+
+		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
+			if (this.onmove) this.onmove(this.node.parentNode, parent);
+			parent.insertBefore(node, anchor);
+			return this
+		}
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,
@@ -277,7 +305,7 @@ ListK.prototype = {
 
 	/**
 	* @function moveTo
-	* @param  {Object} parent destination parent
+	* @param  {!Object} parent destination parent
 	* @param  {Object} [before] nextSibling
 	* @return {!Object} this
 	*/
@@ -285,26 +313,43 @@ ListK.prototype = {
 		var foot = this.foot,
 				next = this.node,
 				origin = next.parentNode,
-				target = parent.node || parent,
-				cursor = before || null;
-		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch')
-		if (this.onmove) this.onmove(origin, target);
-		// skip case where there is nothing to do
-		if (cursor === foot || (origin === target && cursor === foot.nextSibling)) return this
+				anchor = before || null;
 
-		if (origin) {
-			if (target) { // relocate
+		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
+		if (!parent) throw Error('parent node or component must be specified') //TODO
+
+		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
+			if (this.onmove) this.onmove(origin, parent);
+
+			if (origin) { // relocate
+				var cursor;
 				do next = (cursor = next).nextSibling;
-				while (target.insertBefore(cursor, before) !== foot)
+				while (parent.insertBefore(cursor, anchor) !== foot)
 			}
-			else { // remove all
-				do next = (cursor = next).nextSibling;
-				while (origin.removeChild(cursor) !== foot)
+			else { // insertion
+				parent.insertBefore(next, anchor);
+				parent.insertBefore(foot, anchor);
 			}
 		}
-		else if (target) { //head and foot only
-			target.insertBefore(next, before);
-			target.insertBefore(foot, before);
+		return this
+	},
+
+
+	/**
+	* @function remove
+	* @return {!Object} this
+	*/
+	remove: function() {
+		var foot = this.foot,
+				next = this.node,
+				origin = next.parentNode;
+		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
+
+		if (origin) {
+			if (this.onmove) this.onmove(origin, null);
+			var cursor;
+			do next = (cursor = next).nextSibling;
+			while (origin.removeChild(cursor) !== foot) //TODO
 		}
 
 		return this
@@ -316,19 +361,20 @@ ListK.prototype = {
 
 	updateChildren: updateKeyedChildren,
 
-	_placeItem: function(parent, item, spot) {
-		if (item.foot) {
-			if (!spot) return item.moveTo(parent)
-			var head = item.node;
-			if (head === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
-			else if (head !== spot) item.moveTo(parent, spot);
-			return item.foot
+
+	_placeItem: function(parent, item, spot, foot) {
+		if (!spot) item.moveTo(parent);
+		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
+		else if (item.node !== spot) item.moveTo(parent, spot);
+		return item.foot || item.node
+	},
+
+	_clearFrom: function(spot) {
+		while(spot !== this.foot) {
+			var item = spot[picoKey];
+			spot = (item.foot || item.node).nextSibling;
+			item.remove();
 		}
-		var node = item.node || item;
-		if (!spot) parent.appendChild(node);
-		else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
-		else if (node !== spot) parent.insertBefore(node, spot);
-		return node
 	}
 };
 
@@ -348,13 +394,12 @@ function updateKeyedChildren(arr) {
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
-			spot = this._placeItem(parent, item, spot).nextSibling;
+			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
 
 	this.refs = newM;
-
-	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
+	this._clearFrom(spot);
 	return this
 }
 
@@ -381,6 +426,7 @@ ListS.prototype = {
 	root: null,
 	set: setThis,
 	moveTo: ListK.prototype.moveTo,
+	remove: ListK.prototype.remove,
 
 	/**
 	 * select all by default
@@ -392,7 +438,9 @@ ListS.prototype = {
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem
+	_placeItem: ListK.prototype._placeItem,
+	_clearFrom: ListK.prototype._clearFrom
+
 };
 
 function updateListChildren(v,k,o) {
@@ -407,11 +455,10 @@ function updateListChildren(v,k,o) {
 		var item = items[keys[i]];
 		if (item) {
 			if (item.update) item.update(v,k,o);
-			spot = this._placeItem(parent, item, spot).nextSibling; //TODO
+			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
-
-	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
+	this._clearFrom(spot);
 	return this
 }
 

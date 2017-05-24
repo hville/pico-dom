@@ -47,10 +47,15 @@ function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	create: function(parent) {
+	get node () {
+		return this.create().node
+	},
+
+	create: function(parent, key) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(exports.D));
 		if (parent) cmp.root = parent.root || parent;
+		if (key !== undefined) cmp.key = key;
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		return cmp
 	},
@@ -231,11 +236,11 @@ var ncProto = NodeCo.prototype = {
 	* @param  {Object} [before] nextSibling
 	* @return {!Object} this
 	*/
-	moveTo: function(parent, before) { //TODO not variadic, nodes only...
+	moveTo: function(parent, before) {
 		var node = this.node,
 				origin = node.parentNode,
 				anchor = before || null;
-		if (!parent) throw Error('parent node or component must be specified') //TODO
+		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			if (this.onmove) this.onmove(this.node.parentNode, parent);
@@ -295,7 +300,7 @@ function ListK(template) {
 	this.template = template;
 	this.refs = {};
 	this.node = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.foot = exports.D.createComment('$');
 	this.node[picoKey] = this;
 }
 
@@ -316,8 +321,7 @@ ListK.prototype = {
 				origin = next.parentNode,
 				anchor = before || null;
 
-		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
-		if (!parent) throw Error('parent node or component must be specified') //TODO
+		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
 			if (this.onmove) this.onmove(origin, parent);
@@ -341,16 +345,14 @@ ListK.prototype = {
 	* @return {!Object} this
 	*/
 	remove: function() {
-		var foot = this.foot,
-				next = this.node,
-				origin = next.parentNode;
-		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
+		var head = this.node,
+				origin = head.parentNode;
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null);
-			var cursor;
-			do next = (cursor = next).nextSibling;
-			while (origin.removeChild(cursor) !== foot) //TODO
+			this._clearFrom(head.nextSibling);
+			origin.removeChild(this.foot);
+			origin.removeChild(head);
 		}
 
 		return this
@@ -391,7 +393,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create(this).set('key', key);
+				item = newM[key] = items[key] || model.create(this, key);
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -412,13 +414,13 @@ function ListS(template) {
 	this.template = template;
 	this.refs = {};
 	this.node = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$'); //TODO dynamic
+	this.foot = exports.D.createComment('$');
 	this.node[picoKey] = this;
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this.refs[ks[i]] = model.create(this).set('key', key);
+		this.refs[ks[i]] = model.create(this, key);
 	}
 }
 

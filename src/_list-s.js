@@ -11,13 +11,13 @@ export function ListS(template) {
 	this.template = template
 	this.refs = {}
 	this.node = D.createComment('^')
-	this.foot = D.createComment('$') //TODO dynamic
+	this.foot = D.createComment('$')
 	this.node[picoKey] = this
 
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
-		this.refs[ks[i]] = model.create(this).set('key', key)
+		this.refs[ks[i]] = model.create(this, key)
 	}
 }
 

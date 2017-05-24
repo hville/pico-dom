@@ -2,14 +2,13 @@ import {element as el, list} from '../module'
 import {Store} from './Store' // any user store will do
 import {ic_remove, ic_add} from './icons'
 
+var i = 0
 
 var tableTemplate = el('table',
 	el('tbody',
 		list(
-			el('tr',
-				{class: 'abc'},
-				function(tr) { tr.common.i = tr.key },
-				el('td', ic_remove, {
+			el('tr').class('abc').oncreate(function(tr) { i = tr.key }).child(
+				el('td').on().child(ic_remove), {
 					on: {click: function() { this.common.store.delRow(this.common.i)}}
 				}), // title column
 				list( // data columns

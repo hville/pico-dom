@@ -97,11 +97,11 @@ export var ncProto = NodeCo.prototype = {
 	* @param  {Object} [before] nextSibling
 	* @return {!Object} this
 	*/
-	moveTo: function(parent, before) { //TODO not variadic, nodes only...
+	moveTo: function(parent, before) {
 		var node = this.node,
 				origin = node.parentNode,
 				anchor = before || null
-		if (!parent) throw Error('parent node or component must be specified') //TODO
+		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			if (this.onmove) this.onmove(this.node.parentNode, parent)

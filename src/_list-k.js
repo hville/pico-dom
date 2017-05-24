@@ -10,7 +10,7 @@ export function ListK(template) {
 	this.template = template
 	this.refs = {}
 	this.node = D.createComment('^')
-	this.foot = D.createComment('$') //TODO dynamic
+	this.foot = D.createComment('$')
 	this.node[picoKey] = this
 }
 
@@ -31,8 +31,7 @@ ListK.prototype = {
 				origin = next.parentNode,
 				anchor = before || null
 
-		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
-		if (!parent) throw Error('parent node or component must be specified') //TODO
+		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
 			if (this.onmove) this.onmove(origin, parent)
@@ -56,16 +55,14 @@ ListK.prototype = {
 	* @return {!Object} this
 	*/
 	remove: function() {
-		var foot = this.foot,
-				next = this.node,
-				origin = next.parentNode
-		if (next.parentNode !== foot.parentNode) throw Error('list moveTo parent mismatch') //TODO
+		var head = this.node,
+				origin = head.parentNode
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null)
-			var cursor
-			do next = (cursor = next).nextSibling
-			while (origin.removeChild(cursor) !== foot) //TODO
+			this._clearFrom(head.nextSibling)
+			origin.removeChild(this.foot)
+			origin.removeChild(head)
 		}
 
 		return this
@@ -106,7 +103,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create(this).set('key', key)
+				item = newM[key] = items[key] || model.create(this, key)
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr)
