@@ -13,10 +13,10 @@ export function NodeCo(node) {
 	this.node = node
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text
-	if ('value' in node) this.update = this.value //TODO fail on input.type = select
+	if ('value' in node && node.nodeName !== 'LI') this.update = this.value
 
 	node[picoKey] = this.update ? this : null
-	//TODO ondestroy
+	//TODO destroy, ondestroy
 }
 
 
@@ -77,11 +77,39 @@ export var ncProto = NodeCo.prototype = {
 
 	// PLACEMENT
 
-	moveTo: function(target, before) {
-		if (this.onmove) this.onmove(this.node.parentNode, target)
-		;(target.node || target).insertBefore(this.node, before || null)
+	/**
+	* @function
+	* @return {!Object} this
+	*/
+	remove: function() {
+		var node = this.node,
+				origin = node.parentNode
+		if (origin) {
+			if (this.onmove) this.onmove(origin, null)
+			origin.removeChild(node)
+		}
 		return this
 	},
+
+	/**
+	* @function
+	* @param  {!Object} parent destination parent
+	* @param  {Object} [before] nextSibling
+	* @return {!Object} this
+	*/
+	moveTo: function(parent, before) { //TODO not variadic, nodes only...
+		var node = this.node,
+				origin = node.parentNode,
+				anchor = before || null
+		if (!parent) throw Error('parent node or component must be specified') //TODO
+
+		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
+			if (this.onmove) this.onmove(this.node.parentNode, parent)
+			parent.insertBefore(node, anchor)
+			return this
+		}
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,

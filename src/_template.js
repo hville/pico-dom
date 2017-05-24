@@ -31,12 +31,12 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
+	oncreate: function(fcn) { //TODO
 		this.ops.push(new Op(call, fcn))
 		return this
 	},
 
-	set: wrapMethod('set'), //TODO RENAME
+	set: wrapMethod('set'),
 
 	config: function(any) {
 		if (any != null) {
@@ -69,7 +69,7 @@ Template.prototype = {
 			if (child != null) {
 				if (Array.isArray(child)) this.child.apply(this, child)
 				else this.ops.push(
-					child.create ? new Op(proto._childTemplate, child)
+					child.create ? new Op(proto._childTemplate, child) //TODO
 					: child.cloneNode ? new Op(proto._childNode, child)
 					: new Op(proto._childText, ''+child)
 				)
@@ -81,7 +81,7 @@ Template.prototype = {
 
 
 function call(fcn) {
-	fcn.call(this, this.node)
+	fcn.call(this, this.node) //TODO
 }
 
 function wrapMethod(name) {

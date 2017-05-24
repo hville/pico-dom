@@ -7,14 +7,14 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
+~~destroy, ondestroy~~
 
-## [0.34.0] - 2017-05-23
+## [0.40.0] - 2017-05-24
 ### Changed
 - templates are now mutable and must be cloned manually
 - template.call changed to template.oncreate
-
-### Added
-- template methods `select`, `update` and `getKey`
+- template.assign and co.assign changed to .set
+- reverted .store and .common to .root
 
 ## [0.33.0] - 2017-05-17
 ### Added

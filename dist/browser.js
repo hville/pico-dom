@@ -42,13 +42,14 @@ function Template(constructor, transforms) {
 	this.ops = transforms || [];
 }
 
+
 Template.prototype = {
 	constructor: Template,
 
-	create: function(keyVal) {
+	create: function(parent) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(exports.D));
-		if (keyVal) cmp.assign(keyVal); //TODO common
+		if (parent) cmp.root = parent.root || parent;
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		return cmp
 	},
@@ -59,44 +60,13 @@ Template.prototype = {
 		return template
 	},
 
-	update: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'update', fcn));
-		return this
-	},
-
-	updateOnce: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn));
-		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce));
-		return this
-	},
-
-	select: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'select', fcn));
-		return this
-	},
-
-	getKey: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'getKey', fcn));
-		return this
-	},
-	/*key: function(key) { //TODO name
-		return new Template(this.ops.concat(new Op(setKey, key)))
-	},*/
-	assign: wrapMethod('assign'), //TODO RENAME
-
-	on: wrapMethod('on'),
-	attr: wrapMethod('attr'),
-	prop: wrapMethod('prop'),
-	class: wrapMethod('class'),
-	_childNode: wrapMethod('_childNode'),
-	_childTemplate: wrapMethod('_childTemplate'),
-	_childText: wrapMethod('_childText'),
-
-
-	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
+	// COMPONENT OPERATIONS
+	oncreate: function(fcn) {
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
+
+	set: wrapMethod('set'), //TODO RENAME
 
 	config: function(any) {
 		if (any != null) {
@@ -114,6 +84,13 @@ Template.prototype = {
 		}
 		return this
 	},
+
+	// ELEMENT OPERATIONS
+
+	on: wrapMethod('on'),
+	attr: wrapMethod('attr'),
+	prop: wrapMethod('prop'),
+	class: wrapMethod('class'),
 
 	child: function() {
 		var proto = this.Co.prototype;
@@ -146,44 +123,14 @@ function wrapMethod(name) {
 	}
 }
 
-function updateOnce(v,k,o) {
-	this.updateOnce(v,k,o);
-	this.update = null;
-	return this
-}
-
 /**
  * @function
- * @param {!Object} obj source
- * @param {Function} fcn reducer
- * @param {*} res accumulator
- * @param {*} [ctx] context
- * @returns {*} accumulator
- */
-
-
-/**
- * @function
- * @param {!Object} obj
- * @param {Function} fcn
- * @param {*} [ctx]
- * @returns {void}
- */
-function each(obj, fcn, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
-}
-
-/**
- * @function
- * @param {string|!Object} key keyOrObject
- * @param {*} [val] value
+ * @param {string|number} key
+ * @param {*} val value
  * @returns {!Object} this
  */
-function assignToThis(key, val) { //eslint-disable-line no-unused-vars
-	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
-		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]];
-	}
-	else if (key[0] !== '_') this[key] = val;
+function setThis(key, val) {
+	this[key] = val;
 	return this
 }
 
@@ -202,15 +149,16 @@ function NodeCo(node) {
 	if ('value' in node) this.update = this.value; //TODO fail on input.type = select
 
 	node[picoKey] = this.update ? this : null;
-	//TODO oncreate, ondestroy, onmove, ...
+	//TODO ondestroy
 }
 
 
 var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
-	common: null,
+	root: null,
+
 	// INSTANCE UTILITIES
-	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
+	set: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -252,7 +200,7 @@ var ncProto = NodeCo.prototype = {
 	},
 
 	_childTemplate: function (template) {
-		template.create({common: this.common}).moveTo(this.node); //TODO common
+		template.create(this).moveTo(this.node);
 	},
 
 	_childText: function appendText(txt) {
@@ -277,7 +225,9 @@ var ncProto = NodeCo.prototype = {
 		if (handler) handler.call(this, event);
 	},
 	on: function(type, handler) {
-		if (typeof type === 'object') each(type, this.registerHandler, this); //TODO inline each
+		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
+			this.registerHandler(ks[i], type[ks[i]]);
+		}
 		else this.registerHandler(handler, type);
 		return this
 	},
@@ -322,8 +272,8 @@ function ListK(template) {
 
 ListK.prototype = {
 	constructor: ListK,
-	common: null,
-	assign: assignToThis,
+	root: null,
+	set: setThis,
 
 	/**
 	* @function moveTo
@@ -374,7 +324,7 @@ ListK.prototype = {
 			else if (head !== spot) item.moveTo(parent, spot);
 			return item.foot
 		}
-		var node = item.node || item; //TODO Component Only with lifecycle
+		var node = item.node || item;
 		if (!spot) parent.appendChild(node);
 		else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
 		else if (node !== spot) parent.insertBefore(node, spot);
@@ -394,7 +344,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create({common: this.common, key: key});
+				item = newM[key] = items[key] || model.create(this).set('key', key);
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -422,14 +372,14 @@ function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this.refs[ks[i]] = model.create({common: this.common, key: key});
+		this.refs[ks[i]] = model.create(this).set('key', key);
 	}
 }
 
 ListS.prototype = {
 	constructor: ListS,
-	common: null,
-	assign: assignToThis, //TODO needed?
+	root: null,
+	set: setThis,
 	moveTo: ListK.prototype.moveTo,
 
 	/**

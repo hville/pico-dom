@@ -26,6 +26,7 @@ ListS.prototype = {
 	root: null,
 	set: setThis,
 	moveTo: ListK.prototype.moveTo,
+	remove: ListK.prototype.remove,
 
 	/**
 	 * select all by default
@@ -37,7 +38,9 @@ ListS.prototype = {
 
 	update: updateListChildren,
 	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem
+	_placeItem: ListK.prototype._placeItem,
+	_clearFrom: ListK.prototype._clearFrom
+
 }
 
 function updateListChildren(v,k,o) {
@@ -52,10 +55,9 @@ function updateListChildren(v,k,o) {
 		var item = items[keys[i]]
 		if (item) {
 			if (item.update) item.update(v,k,o)
-			spot = this._placeItem(parent, item, spot).nextSibling //TODO
+			spot = this._placeItem(parent, item, spot, foot).nextSibling
 		}
 	}
-
-	if (spot !== foot) while (spot !== parent.removeChild(foot.previousSibling)) {} //eslint-disable-line no-empty
+	this._clearFrom(spot)
 	return this
 }
