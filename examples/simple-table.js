@@ -2,23 +2,22 @@ import {element as el, list} from '../module'
 import {Store} from './Store' // any user store will do
 import {ic_remove, ic_add} from './icons'
 
-var i = 0
+var i = 0,
+		j = 0
 
 var tableTemplate = el('table',
 	el('tbody',
 		list(
-			el('tr').class('abc').oncreate(function(tr) { i = tr.key }).child(
-				el('td').on().child(ic_remove), {
-					on: {click: function() { this.common.store.delRow(this.common.i)}}
-				}), // title column
+			el('tr').class('abc').oncreate(function() { i = this.key })
+			.child(
+				el('td').oncreate(function() { this.i = i })
+				.on('click', function() { this.root.store.delRow(this.i)})
+				.child(ic_remove), // title column
 				list( // data columns
-					el('td',
-						function(td) { td.common.j = td.key },
-						el('input',
-							function(c) { c.i = c.common.i; c.j = c.common.j },
-							{
-								update: function(val) { this.node.value = val },
-								on: {
+					el('td', function() { j = this.key },
+						el('input', function() { this.i = i; this.j = j }, {
+							update: function(val) { this.node.value = val },
+							on: {
 									change: function() { this.common.store.set(this.node.value, [this.i, this.j]) }
 								}
 							}

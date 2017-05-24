@@ -67,7 +67,7 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) { //TODO
+	oncreate: function(fcn) {
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
@@ -81,8 +81,8 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]];
-					if (!this[key]) throw Error('invalid method name: ' + key)
-					if (Array.isArray(arg)) this[key](arg[0], arg[1]);
+					if (!this[key]) this.set(key, arg);
+					else if (Array.isArray(arg)) this[key](arg[0], arg[1]);
 					else this[key](arg);
 				}
 			}
@@ -117,7 +117,7 @@ Template.prototype = {
 
 
 function call(fcn) {
-	fcn.call(this, this.node); //TODO
+	fcn.call(this, this.node);
 }
 
 function wrapMethod(name) {
@@ -201,15 +201,15 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 
-	_childNode: function (node) {
+	_childNode: function (node) { //TODO
 		this.node.appendChild(node.cloneNode(true));
 	},
 
-	_childTemplate: function (template) {
+	_childTemplate: function (template) {  //TODO
 		template.create(this).moveTo(this.node);
 	},
 
-	_childText: function appendText(txt) {
+	_childText: function appendText(txt) {  //TODO
 		this.node.appendChild(exports.D.createTextNode(txt));
 	},
 

@@ -62,15 +62,15 @@ export var ncProto = NodeCo.prototype = {
 		return this
 	},
 
-	_childNode: function (node) {
+	_childNode: function (node) { //TODO
 		this.node.appendChild(node.cloneNode(true))
 	},
 
-	_childTemplate: function (template) {
+	_childTemplate: function (template) {  //TODO
 		template.create(this).moveTo(this.node)
 	},
 
-	_childText: function appendText(txt) {
+	_childText: function appendText(txt) {  //TODO
 		this.node.appendChild(D.createTextNode(txt))
 	},
 
