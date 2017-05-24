@@ -16,10 +16,15 @@ export function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	create: function(parent) {
+	get node () {
+		return this.create().node
+	},
+
+	create: function(parent, key) {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].call(D))
 		if (parent) cmp.root = parent.root || parent
+		if (key !== undefined) cmp.key = key
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
 		return cmp
 	},
