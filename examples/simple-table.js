@@ -8,36 +8,36 @@ var i = 0,
 var tableTemplate = el('table',
 	el('tbody',
 		list(
-			el('tr').class('abc').oncreate(function() { i = this.key })
+			el('tr')
+			.class('abc')
+			.oncreate(function() { i = this.key })
 			.child(
-				el('td').oncreate(function() { this.i = i })
+				el('td')
+				.oncreate(function() { this.i = i })
 				.on('click', function() { this.root.store.delRow(this.i)})
-				.child(ic_remove), // title column
+				.child(
+					ic_remove // title column
+				),
 				list( // data columns
 					el('td', function() { j = this.key },
-						el('input', function() { this.i = i; this.j = j }, {
-							update: function(val) { this.node.value = val },
-							on: {
-									change: function() { this.common.store.set(this.node.value, [this.i, this.j]) }
-								}
-							}
-						)
+						el('input')
+						.oncreate(function() { this.i = i; this.j = j })
+						.set('update', function(val) { this.node.value = val })
+						.on('change', function() { this.root.store.set(this.node.value, [this.i, this.j]) })
 					)
 				)
 			)
 		),
-		el('tr',
-			el('td', ic_add, {
-				on: {
-					click: function() { this.common.store.addRow() }
-				}
-			})
+		el('tr').child(
+			el('td')
+			.on('click', function() { this.root.store.addRow() })
+			.child(ic_add)
 		)
 	)
-)
+) //741
 
 var store = new Store([]),
-		table = tableTemplate.create({common: {store: store}}).moveTo(document.body)
+		table = tableTemplate.create().set('store', store).moveTo(document.body)
 
 store.onchange = function() { table.update( store.get() ) }
 store.set([['Jane', 'Roe'], ['John', 'Doe']])
