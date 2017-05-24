@@ -1,4 +1,4 @@
-import {each, assignToThis} from './object'
+import {setThis} from './set-this'
 import {picoKey} from './picoKey'
 import {D} from './document'
 
@@ -25,7 +25,7 @@ export var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
+	set: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -92,7 +92,9 @@ export var ncProto = NodeCo.prototype = {
 		if (handler) handler.call(this, event)
 	},
 	on: function(type, handler) {
-		if (typeof type === 'object') each(type, this.registerHandler, this) //TODO inline each
+		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
+			this.registerHandler(ks[i], type[ks[i]])
+		}
 		else this.registerHandler(handler, type)
 		return this
 	},

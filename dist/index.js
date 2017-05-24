@@ -62,22 +62,12 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	update: assignKey('update'),
-	select: assignKey('select'),
-	getKey: assignKey('getKey'),
-	key: assignKey('key'),
 	oncreate: function(fcn) {
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
 
-	assign: wrapMethod('assign'), //TODO RENAME
-
-	updateOnce: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn));
-		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce));
-		return this
-	},
+	set: wrapMethod('set'), //TODO RENAME
 
 	config: function(any) {
 		if (any != null) {
@@ -134,51 +124,18 @@ function wrapMethod(name) {
 	}
 }
 
-function assignKey(key) {
-	return function(val) {
-		this.ops.push(new Op(this.Co.prototype.assign, key, val));
-		return this
-	}
-}
-
-function updateOnce(v,k,o) {
-	this.updateOnce(v,k,o);
-	this.update = null;
-	return this
-}
-
-/**
- * @function
- * @param {!Object} obj source
- * @param {Function} fcn reducer
- * @param {*} res accumulator
- * @param {*} [ctx] context
- * @returns {*} accumulator
- */
-
-
-/**
- * @function
- * @param {!Object} obj
- * @param {Function} fcn
- * @param {*} [ctx]
- * @returns {void}
- */
-function each(obj, fcn, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, obj[ks[i]], ks[i], obj);
-}
-
 /**
  * @function
  * @param {string|!Object} key keyOrObject
  * @param {*} [val] value
  * @returns {!Object} this
  */
-function assignToThis(key, val) { //eslint-disable-line no-unused-vars
-	if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
-		if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]];
-	}
-	else if (key[0] !== '_') this[key] = val;
+function setThis(key, val) { //eslint-disable-line no-unused-vars
+	//if (typeof key === 'object') for (var j=0, ks=Object.keys(key); j<ks.length; ++j) {
+	//	if (ks[j][0] !== '_') this[ks[j]] = key[ks[j]]
+	//}
+	//else
+	if (key[0] !== '_') this[key] = val;
 	return this
 }
 
@@ -206,7 +163,7 @@ var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
+	set: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -273,7 +230,9 @@ var ncProto = NodeCo.prototype = {
 		if (handler) handler.call(this, event);
 	},
 	on: function(type, handler) {
-		if (typeof type === 'object') each(type, this.registerHandler, this); //TODO inline each
+		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
+			this.registerHandler(ks[i], type[ks[i]]);
+		}
 		else this.registerHandler(handler, type);
 		return this
 	},
@@ -319,7 +278,7 @@ function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	assign: assignToThis,
+	set: setThis,
 
 	/**
 	* @function moveTo
@@ -370,7 +329,7 @@ ListK.prototype = {
 			else if (head !== spot) item.moveTo(parent, spot);
 			return item.foot
 		}
-		var node = item.node || item; //TODO Component Only with lifecycle
+		var node = item.node || item;
 		if (!spot) parent.appendChild(node);
 		else if (node === spot.nextSibling) parent.removeChild(spot); // later cleared or re-inserted
 		else if (node !== spot) parent.insertBefore(node, spot);
@@ -390,7 +349,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create(this).assign('key', key);
+				item = newM[key] = items[key] || model.create(this).set('key', key);
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr);
@@ -418,14 +377,14 @@ function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]];
-		this.refs[ks[i]] = model.create(this).assign('key', key);
+		this.refs[ks[i]] = model.create(this).set('key', key);
 	}
 }
 
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	assign: assignToThis, //TODO needed?
+	set: setThis,
 	moveTo: ListK.prototype.moveTo,
 
 	/**

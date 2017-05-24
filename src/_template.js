@@ -31,22 +31,12 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	update: assignKey('update'),
-	select: assignKey('select'),
-	getKey: assignKey('getKey'),
-	key: assignKey('key'),
 	oncreate: function(fcn) {
 		this.ops.push(new Op(call, fcn))
 		return this
 	},
 
-	assign: wrapMethod('assign'), //TODO RENAME
-
-	updateOnce: function(fcn) {
-		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn))
-		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce))
-		return this
-	},
+	set: wrapMethod('set'), //TODO RENAME
 
 	config: function(any) {
 		if (any != null) {
@@ -102,17 +92,3 @@ function wrapMethod(name) {
 		return this
 	}
 }
-
-function assignKey(key) {
-	return function(val) {
-		this.ops.push(new Op(this.Co.prototype.assign, key, val))
-		return this
-	}
-}
-
-function updateOnce(v,k,o) {
-	this.updateOnce(v,k,o)
-	this.update = null
-	return this
-}
-

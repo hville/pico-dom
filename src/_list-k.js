@@ -1,6 +1,6 @@
 import {D} from './document'
 import {picoKey} from './picoKey'
-import {assignToThis} from './object'
+import {setThis} from './set-this'
 
 /**
  * @constructor
@@ -17,7 +17,7 @@ export function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	assign: assignToThis,
+	set: setThis,
 
 	/**
 	* @function moveTo
@@ -68,7 +68,7 @@ ListK.prototype = {
 			else if (head !== spot) item.moveTo(parent, spot)
 			return item.foot
 		}
-		var node = item.node || item //TODO Component Only with lifecycle
+		var node = item.node || item
 		if (!spot) parent.appendChild(node)
 		else if (node === spot.nextSibling) parent.removeChild(spot) // later cleared or re-inserted
 		else if (node !== spot) parent.insertBefore(node, spot)
@@ -88,7 +88,7 @@ function updateKeyedChildren(arr) {
 	for (var i=0; i<arr.length; ++i) {
 		var key = this.getKey(arr[i], i, arr),
 				model = this.template,
-				item = newM[key] = items[key] || model.create(this).assign('key', key)
+				item = newM[key] = items[key] || model.create(this).set('key', key)
 
 		if (item) {
 			if (item.update) item.update(arr[i], i, arr)

@@ -1,7 +1,7 @@
 import {ListK} from './_list-k'
 import {D} from './document'
 import {picoKey} from './picoKey'
-import {assignToThis} from './object'
+import {setThis} from './set-this'
 
 /**
  * @constructor
@@ -17,14 +17,14 @@ export function ListS(template) {
 	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 		var key = ks[i],
 				model = template[ks[i]]
-		this.refs[ks[i]] = model.create(this).assign('key', key)
+		this.refs[ks[i]] = model.create(this).set('key', key)
 	}
 }
 
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	assign: assignToThis, //TODO needed?
+	set: setThis,
 	moveTo: ListK.prototype.moveTo,
 
 	/**

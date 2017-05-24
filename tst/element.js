@@ -50,7 +50,7 @@ ct('element - root', function() {
 	var h0 = el('h0').child(
 		el('h1').oncreate(function() {h1 = this}),
 		el('h2').oncreate(function() {h2 = this})
-	).create().assign('a', 'a')
+	).create().set('a', 'a')
 	ct('===', h1.root, h0)
 	ct('===', h2.root, h0)
 	ct('===', h1.root.a, 'a')
@@ -95,8 +95,8 @@ ct('element - clone template', function() {
 ct('element - update', function() {
 	var co = el('h0').child(
 		X.text('a'),
-		X.text('b').update(function(v) { this.text(v.toUpperCase()) }),
-		X.text('c').updateOnce(function(v) { this.text(v.toUpperCase()) })
+		X.text('b').set('update', function(v) { this.text(v.toUpperCase()) }),
+		X.text('c').set('update', function(v) { this.text(v.toUpperCase()); this.update = null })
 	).create()
 	ct('===', co.node.textContent, 'abc')
 
