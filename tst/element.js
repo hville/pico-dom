@@ -19,7 +19,7 @@ ct('element - static', function() {
 
 	// explicit
 	ct('===', toString(el('p').child('ab').create().node.childNodes), 'ab')
-	ct('===', el('p').oncreate(p => {p.id = 'A'}).create().node.id, 'A')
+	ct('===', el('p').oncreate(function() {this.node.id = 'A'}).create().node.id, 'A')
 	ct('===', el('p').attr('id', 'A').create().node.id, 'A')
 
 	// automagic
@@ -106,7 +106,7 @@ ct('element - update', function() {
 	ct('===', co.node.textContent, 'eED')
 })
 
-ct.only('element - custom element', function() {
+ct('element - custom element', function() {
 	var co = el('h0').child(
 		el('h1').child(
 			el('h2', 'x').oncreate(

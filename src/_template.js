@@ -34,24 +34,17 @@ Template.prototype = {
 	update: assignKey('update'),
 	select: assignKey('select'),
 	getKey: assignKey('getKey'),
-
-	/*key: function(key) { //TODO name
-		return new Template(this.ops.concat(new Op(setKey, key)))
-	},*/
-	assign: wrapMethod('assign'), //TODO RENAME
-
-	default: function(key, val) { //TODO added once on list templates, DELETE?
-		this.ops.splice(1,0,new Op(this.Co.prototype.assign, key, val))
+	key: assignKey('key'),
+	oncreate: function(fcn) {
+		this.ops.push(new Op(call, fcn))
 		return this
 	},
+
+	assign: wrapMethod('assign'), //TODO RENAME
 
 	updateOnce: function(fcn) {
 		this.ops.push(new Op(this.Co.prototype.assign, 'updateOnce', fcn))
 		this.ops.push(new Op(this.Co.prototype.assign, 'update', updateOnce))
-		return this
-	},
-	oncreate: function(fcn) { //TODO oncreate ONLY once (call in constructor)
-		this.ops.push(new Op(call, fcn))
 		return this
 	},
 
@@ -78,10 +71,6 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
-
-	_childNode: wrapMethod('_childNode'),
-	_childTemplate: wrapMethod('_childTemplate'),
-	_childText: wrapMethod('_childText'),
 
 	child: function() {
 		var proto = this.Co.prototype
@@ -126,3 +115,4 @@ function updateOnce(v,k,o) {
 	this.update = null
 	return this
 }
+

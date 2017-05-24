@@ -23,6 +23,7 @@ export function ListS(template) {
 
 ListS.prototype = {
 	constructor: ListS,
+	root: null,
 	assign: assignToThis, //TODO needed?
 	moveTo: ListK.prototype.moveTo,
 

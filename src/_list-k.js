@@ -16,6 +16,7 @@ export function ListK(template) {
 
 ListK.prototype = {
 	constructor: ListK,
+	root: null,
 	assign: assignToThis,
 
 	/**

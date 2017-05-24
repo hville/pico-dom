@@ -16,12 +16,14 @@ export function NodeCo(node) {
 	if ('value' in node) this.update = this.value //TODO fail on input.type = select
 
 	node[picoKey] = this.update ? this : null
-	//TODO oncreate, ondestroy, onmove, ...
+	//TODO ondestroy
 }
 
 
 export var ncProto = NodeCo.prototype = {
 	constructor: NodeCo,
+	root: null,
+
 	// INSTANCE UTILITIES
 	assign: assignToThis, //TODO function assign(key, val) {this[key] = val}
 
@@ -65,7 +67,7 @@ export var ncProto = NodeCo.prototype = {
 	},
 
 	_childTemplate: function (template) {
-		template.create(this).moveTo(this.node) //TODO common
+		template.create(this).moveTo(this.node)
 	},
 
 	_childText: function appendText(txt) {
