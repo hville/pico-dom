@@ -151,4 +151,5 @@ function updateChildren(v,k,o) {
 		}
 		else child = child.nextSibling
 	}
+	return this
 }
