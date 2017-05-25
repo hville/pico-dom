@@ -55,7 +55,9 @@ Template.prototype = {
 				cmp = new this.Co(ops[0].call(exports.D));
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
+
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
+		if (cmp.oncreate) cmp.oncreate();
 		return cmp
 	},
 
@@ -66,12 +68,10 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
+	call: function(fcn) {
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
-
-	set: wrapMethod('set'),
 
 	config: function(any) {
 		if (any != null) {
@@ -89,6 +89,8 @@ Template.prototype = {
 		}
 		return this
 	},
+
+	extra: wrapMethod('extra'),
 
 	// ELEMENT OPERATIONS
 
@@ -163,7 +165,7 @@ var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	set: setThis,
+	extra: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -248,6 +250,13 @@ var ncProto = NodeCo.prototype = {
 		}
 	},
 
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
+		this.node = this.refs = null;
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,
@@ -257,14 +266,14 @@ var ncProto = NodeCo.prototype = {
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	on: function(type, handler) {
+	on: function(type, handler) { //TODO variadic
 		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
 			this.registerHandler(ks[i], type[ks[i]]);
 		}
-		else this.registerHandler(handler, type);
+		else this.registerHandler(type, handler);
 		return this
 	},
-	registerHandler: function(handler, type) {
+	registerHandler: function(type, handler) {
 		if (!handler) {
 			if (this._on && this._on[type]) {
 				delete this._on[type];
@@ -289,6 +298,7 @@ function updateChildren(v,k,o) {
 		}
 		else child = child.nextSibling;
 	}
+	return this
 }
 
 /**
@@ -306,7 +316,7 @@ function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	set: setThis,
+	extra: setThis,
 
 	/**
 	* @function moveTo
@@ -345,17 +355,29 @@ ListK.prototype = {
 	*/
 	remove: function() {
 		var head = this.node,
-				origin = head.parentNode;
+				origin = head.parentNode,
+				spot = head.nextSibling;
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null);
-			this._clearFrom(head.nextSibling);
+			while(spot !== this.foot) {
+				var item = spot[picoKey];
+				spot = (item.foot || item.node).nextSibling;
+				item.remove();
+			}
 			origin.removeChild(this.foot);
 			origin.removeChild(head);
 		}
 
 		return this
 	},
+
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		this.node = this.refs = null;
+	},
+
 
 	getKey: function(v,k) { return k }, // default: indexed
 
@@ -369,14 +391,6 @@ ListK.prototype = {
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	},
-
-	_clearFrom: function(spot) {
-		while(spot !== this.foot) {
-			var item = spot[picoKey];
-			spot = (item.foot || item.node).nextSibling;
-			item.remove();
-		}
 	}
 };
 
@@ -401,7 +415,11 @@ function updateKeyedChildren(arr) {
 	}
 
 	this.refs = newM;
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.destroy();
+	}
 	return this
 }
 
@@ -423,12 +441,15 @@ function ListS(template) {
 	}
 }
 
+var protoK = ListK.prototype;
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	set: setThis,
-	moveTo: ListK.prototype.moveTo,
-	remove: ListK.prototype.remove,
+	extra: setThis,
+	moveTo: protoK.moveTo,
+	remove: protoK.remove,
+	destroy: protoK.destroy,
+	_placeItem: protoK._placeItem,
 
 	/**
 	 * select all by default
@@ -439,10 +460,7 @@ ListS.prototype = {
 	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
-	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_clearFrom: ListK.prototype._clearFrom
-
+	updateChildren: updateListChildren
 };
 
 function updateListChildren(v,k,o) {
@@ -460,7 +478,11 @@ function updateListChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.remove();
+	}
 	return this
 }
 

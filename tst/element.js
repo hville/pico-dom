@@ -18,7 +18,7 @@ ct('element - static', function() {
 	ct('===', el('p').create().node.nodeType, 1)
 
 	// explicit
-	ct('===', toString(el('p').child('ab').create().node.childNodes), 'ab')
+	ct('===', toString(el('p').append('ab').create().node.childNodes), 'ab')
 	ct('===', el('p').call(function() {this.node.id = 'A'}).create().node.id, 'A')
 	ct('===', el('p').attr('id', 'A').create().node.id, 'A')
 
@@ -29,13 +29,13 @@ ct('element - static', function() {
 })
 
 ct('element - mixed children', function() {
-	ct('===', el('p').child([0, el('p')], el('p'), [el('p')]).create().node.childNodes.length, 4)
-	ct('===', el('p').child(el('p'), [], el('p'), [el('p'), 0]).create().node.childNodes.length, 4)
-	ct('===', el('p').child(el('p'), null, 0, [el('p'), el('p')]).create().node.childNodes.length, 4)
+	ct('===', el('p').append([0, el('p')], el('p'), [el('p')]).create().node.childNodes.length, 4)
+	ct('===', el('p').append(el('p'), [], el('p'), [el('p'), 0]).create().node.childNodes.length, 4)
+	ct('===', el('p').append(el('p'), null, 0, [el('p'), el('p')]).create().node.childNodes.length, 4)
 })
 
 ct('element - static, multiple mixed arguments', function() {
-	var p = el('p').child(0).class('A').child(1).prop('id', 'B').child(2).create().node
+	var p = el('p').append(0).class('A').append(1).prop('id', 'B').append(2).create().node
 	ct('===', p.nodeType, 1)
 	ct('===', p.firstChild.nodeValue, '0')
 	ct('===', p.className, 'A')
@@ -47,7 +47,7 @@ ct('element - static, multiple mixed arguments', function() {
 ct('element - root', function() {
 	var h1 = {},
 			h2 = {}
-	var h0 = el('h0').child(
+	var h0 = el('h0').append(
 		el('h1').call(function() {h1 = this}),
 		el('h2').call(function() {h2 = this})
 	).create().extra('a', 'a')
@@ -71,13 +71,13 @@ ct('element - event', function() {
 
 ct('element - clone template', function() {
 	var t0 = el('div'),
-			t1 = X.template(t0.clone({attr: ['id', 1]}).child(el('h1').child(1)).create().node),
+			t1 = X.template(t0.clone({attr: ['id', 1]}).append(el('h1').append(1)).create().node),
 			t2 = X.template(el('h2', 2).create().node),
-			h0 = t0.clone().attr('id', 0).child(el('h0').child(0)).create(),
+			h0 = t0.clone().attr('id', 0).append(el('h0').append(0)).create(),
 			h1 = t1.create(),
 			h2 = t2.attr('id', 2).create(),
-			h3 = t0.clone().attr('id', '3').child(el('h3').child(3)).create(),
-			h4 = t0.attr('id', 4).child(el('h4').child(4)).create()
+			h3 = t0.clone().attr('id', '3').append(el('h3').append(3)).create(),
+			h4 = t0.attr('id', 4).append(el('h4').append(4)).create()
 
 	ct('===', h0.node.childNodes.length, 1)
 	ct('===', h1.node.childNodes.length, 1)
@@ -93,7 +93,7 @@ ct('element - clone template', function() {
 })
 
 ct('element - update', function() {
-	var co = el('h0').child(
+	var co = el('h0').append(
 		X.text('a'),
 		X.text('b').extra('update', function(v) { this.text(v.toUpperCase()) }),
 		X.text('c').extra('update', function(v) { this.text(v.toUpperCase()); this.update = null })
@@ -107,8 +107,8 @@ ct('element - update', function() {
 })
 
 ct('element - custom element', function() {
-	var co = el('h0').child(
-		el('h1').child(
+	var co = el('h0').append(
+		el('h1').append(
 			el('h2', 'x').call(
 				function() {
 					this.root.update = this.text.bind(this)

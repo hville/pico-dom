@@ -55,7 +55,7 @@ Template.prototype = {
 					else this[key](arg)
 				}
 			}
-			else this.child(any)
+			else this.append(any)
 		}
 		return this
 	},
@@ -69,12 +69,12 @@ Template.prototype = {
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
 
-	child: function() {
+	append: function() {
 		var proto = this.Co.prototype
 		for (var i=0; i<arguments.length; ++i) {
 			var child = arguments[i]
 			if (child != null) {
-				if (Array.isArray(child)) this.child.apply(this, child)
+				if (Array.isArray(child)) this.append.apply(this, child)
 				else this.ops.push(
 					child.create ? new Op(proto._childTemplate, child) //TODO
 					: child.cloneNode ? new Op(proto._childNode, child)
