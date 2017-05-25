@@ -50,8 +50,7 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]]
-					if (!this[key]) this.set(key, arg)
-					else if (Array.isArray(arg)) this[key](arg[0], arg[1])
+					if (Array.isArray(arg)) this[key](arg[0], arg[1])
 					else this[key](arg)
 				}
 			}

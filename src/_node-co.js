@@ -16,7 +16,6 @@ export function NodeCo(node) {
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value
 
 	node[picoKey] = this.update ? this : null
-	//TODO destroy, ondestroy
 }
 
 

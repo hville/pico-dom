@@ -63,8 +63,8 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]];
-					if (!this[key]) this.set(key, arg);
-					else if (Array.isArray(arg)) this[key](arg[0], arg[1]);
+					//if (!this[key]) this.set(key, arg)
+					if (Array.isArray(arg)) this[key](arg[0], arg[1]);
 					else this[key](arg);
 				}
 			}
@@ -89,12 +89,14 @@ function wrapMethod(name) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
 		var op = [proto[name]];
+
 		if (arguments.length === 1) op.push(a);
 		else if (arguments.length === 2) op.push(a, b);
 		else if (arguments.length > 2) {
 			op.push([a, b]);
 			for (var i=2; i<arguments.length; ++i) op[1].push(arguments[i]);
 		}
+
 		this.ops.push(op);
 		return this
 	}
@@ -133,7 +135,6 @@ function NodeCo(node) {
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
 
 	node[picoKey] = this.update ? this : null;
-	//TODO destroy, ondestroy
 }
 
 
