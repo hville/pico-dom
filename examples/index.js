@@ -10,25 +10,6 @@ var D = typeof document !== 'undefined' ? document : null;
 * @return {Document} DOM document
 */
 
-/**
- * @constructor
- * @param {Function} method
- * @param {*} [a]
- * @param {*} [b]
- */
-function Op(method, a, b) {
-	this.f = method;
-	this.a = a;
-	this.b = b;
-}
-
-Op.prototype.call = function(ctx) {
-	var op = this;
-	return !op.f ? op.a
-		: op.b === undefined ? op.f.call(ctx, op.a)
-		: op.f.call(ctx, op.a, op.b)
-};
-
 function Template(constructor, transforms) {
 	this.Co = constructor;
 	this.ops = transforms || [];
@@ -44,10 +25,12 @@ Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				cmp = new this.Co(ops[0].call(D));
+				cmp = new this.Co(callOp(D, ops[0]));
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
-		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
+
+		for (var i=1; i<ops.length; ++i) callOp(cmp, ops[i]);
+		if (cmp.oncreate) cmp.oncreate();
 		return cmp
 	},
 
@@ -58,29 +41,29 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
-		this.ops.push(new Op(call, fcn));
+	call: function(fcn) {
+		for (var i=1, args=[fcn]; i<arguments.length; ++i) args[i] = arguments[i];
+		this.ops.push(args);
 		return this
 	},
 
-	set: wrapMethod('set'),
-
 	config: function(any) {
 		if (any != null) {
-			if (typeof any === 'function') this.ops.push(new Op(call, any));
+			if (typeof any === 'function') this.ops.push([any]);
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]];
-					if (!this[key]) this.set(key, arg);
-					else if (Array.isArray(arg)) this[key](arg[0], arg[1]);
+					if (Array.isArray(arg)) this[key](arg[0], arg[1]);
 					else this[key](arg);
 				}
 			}
-			else this.child(any);
+			else this.append(any);
 		}
 		return this
 	},
+
+	extra: wrapMethod('extra'),
 
 	// ELEMENT OPERATIONS
 
@@ -88,36 +71,32 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
-
-	child: function() {
-		var proto = this.Co.prototype;
-		for (var i=0; i<arguments.length; ++i) {
-			var child = arguments[i];
-			if (child != null) {
-				if (Array.isArray(child)) this.child.apply(this, child);
-				else this.ops.push(
-					child.create ? new Op(proto._childTemplate, child) //TODO
-					: child.cloneNode ? new Op(proto._childNode, child)
-					: new Op(proto._childText, ''+child)
-				);
-			}
-		}
-		return this
-	}
+	append: wrapMethod('append')
 };
-
-
-function call(fcn) {
-	fcn.call(this, this.node);
-}
 
 function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		this.ops.push(new Op(proto[name], a, b));
+		var op = [proto[name]];
+
+		if (arguments.length === 1) op.push(a);
+		else if (arguments.length === 2) op.push(a, b);
+		else if (arguments.length > 2) {
+			op.push([a, b]);
+			for (var i=2; i<arguments.length; ++i) op[1].push(arguments[i]);
+		}
+
+		this.ops.push(op);
 		return this
 	}
+}
+
+function callOp(ctx, op) {
+	return !op[0] ? op[1]
+		: op.length === 0 ? op[0].call(ctx)
+		: op.length === 1 ? op[0].call(ctx, op[1])
+		: op[0].call(ctx, op[1], op[2])
 }
 
 /**
@@ -141,7 +120,6 @@ function NodeCo(node) {
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
 
 	node[picoKey] = this.update ? this : null;
-	//TODO destroy, ondestroy
 }
 
 
@@ -150,7 +128,7 @@ var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	set: setThis,
+	extra: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -186,17 +164,20 @@ var ncProto = NodeCo.prototype = {
 		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]]);
 		return this
 	},
-
-	_childNode: function (node) { //TODO
-		this.node.appendChild(node.cloneNode(true));
-	},
-
-	_childTemplate: function (template) {  //TODO
-		template.create(this).moveTo(this.node);
-	},
-
-	_childText: function appendText(txt) {  //TODO
-		this.node.appendChild(D.createTextNode(txt));
+	append: function() {
+		var node = this.node;
+		for (var i=0; i<arguments.length; ++i) {
+			var child = arguments[i];
+			if (child != null) {
+				if (Array.isArray(child)) this.append.apply(this, child);
+				else if (child.create) child.create(this).moveTo(node);
+				else if (child.moveTo) child.moveTo(node);
+				else node.appendChild(
+					child.cloneNode ? child.cloneNode(true) : D.createTextNode(''+child)
+				);
+			}
+		}
+		return this
 	},
 
 
@@ -235,6 +216,13 @@ var ncProto = NodeCo.prototype = {
 		}
 	},
 
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
+		this.node = this.refs = null;
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,
@@ -244,14 +232,14 @@ var ncProto = NodeCo.prototype = {
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	on: function(type, handler) {
+	on: function(type, handler) { //TODO variadic
 		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
 			this.registerHandler(ks[i], type[ks[i]]);
 		}
-		else this.registerHandler(handler, type);
+		else this.registerHandler(type, handler);
 		return this
 	},
-	registerHandler: function(handler, type) {
+	registerHandler: function(type, handler) {
 		if (!handler) {
 			if (this._on && this._on[type]) {
 				delete this._on[type];
@@ -276,6 +264,7 @@ function updateChildren(v,k,o) {
 		}
 		else child = child.nextSibling;
 	}
+	return this
 }
 
 function ListK(template) {
@@ -289,7 +278,7 @@ function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	set: setThis,
+	extra: setThis,
 
 	/**
 	* @function moveTo
@@ -328,17 +317,29 @@ ListK.prototype = {
 	*/
 	remove: function() {
 		var head = this.node,
-				origin = head.parentNode;
+				origin = head.parentNode,
+				spot = head.nextSibling;
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null);
-			this._clearFrom(head.nextSibling);
+			while(spot !== this.foot) {
+				var item = spot[picoKey];
+				spot = (item.foot || item.node).nextSibling;
+				item.remove();
+			}
 			origin.removeChild(this.foot);
 			origin.removeChild(head);
 		}
 
 		return this
 	},
+
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		this.node = this.refs = null;
+	},
+
 
 	getKey: function(v,k) { return k }, // default: indexed
 
@@ -352,14 +353,6 @@ ListK.prototype = {
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	},
-
-	_clearFrom: function(spot) {
-		while(spot !== this.foot) {
-			var item = spot[picoKey];
-			spot = (item.foot || item.node).nextSibling;
-			item.remove();
-		}
 	}
 };
 
@@ -384,7 +377,11 @@ function updateKeyedChildren(arr) {
 	}
 
 	this.refs = newM;
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.destroy();
+	}
 	return this
 }
 
@@ -402,12 +399,15 @@ function ListS(template) {
 	}
 }
 
+var protoK = ListK.prototype;
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	set: setThis,
-	moveTo: ListK.prototype.moveTo,
-	remove: ListK.prototype.remove,
+	extra: setThis,
+	moveTo: protoK.moveTo,
+	remove: protoK.remove,
+	destroy: protoK.destroy,
+	_placeItem: protoK._placeItem,
 
 	/**
 	 * select all by default
@@ -418,10 +418,7 @@ ListS.prototype = {
 	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
-	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_clearFrom: ListK.prototype._clearFrom
-
+	updateChildren: updateListChildren
 };
 
 function updateListChildren(v,k,o) {
@@ -439,7 +436,11 @@ function updateListChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.remove();
+	}
 	return this
 }
 
@@ -453,7 +454,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(D.createElementNS, svgURI, tag)]);
+	var model = new Template(NodeCo, [[D.createElementNS, svgURI, tag]]);
 	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -466,7 +467,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [new Op(D.createElement, tagName)]);
+	var model = new Template(NodeCo, [[D.createElement, tagName]]);
 	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -498,7 +499,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
 function template(node, options) { //eslint-disable-line no-unused-vars
 	if (!node.cloneNode) throw Error('invalid node')
 
-	var modl = new Template(NodeCo, [new Op(cloneNode, node)]);
+	var modl = new Template(NodeCo, [[cloneNode, node]]);
 	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i]);
 	return modl
 }
@@ -517,7 +518,7 @@ function cloneNode(node) {
 function list(model, options) { //eslint-disable-line no-unused-vars
 	var lst = new Template(
 		model.create ? ListK : ListS,
-		[new Op(null, model)]
+		[[null, model]]
 	);
 
 	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i]);
@@ -587,26 +588,26 @@ var ic_circle = template( // template used to pre-resolve the node structure
 	.attr('height', '24')
 	.attr('viewBox', '0 0 24 24')
 	.attr('width', '24')
-	.child(
+	.append(
 		svg('path')
 		.attr('fill', 'none')
 		.attr('d', 'M0 0h24v24H0z')
 	).node
 );
 
-var ic_add = ic_circle.clone().child( //ic_add_circle_outline_black_36px
+var ic_add = ic_circle.clone().append( //ic_add_circle_outline_black_36px
 	svg('path').attr('d',
 		'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
 	).node
 );
 
-var ic_clear = ic_circle.clone().child( //ic_clear_black_36px
+var ic_clear = ic_circle.clone().append( //ic_clear_black_36px
 	svg('path').attr('d',
 		'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
 	).node
 );
 
-var ic_remove = ic_circle.clone().child( //ic_remove_circle_outline_black_36px
+var ic_remove = ic_circle.clone().append( //ic_remove_circle_outline_black_36px
 	svg('path').attr('d',
 		'M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
 	).node
@@ -620,34 +621,34 @@ var tableTemplate = element('table',
 		list(
 			element('tr')
 			.class('abc')
-			.oncreate(function() { i = this.key; })
-			.child(
+			.call(function() { i = this.key; })
+			.append(
 				element('td')
-				.oncreate(function() { this.i = i; })
+				.call(function() { this.i = i; })
 				.on('click', function() { this.root.store.delRow(this.i);})
-				.child(
+				.append(
 					ic_remove // title column
 				),
 				list( // data columns
 					element('td', function() { j = this.key; },
 						element('input')
-						.oncreate(function() { this.i = i; this.j = j; })
-						.set('update', function(val) { this.node.value = val; })
+						.call(function() { this.i = i; this.j = j; })
+						.extra('update', function(val) { this.node.value = val; })
 						.on('change', function() { this.root.store.set(this.node.value, [this.i, this.j]); })
 					)
 				)
 			)
 		),
-		element('tr').child(
+		element('tr').append(
 			element('td')
 			.on('click', function() { this.root.store.addRow(); })
-			.child(ic_add)
+			.append(ic_add)
 		)
 	)
 ); //741
 
 var store = new Store([]);
-var table = tableTemplate.create().set('store', store).moveTo(document.body);
+var table = tableTemplate.create().extra('store', store).moveTo(document.body);
 
 store.onchange = function() { table.update( store.get() ); };
 store.set([['Jane', 'Roe'], ['John', 'Doe']]);

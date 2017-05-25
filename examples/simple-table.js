@@ -10,34 +10,34 @@ var tableTemplate = el('table',
 		list(
 			el('tr')
 			.class('abc')
-			.oncreate(function() { i = this.key })
-			.child(
+			.call(function() { i = this.key })
+			.append(
 				el('td')
-				.oncreate(function() { this.i = i })
+				.call(function() { this.i = i })
 				.on('click', function() { this.root.store.delRow(this.i)})
-				.child(
+				.append(
 					ic_remove // title column
 				),
 				list( // data columns
 					el('td', function() { j = this.key },
 						el('input')
-						.oncreate(function() { this.i = i; this.j = j })
-						.set('update', function(val) { this.node.value = val })
+						.call(function() { this.i = i; this.j = j })
+						.extra('update', function(val) { this.node.value = val })
 						.on('change', function() { this.root.store.set(this.node.value, [this.i, this.j]) })
 					)
 				)
 			)
 		),
-		el('tr').child(
+		el('tr').append(
 			el('td')
 			.on('click', function() { this.root.store.addRow() })
-			.child(ic_add)
+			.append(ic_add)
 		)
 	)
 ) //741
 
 var store = new Store([]),
-		table = tableTemplate.create().set('store', store).moveTo(document.body)
+		table = tableTemplate.create().extra('store', store).moveTo(document.body)
 
 store.onchange = function() { table.update( store.get() ) }
 store.set([['Jane', 'Roe'], ['John', 'Doe']])
