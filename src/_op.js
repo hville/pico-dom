@@ -13,6 +13,7 @@ export function Op(method, a, b) {
 Op.prototype.call = function(ctx) {
 	var op = this
 	return !op.f ? op.a
+		: op.a === undefined ? op.f.call(ctx)
 		: op.b === undefined ? op.f.call(ctx, op.a)
 		: op.f.call(ctx, op.a, op.b)
 }

@@ -29,6 +29,7 @@ function Op(method, a, b) {
 Op.prototype.call = function(ctx) {
 	var op = this;
 	return !op.f ? op.a
+		: op.a === undefined ? op.f.call(ctx)
 		: op.b === undefined ? op.f.call(ctx, op.a)
 		: op.f.call(ctx, op.a, op.b)
 };
@@ -70,13 +71,13 @@ Template.prototype = {
 
 	// COMPONENT OPERATIONS
 	call: function(fcn) {
-		this.ops.push(new Op(call, fcn));
+		this.ops.push(new Op(fcn));
 		return this
 	},
 
 	config: function(any) {
 		if (any != null) {
-			if (typeof any === 'function') this.ops.push(new Op(call, any));
+			if (typeof any === 'function') this.ops.push(new Op(any));
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
@@ -101,11 +102,6 @@ Template.prototype = {
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 };
-
-
-function call(fcn) {
-	fcn.call(this, this.node);
-}
 
 function wrapMethod(name) {
 	return function(a, b) {
