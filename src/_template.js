@@ -68,22 +68,7 @@ Template.prototype = {
 	attr: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
 	class: wrapMethod('class'),
-
-	append: function() {
-		var proto = this.Co.prototype
-		for (var i=0; i<arguments.length; ++i) {
-			var child = arguments[i]
-			if (child != null) {
-				if (Array.isArray(child)) this.append.apply(this, child)
-				else this.ops.push(
-					child.create ? new Op(proto._childTemplate, child) //TODO
-					: child.cloneNode ? new Op(proto._childNode, child)
-					: new Op(proto._childText, ''+child)
-				)
-			}
-		}
-		return this
-	}
+	append: wrapMethod('append')
 }
 
 
@@ -95,7 +80,11 @@ function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		this.ops.push(new Op(proto[name], a, b))
+		if (arguments.length > 2) {
+			for (var i=0, args=[]; i<arguments.length; ++i) args[i] = arguments[i]
+			this.ops.push(new Op(proto[name], args))
+		}
+		else this.ops.push(new Op(proto[name], a, b))
 		return this
 	}
 }

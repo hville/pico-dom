@@ -61,17 +61,20 @@ export var ncProto = NodeCo.prototype = {
 		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]])
 		return this
 	},
-
-	_childNode: function (node) { //TODO
-		this.node.appendChild(node.cloneNode(true))
-	},
-
-	_childTemplate: function (template) {  //TODO
-		template.create(this).moveTo(this.node)
-	},
-
-	_childText: function appendText(txt) {  //TODO
-		this.node.appendChild(D.createTextNode(txt))
+	append: function() {
+		var node = this.node
+		for (var i=0; i<arguments.length; ++i) {
+			var child = arguments[i]
+			if (child != null) {
+				if (Array.isArray(child)) this.append.apply(this, child)
+				else if (child.create) child.create(this).moveTo(node)
+				else if (child.moveTo) child.moveTo(node)
+				else node.appendChild(
+					child.cloneNode ? child.cloneNode(true) : D.createTextNode(''+child)
+				)
+			}
+		}
+		return this
 	},
 
 
