@@ -56,17 +56,29 @@ ListK.prototype = {
 	*/
 	remove: function() {
 		var head = this.node,
-				origin = head.parentNode
+				origin = head.parentNode,
+				spot = head.nextSibling
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null)
-			this._clearFrom(head.nextSibling)
+			while(spot !== this.foot) {
+				var item = spot[picoKey]
+				spot = (item.foot || item.node).nextSibling
+				item.remove()
+			}
 			origin.removeChild(this.foot)
 			origin.removeChild(head)
 		}
 
 		return this
 	},
+
+	destroy: function() {
+		this.remove()
+		if (this.ondestroy) this.ondestroy()
+		this.node = this.refs = null
+	},
+
 
 	getKey: function(v,k) { return k }, // default: indexed
 
@@ -80,14 +92,6 @@ ListK.prototype = {
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot)
 		else if (item.node !== spot) item.moveTo(parent, spot)
 		return item.foot || item.node
-	},
-
-	_clearFrom: function(spot) {
-		while(spot !== this.foot) {
-			var item = spot[picoKey]
-			spot = (item.foot || item.node).nextSibling
-			item.remove()
-		}
 	}
 }
 
@@ -112,6 +116,10 @@ function updateKeyedChildren(arr) {
 	}
 
 	this.refs = newM
-	this._clearFrom(spot)
+	while(spot !== this.foot) {
+		item = spot[picoKey]
+		spot = (item.foot || item.node).nextSibling
+		item.destroy()
+	}
 	return this
 }

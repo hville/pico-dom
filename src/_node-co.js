@@ -110,6 +110,13 @@ export var ncProto = NodeCo.prototype = {
 		}
 	},
 
+	destroy: function() {
+		this.remove()
+		if (this.ondestroy) this.ondestroy()
+		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i])
+		this.node = this.refs = null
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,
@@ -129,8 +136,7 @@ export var ncProto = NodeCo.prototype = {
 	registerHandler: function(type, handler) {
 		if (!handler) {
 			if (this._on && this._on[type]) {
-				if (Object.keys(this._on).length === 1) this._on = null
-				else delete this._on[type]
+				delete this._on[type]
 				this.node.removeEventListener(type, this, false)
 			}
 		}

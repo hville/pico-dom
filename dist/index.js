@@ -56,6 +56,7 @@ Template.prototype = {
 				cmp = new this.Co(ops[0].call(exports.D));
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
+
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
 		if (cmp.oncreate) cmp.oncreate();
 		return cmp
@@ -250,6 +251,13 @@ var ncProto = NodeCo.prototype = {
 		}
 	},
 
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
+		this.node = this.refs = null;
+	},
+
 	// UPDATE
 	update: updateChildren,
 	updateChildren: updateChildren,
@@ -266,11 +274,10 @@ var ncProto = NodeCo.prototype = {
 		else this.registerHandler(type, handler);
 		return this
 	},
-	registerHandler: function(type, handler) { //TODO
+	registerHandler: function(type, handler) {
 		if (!handler) {
 			if (this._on && this._on[type]) {
-				if (Object.keys(this._on).length === 1) this._on = null;
-				else delete this._on[type];
+				delete this._on[type];
 				this.node.removeEventListener(type, this, false);
 			}
 		}
@@ -349,17 +356,29 @@ ListK.prototype = {
 	*/
 	remove: function() {
 		var head = this.node,
-				origin = head.parentNode;
+				origin = head.parentNode,
+				spot = head.nextSibling;
 
 		if (origin) {
 			if (this.onmove) this.onmove(origin, null);
-			this._clearFrom(head.nextSibling);
+			while(spot !== this.foot) {
+				var item = spot[picoKey];
+				spot = (item.foot || item.node).nextSibling;
+				item.remove();
+			}
 			origin.removeChild(this.foot);
 			origin.removeChild(head);
 		}
 
 		return this
 	},
+
+	destroy: function() {
+		this.remove();
+		if (this.ondestroy) this.ondestroy();
+		this.node = this.refs = null;
+	},
+
 
 	getKey: function(v,k) { return k }, // default: indexed
 
@@ -373,14 +392,6 @@ ListK.prototype = {
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	},
-
-	_clearFrom: function(spot) {
-		while(spot !== this.foot) {
-			var item = spot[picoKey];
-			spot = (item.foot || item.node).nextSibling;
-			item.remove();
-		}
 	}
 };
 
@@ -405,7 +416,11 @@ function updateKeyedChildren(arr) {
 	}
 
 	this.refs = newM;
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.destroy();
+	}
 	return this
 }
 
@@ -427,12 +442,15 @@ function ListS(template) {
 	}
 }
 
+var protoK = ListK.prototype;
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
 	extra: setThis,
-	moveTo: ListK.prototype.moveTo,
-	remove: ListK.prototype.remove,
+	moveTo: protoK.moveTo,
+	remove: protoK.remove,
+	destroy: protoK.destroy,
+	_placeItem: protoK._placeItem,
 
 	/**
 	 * select all by default
@@ -443,10 +461,7 @@ ListS.prototype = {
 	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
-	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_clearFrom: ListK.prototype._clearFrom
-
+	updateChildren: updateListChildren
 };
 
 function updateListChildren(v,k,o) {
@@ -464,7 +479,11 @@ function updateListChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
-	this._clearFrom(spot);
+	while(spot !== this.foot) {
+		item = spot[picoKey];
+		spot = (item.foot || item.node).nextSibling;
+		item.remove();
+	}
 	return this
 }
 

@@ -21,12 +21,15 @@ export function ListS(template) {
 	}
 }
 
+var protoK = ListK.prototype
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
 	extra: setThis,
-	moveTo: ListK.prototype.moveTo,
-	remove: ListK.prototype.remove,
+	moveTo: protoK.moveTo,
+	remove: protoK.remove,
+	destroy: protoK.destroy,
+	_placeItem: protoK._placeItem,
 
 	/**
 	 * select all by default
@@ -37,10 +40,7 @@ ListS.prototype = {
 	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
 
 	update: updateListChildren,
-	updateChildren: updateListChildren,
-	_placeItem: ListK.prototype._placeItem,
-	_clearFrom: ListK.prototype._clearFrom
-
+	updateChildren: updateListChildren
 }
 
 function updateListChildren(v,k,o) {
@@ -58,6 +58,10 @@ function updateListChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling
 		}
 	}
-	this._clearFrom(spot)
+	while(spot !== this.foot) {
+		item = spot[picoKey]
+		spot = (item.foot || item.node).nextSibling
+		item.remove()
+	}
 	return this
 }

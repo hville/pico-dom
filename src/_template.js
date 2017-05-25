@@ -25,6 +25,7 @@ Template.prototype = {
 				cmp = new this.Co(ops[0].call(D))
 		if (parent) cmp.root = parent.root || parent
 		if (key !== undefined) cmp.key = key
+
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp)
 		if (cmp.oncreate) cmp.oncreate()
 		return cmp
