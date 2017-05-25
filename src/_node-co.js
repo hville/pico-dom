@@ -25,7 +25,7 @@ export var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	set: setThis,
+	extra: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -119,17 +119,18 @@ export var ncProto = NodeCo.prototype = {
 				handler = handlers && handlers[event.type]
 		if (handler) handler.call(this, event)
 	},
-	on: function(type, handler) {
+	on: function(type, handler) { //TODO variadic
 		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
 			this.registerHandler(ks[i], type[ks[i]])
 		}
-		else this.registerHandler(handler, type)
+		else this.registerHandler(type, handler)
 		return this
 	},
-	registerHandler: function(handler, type) {
+	registerHandler: function(type, handler) {
 		if (!handler) {
 			if (this._on && this._on[type]) {
-				delete this._on[type]
+				if (Object.keys(this._on).length === 1) this._on = null
+				else delete this._on[type]
 				this.node.removeEventListener(type, this, false)
 			}
 		}

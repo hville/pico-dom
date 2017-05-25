@@ -17,7 +17,7 @@ export function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	set: setThis,
+	extra: setThis,
 
 	/**
 	* @function moveTo

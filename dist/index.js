@@ -57,6 +57,7 @@ Template.prototype = {
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
 		for (var i=1; i<ops.length; ++i) ops[i].call(cmp);
+		if (cmp.oncreate) cmp.oncreate();
 		return cmp
 	},
 
@@ -67,12 +68,10 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	oncreate: function(fcn) {
+	call: function(fcn) {
 		this.ops.push(new Op(call, fcn));
 		return this
 	},
-
-	set: wrapMethod('set'),
 
 	config: function(any) {
 		if (any != null) {
@@ -90,6 +89,8 @@ Template.prototype = {
 		}
 		return this
 	},
+
+	extra: wrapMethod('extra'),
 
 	// ELEMENT OPERATIONS
 
@@ -164,7 +165,7 @@ var ncProto = NodeCo.prototype = {
 	root: null,
 
 	// INSTANCE UTILITIES
-	set: setThis,
+	extra: setThis,
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -258,17 +259,18 @@ var ncProto = NodeCo.prototype = {
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	on: function(type, handler) {
+	on: function(type, handler) { //TODO variadic
 		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
 			this.registerHandler(ks[i], type[ks[i]]);
 		}
-		else this.registerHandler(handler, type);
+		else this.registerHandler(type, handler);
 		return this
 	},
-	registerHandler: function(handler, type) {
+	registerHandler: function(type, handler) { //TODO
 		if (!handler) {
 			if (this._on && this._on[type]) {
-				delete this._on[type];
+				if (Object.keys(this._on).length === 1) this._on = null;
+				else delete this._on[type];
 				this.node.removeEventListener(type, this, false);
 			}
 		}
@@ -290,6 +292,7 @@ function updateChildren(v,k,o) {
 		}
 		else child = child.nextSibling;
 	}
+	return this
 }
 
 /**
@@ -307,7 +310,7 @@ function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	set: setThis,
+	extra: setThis,
 
 	/**
 	* @function moveTo
@@ -427,7 +430,7 @@ function ListS(template) {
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	set: setThis,
+	extra: setThis,
 	moveTo: ListK.prototype.moveTo,
 	remove: ListK.prototype.remove,
 

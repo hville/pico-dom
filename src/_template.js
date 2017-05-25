@@ -42,8 +42,6 @@ Template.prototype = {
 		return this
 	},
 
-	set: wrapMethod('set'),
-
 	config: function(any) {
 		if (any != null) {
 			if (typeof any === 'function') this.ops.push(new Op(call, any))
@@ -60,6 +58,8 @@ Template.prototype = {
 		}
 		return this
 	},
+
+	extra: wrapMethod('extra'),
 
 	// ELEMENT OPERATIONS
 

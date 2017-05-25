@@ -24,7 +24,7 @@ export function ListS(template) {
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	set: setThis,
+	extra: setThis,
 	moveTo: ListK.prototype.moveTo,
 	remove: ListK.prototype.remove,
 
