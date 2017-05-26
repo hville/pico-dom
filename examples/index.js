@@ -10,11 +10,6 @@ var D = typeof document !== 'undefined' ? document : null;
 * @return {Document} DOM document
 */
 
-/**
- * @constructor
- * @param {!Function} constructor
- * @param {!Array} transforms
- */
 function Template(constructor, transforms) {
 	this.Co = constructor;
 	this.ops = transforms || [];
@@ -28,112 +23,127 @@ Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				cmp = new this.Co(callOp(D, ops[0]));
-		if (parent) cmp.root = parent.root || parent;
+				cmp = new this.Co(ops[0].f ? ops[0].f.apply(D, ops[0].a) : ops[0].a[0]);
+
+		if (parent) {
+			cmp.parent = parent;
+			cmp.root = parent.root || parent;
+		}
 		if (key !== undefined) cmp.key = key;
 
-		for (var i=1; i<ops.length; ++i) callOp(cmp, ops[i]);
-		if (cmp.oncreate) cmp.oncreate();
+		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a);
 		return cmp
-	},
-
-	clone: function(options) {
-		var template = new Template(this.Co, this.ops.slice());
-		if (options) template.config(options);
-		return template
 	},
 
 	// COMPONENT OPERATIONS
 	call: function(fcn) {
-		for (var i=1, args=[fcn]; i<arguments.length; ++i) args[i] = arguments[i];
-		this.ops.push(args);
+		for (var i=1, args=[]; i<arguments.length; ++i) args[i-1] = arguments[i];
+		return new Template(this.Co, this.ops.concat({f: fcn, a:args}))
+	},
+
+	_ops: function(fcn, obj) {
+		for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) {
+			this.ops.push({f: fcn, a: [ks[i], obj[ks[i]]]});
+		}
 		return this
 	},
 
-	config: function(any) {
+	_config: function(any) {
+		var cProto = this.Co.prototype;
 		if (any != null) {
-			if (typeof any === 'function') this.ops.push([any]);
+
+			if (typeof any === 'function') this.ops.push({f: any, a:[]});
+
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-					var key = ks[i],
-							arg = any[ks[i]];
-					if (Array.isArray(arg)) this[key](arg[0], arg[1]); //TODO
-					else this[key](arg);
+					var key = ks[i];
+					if (!this[key]) throw Error (key + ' is not a template method')
+
+					if (key[key.length-1] === 's' && any[key].constructor === Object) {
+						// break group functions extras, props, attrs
+						this._ops(cProto[key.slice(0,-1)], any[key]);
+					}
+					else {
+						this.ops.push({f: cProto[key], a:[any[key]]});
+					}
 				}
 			}
-			else this.append(any);
+			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]});
+			else throw Error('invalid argument '+any)
 		}
 		return this
 	},
 
 	extra: wrapMethod('extra'),
+	extras: wrapMany('extra'),
 
 	// ELEMENT OPERATIONS
 
-	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
-	attrs: wrapMethod('attr'),
+	attrs: wrapMany('attr'),
+
+	event: wrapMethod('event'),
+	events: wrapMany('event'),
+
 	prop: wrapMethod('prop'),
-	props: wrapMethod('prop'),
+	props: wrapMany('prop'),
+
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 };
 
-function wrapMethod(name) {
-	return function(a, b) {
-		var proto = this.Co.prototype;
-		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		var op = [proto[name]];
-
-		if (arguments.length === 1) op.push(a);
-		else if (arguments.length === 2) op.push(a, b);
-		else if (arguments.length > 2) {
-			op.push([a, b]);
-			for (var i=2; i<arguments.length; ++i) op[1].push(arguments[i]);
-		}
-
-		this.ops.push(op);
-		return this
+function wrapMany(name) {
+	return function(a) {
+		return (new Template(this.Co, this.ops.slice()))._ops(this.Co.prototype[name], a)
 	}
 }
 
-function callOp(ctx, op) {
-	return !op[0] ? op[1]
-		: op.length === 0 ? op[0].call(ctx)
-		: op.length === 1 ? op[0].call(ctx, op[1])
-		: op[0].call(ctx, op[1], op[2])
-}
-
-/**
- * @function
- * @param {string|number} key
- * @param {*} val value
- * @returns {!Object} this
- */
-function setThis(key, val) {
-	this[key] = val;
-	return this
+function wrapMethod(name) {
+	return function() {
+		for (var i=0, args=[]; i<arguments.length; ++i) args[i] = arguments[i];
+		return new Template(this.Co, this.ops.concat({f: this.Co.prototype[name], a: args}))
+	}
 }
 
 var picoKey = '_pico';
 
-function NodeCo(node) {
+/**
+ * @function
+ * @param {!Object} obj
+ * @param {Function} fcn
+ * @param {*} [ctx]
+ * @returns {void}
+ */
+function eachKeys(obj, fcn, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, ks[i], obj[ks[i]]);
+}
+
+function Extra(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
+
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
 
-	node[picoKey] = this.update ? this : null;
+	node[picoKey] = this;
 }
 
 
-var ncProto = NodeCo.prototype = {
-	constructor: NodeCo,
-	root: null,
+var extraProto = Extra.prototype = {
+	constructor: Extra,
 
 	// INSTANCE UTILITIES
-	extra: setThis,
+	/**
+	 * @function
+	 * @param {string|number} key
+	 * @param {*} val value
+	 * @returns {!Object} this
+	 */
+	extra: function(key, val) {
+		this[key] = val;
+		return this
+	},
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -162,11 +172,15 @@ var ncProto = NodeCo.prototype = {
 		return this
 	},
 	attrs: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.attr(ks[i], keyVals[ks[i]]);
+		eachKeys(keyVals, this.attr, this);
 		return this
 	},
 	props: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]]);
+		eachKeys(keyVals, this.prop, this);
+		return this
+	},
+	extras: function(keyVals) {
+		eachKeys(keyVals, this.extra, this);
 		return this
 	},
 	append: function() {
@@ -188,19 +202,6 @@ var ncProto = NodeCo.prototype = {
 
 	// PLACEMENT
 
-	/**
-	* @function
-	* @return {!Object} this
-	*/
-	remove: function() {
-		var node = this.node,
-				origin = node.parentNode;
-		if (origin) {
-			if (this.onmove) this.onmove(origin, null);
-			origin.removeChild(node);
-		}
-		return this
-	},
 
 	/**
 	* @function
@@ -210,21 +211,29 @@ var ncProto = NodeCo.prototype = {
 	*/
 	moveTo: function(parent, before) {
 		var node = this.node,
-				origin = node.parentNode,
 				anchor = before || null;
 		if (!parent) throw Error('invalid parent node')
 
-		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
-			if (this.onmove) this.onmove(this.node.parentNode, parent);
+		if (node.parentNode !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			parent.insertBefore(node, anchor);
-			return this
 		}
+		return this
+	},
+
+	/**
+	* @function
+	* @return {!Object} this
+	*/
+	remove: function() {
+		var node = this.node,
+				origin = node.parentNode;
+		if (origin) origin.removeChild(node);
+		return this
 	},
 
 	destroy: function() {
 		this.remove();
-		if (this.ondestroy) this.ondestroy();
-		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
+		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
 		this.node = this.refs = null;
 	},
 
@@ -233,27 +242,24 @@ var ncProto = NodeCo.prototype = {
 	updateChildren: updateChildren,
 	// EVENT LISTENERS
 	handleEvent: function(event) {
-		var handlers = this._on,
+		var handlers = this._events,
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	on: function(type, handler) { //TODO variadic
-		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
-			this.registerHandler(ks[i], type[ks[i]]);
-		}
-		else this.registerHandler(type, handler);
+	events: function(handlers) {
+		eachKeys(handlers, this.event, this);
 		return this
 	},
-	registerHandler: function(type, handler) {
+	event: function(type, handler) {
 		if (!handler) {
-			if (this._on && this._on[type]) {
-				delete this._on[type];
+			if (this._events && this._events[type]) {
+				delete this._events[type];
 				this.node.removeEventListener(type, this, false);
 			}
 		}
 		else {
-			if (!this._on) this._on = {};
-			this._on[type] = handler;
+			if (!this._events) this._events = {};
+			this._events[type] = handler;
 			this.node.addEventListener(type, this, false);
 		}
 	}
@@ -272,18 +278,26 @@ function updateChildren(v,k,o) {
 	return this
 }
 
-function ListK(template) {
+function List(template) {
 	this.template = template;
 	this.refs = {};
 	this.node = D.createComment('^');
 	this.foot = D.createComment('$');
 	this.node[picoKey] = this;
+
+	if (!template.create) { // select list
+		this.update = this.updateChildren = updateSelectChildren;
+		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
+			var key = ks[i];
+			this.refs[key] = template[key].create(this, key);
+		}
+	}
 }
 
-ListK.prototype = {
-	constructor: ListK,
-	root: null,
-	extra: setThis,
+List.prototype = {
+	constructor: List,
+
+	extra: extraProto.extra,
 
 	/**
 	* @function moveTo
@@ -300,7 +314,6 @@ ListK.prototype = {
 		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
-			if (this.onmove) this.onmove(origin, parent);
 
 			if (origin) { // relocate
 				var cursor;
@@ -326,7 +339,6 @@ ListK.prototype = {
 				spot = head.nextSibling;
 
 		if (origin) {
-			if (this.onmove) this.onmove(origin, null);
 			while(spot !== this.foot) {
 				var item = spot[picoKey];
 				spot = (item.foot || item.node).nextSibling;
@@ -339,26 +351,33 @@ ListK.prototype = {
 		return this
 	},
 
-	destroy: function() {
-		this.remove();
-		if (this.ondestroy) this.ondestroy();
-		this.node = this.refs = null;
-	},
-
-
-	getKey: function(v,k) { return k }, // default: indexed
+	destroy: extraProto.destroy,
 
 	update: updateKeyedChildren,
 
 	updateChildren: updateKeyedChildren,
-
 
 	_placeItem: function(parent, item, spot, foot) {
 		if (!spot) item.moveTo(parent);
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	}
+	},
+
+	// FOR KEYED LIST
+
+	getKey: function(v,k) { return k }, // default: indexed
+
+	// FOR SELECT LIST
+
+	/**
+	 * select all by default
+	 * @function
+	 * @param {...*} [v]
+	 * @return {!Array}
+	 */
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
+
 };
 
 
@@ -390,43 +409,7 @@ function updateKeyedChildren(arr) {
 	return this
 }
 
-function ListS(template) {
-	this.template = template;
-	this.refs = {};
-	this.node = D.createComment('^');
-	this.foot = D.createComment('$');
-	this.node[picoKey] = this;
-
-	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		var key = ks[i],
-				model = template[ks[i]];
-		this.refs[ks[i]] = model.create(this, key);
-	}
-}
-
-var protoK = ListK.prototype;
-ListS.prototype = {
-	constructor: ListS,
-	root: null,
-	extra: setThis,
-	moveTo: protoK.moveTo,
-	remove: protoK.remove,
-	destroy: protoK.destroy,
-	_placeItem: protoK._placeItem,
-
-	/**
-	 * select all by default
-	 * @function
-	 * @param {...*} [v]
-	 * @return {!Array}
-	 */
-	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
-
-	update: updateListChildren,
-	updateChildren: updateListChildren
-};
-
-function updateListChildren(v,k,o) {
+function updateSelectChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
@@ -459,8 +442,8 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[D.createElementNS, svgURI, tag]]);
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
+	var model = new Template(Extra, [{f: D.createElementNS, a:[svgURI, tag]}]);
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
 
@@ -472,8 +455,8 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[D.createElement, tagName]]);
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
+	var model = new Template(Extra, [{f: D.createElement, a: [tagName]}]);
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
 
@@ -492,11 +475,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[D.createTextNode, txt]]);
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
-	return model
-}
+
 
 
 /**
@@ -508,8 +487,8 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
 function template(node, options) { //eslint-disable-line no-unused-vars
 	if (!node.cloneNode) throw Error('invalid node')
 
-	var modl = new Template(NodeCo, [[cloneNode, node]]);
-	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i]);
+	var modl = new Template(Extra, [{f: cloneNode, a: [node]}]);
+	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
 	return modl
 }
 
@@ -525,12 +504,9 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(
-		model.create ? ListK : ListS,
-		[[null, model]]
-	);
+	var lst = new Template(List, [{f:null, a:[model]}]);
 
-	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i]);
+	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst
 }
 
@@ -538,76 +514,147 @@ function list(model, options) { //eslint-disable-line no-unused-vars
 
 // create template
 
+// generic simple store for the examples
+
+function Store(config) {
+	this.data = {};
+	for (var i=0, ks=Object.keys(config); i<ks.length; ++i) this[ks[i]] = config[ks[i]];
+}
+
+Store.prototype = {
+	constructor: Store,
+
+	get: function(path) {
+		var data = this.data;
+		switch (arguments.length) {
+			case 0: return data
+			case 1:
+				if (Array.isArray(path)) {
+					for (var i=0; i<path.length; ++i) if ((data = data[path[i]]) === undefined) break
+					return data
+				}
+				else return data[path]
+			default:
+				return this.get.apply(this, arguments)
+		}
+	},
+
+	set: function(value, path) {
+		var data = this.data;
+		switch (arguments.length) {
+			case 0: throw Error('value required')
+			case 1:
+				this.data = value;
+				break
+			case 2:
+				if (Array.isArray(path)) {
+					for (var i=0; i<(path.length-1); ++i) if ((data = data[path[i]]) === undefined) throw Error('invalid path '+path.join())
+					data[path[path.length-1]] = value;
+				}
+				else {
+					data[path] = value;
+				}
+				break
+			default:
+				throw Error('invalid argument')
+		}
+		if (this.onchange) this.onchange();
+	},
+
+	act: function(name, args) {
+		return this[name].apply(this, args)
+	}
+};
+
 // immutable templates, svg elements
 var ic_circle = template( // template used to pre-resolve the node structure
-	svg('svg')
-	.attr('fill', '#000000')
-	.attr('height', '24')
-	.attr('viewBox', '0 0 24 24')
-	.attr('width', '24')
-	.append(
-		svg('path')
-		.attr('fill', 'none')
-		.attr('d', 'M0 0h24v24H0z')
-	).node
+	svg('svg', {
+		attrs: {
+			fill: '#000000',
+			height: '24',
+			viewBox: '0 0 24 24',
+			width: '24'
+		}},
+		svg('path', {
+			attrs: {
+				fill: 'none',
+				d: 'M0 0h24v24H0z'
+			}
+		})
+	).create().node // template will clone the node instead of runing all steps
 );
 
-var ic_add = ic_circle.clone().append( //ic_add_circle_outline_black_36px
+var ic_add = ic_circle.append( //ic_add_circle_outline_black_36px
 	svg('path').attr('d',
 		'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
-	).node
+	)
 );
 
-var ic_clear = ic_circle.clone().append( //ic_clear_black_36px
+var ic_clear = ic_circle.append( //ic_clear_black_36px
 	svg('path').attr('d',
 		'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
-	).node
+	)
 );
 
-var ic_remove = ic_circle.clone().append( //ic_remove_circle_outline_black_36px
+var ic_remove = ic_circle.append( //ic_remove_circle_outline_black_36px
 	svg('path').attr('d',
 		'M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
-	).node
+	)
 );
 
-var data = ['a', 'b', 'c'];
+var store = new Store([]);
+var i = 0;
+var j = 0;
 
-element('table',
-	element('ol',
+var table = element('table',
+	element('tbody',
 		list(
-			element('li')
-			.on('click', function(e) {
-				var idx = data.indexOf(this.key),
-						id = e.target.id || e.target.parentNode.id;
-				console.log('CLICK', id, idx, data.length, data);
-				if (id === 'del') data.splice(idx, 1);
-				else if (id === 'add') data.splice(idx, 0, this.key+idx);
-				else console.log('CLASS', this.node.className), this.class('f4 blue'), this.attr('style', 'opacity: 0.8;');//this.node.style.opacity = '.8'
-				this.root.update(data);
-			})
-			.call(function() {})
-
-			.on('transitionend', function(e) { console.log(e.name); })
-			.class('f6 darkest-blue')
-			.attr('style', 'opacity: 0.1')
-			.append(
-				ic_add.attr('id', 'add'),
-				text(''),
-				ic_remove.attr('id', 'del')
+			element('tr',
+				function() {
+					i = this.key; this.class('abc');
+				},
+				element('td', //leading column with icon
+					function() { this.i = i; },
+					{ events: { click: function() { this.root.store.delRow(this.i); } } },
+					ic_remove
+				),
+				list( // data columns
+					element('td',
+						function() { j = this.key; },
+						element('input',
+							function() {
+								this.i = i; this.j = j;
+								this.update = this.value;
+								this.event('change', function() {
+									this.root.store.set(this.node.value, [this.i, this.j]);
+								});
+							}
+						)
+					)
+				)
 			)
-			.call(function() {
-				var ctx = this;
-				this.node.ownerDocument.defaultView.requestAnimationFrame(
-					function() { ctx.attr('style', 'transition: all 9s ease; opacity: 1'); },
-			); })
-			//class('f6 darkest-blue')
-			//.attr('style', 'opacity: 1')
-			//.class('f1 orange')
-		).extra('getKey', function(v) { return v })
+		),
+		element('tr',
+			element('td',
+				{ events: {click: function() { this.root.store.addRow(); } } },
+				ic_add
+			)
+		)
 	)
-)
-.create()
-.update(data)
-.moveTo(document.body);
+).create()
+.extra('store', store)
+.moveTo(D.body);
+
+store.onchange = function() { table.update( store.get() ); };
+store.set([['Jane', 'Roe'], ['John', 'Doe']]);
+
+store.addRow = function() {
+	store.set(['',''], store.get().length);
+};
+store.delRow = function(idx) {
+	var data = store.get().slice();
+	data.splice(idx,1);
+	store.set(data);
+};
 
 }());

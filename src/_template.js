@@ -20,7 +20,10 @@ Template.prototype = {
 		var ops = this.ops,
 				cmp = new this.Co(ops[0].f ? ops[0].f.apply(D, ops[0].a) : ops[0].a[0])
 
-		if (parent) cmp.root = parent.root || parent
+		if (parent) {
+			cmp.parent = parent
+			cmp.root = parent.root || parent
+		}
 		if (key !== undefined) cmp.key = key
 
 		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a)

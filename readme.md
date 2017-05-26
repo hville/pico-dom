@@ -15,30 +15,36 @@ supports different environments
 * browser: (`picoDOM.element`)*
 
 ```javascript
-import {element as el, list} from '../module'
+import {D, element as el, list} from '../module'
 import {Store} from './Store' // any user store will do
 import {ic_remove, ic_add} from './icons'
 
+var store = new Store([]),
+    i = 0,
+    j = 0
 
-var tableTemplate = el('table',
+var table = el('table',
   el('tbody',
     list(
       el('tr',
-        {class: 'abc'},
-        function(tr) { tr.common.i = tr.key },
-        el('td', ic_remove, {
-          on: {click: function() { this.common.store.delRow(this.common.i)}}
-        }), // title column
+        function() {
+          i = this.key; this.class('abc')
+        },
+        el('td', //leading column with icon
+          function() { this.i = i },
+          { events: { click: function() { this.root.store.delRow(this.i) } } },
+          ic_remove
+        ),
         list( // data columns
           el('td',
-            function(td) { td.common.j = td.key },
+            function() { j = this.key },
             el('input',
-              function(c) { c.i = c.common.i; c.j = c.common.j },
-              {
-                update: function(val) { this.node.value = val },
-                on: {
-                  change: function() { this.common.store.set(this.node.value, [this.i, this.j]) }
-                }
+              function() {
+                this.i = i; this.j = j
+                this.update = this.value
+                this.event('change', function() {
+                  this.root.store.set(this.node.value, [this.i, this.j])
+                })
               }
             )
           )
@@ -46,17 +52,18 @@ var tableTemplate = el('table',
       )
     ),
     el('tr',
-      el('td', ic_add, {
-        on: {
-          click: function() { this.common.store.addRow() }
-        }
-      })
+      el('td',
+        { events: {click: function() { this.root.store.addRow() } } },
+        ic_add
+      )
     )
   )
-)
+).create()
+.extra('store', store)
+.moveTo(D.body)
 
-var store = new Store([]),
-    table = tableTemplate.create({common: {store: store}}).moveTo(document.body)
+store.onchange = function() { table.update( store.get() ) }
+store.set([['Jane', 'Roe'], ['John', 'Doe']])
 ```
 
 ## Why
@@ -73,7 +80,7 @@ To explore ideas for a flexible and concise API with minimal tooling and memory 
 * 2kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
-* All in ES5 with ES modules, CJS module and iife for browsers. Should work well on mobile and older browsers.
+* All in ES5 with ES modules, CJS module and iife for browsers. Should work well on mobile and older browsers like IE9.
 
 
 ### Limitations
@@ -150,6 +157,8 @@ Components are created from templates: `template.create()`.
 Normally, only the main component is manually created and all other templates are initiated from within.
 
 In addition to the same methods found in templates (`attr(s)`, `props(s)`, `extra(s)`, `call`, `append`, `class`, `event`, `events`), Components have the following properties and methods for dealing with DOM Nodes
+
+EventHandlers are binded to the component context.
 
 #### DOM references
 
