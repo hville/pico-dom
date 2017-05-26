@@ -1,8 +1,9 @@
 import {D} from './document'
 import {Template} from './_template'
 import {Extra} from './_extra'
-import {ListK} from './_list-k'
-import {ListS} from './_list-s'
+//import {ListK} from './_list-k'
+//import {ListS} from './_list-s'
+import {List} from './_list'
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -84,10 +85,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(
-		model.create ? ListK : ListS,
-		[[null, model]]
-	)
+	var lst = new Template(List, [[null, model]])
 
 	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i])
 	return lst

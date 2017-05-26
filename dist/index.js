@@ -241,7 +241,7 @@ var extraProto = Extra.prototype = {
 	destroy: function() {
 		if (this.ondestroy && this.ondestroy()) return this
 		this.remove();
-		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i]);
+		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
 		this.node = this.refs = null;
 	},
 
@@ -290,16 +290,25 @@ function updateChildren(v,k,o) {
  * @constructor
  * @param {!Object} template
  */
-function ListK(template) {
+function List(template) {
 	this.template = template;
 	this.refs = {};
 	this.node = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
 	this.node[picoKey] = this;
+
+	if (!template.create) { // select list
+		this.update = this.updateChildren = updateSelectChildren;
+		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
+			var key = ks[i],
+					model = template[ks[i]];
+			this.refs[ks[i]] = model.create(this, key);
+		}
+	}
 }
 
-ListK.prototype = {
-	constructor: ListK,
+List.prototype = {
+	constructor: List,
 	root: null,
 	onremove: null,
 	ondestroy: null,
@@ -363,19 +372,31 @@ ListK.prototype = {
 
 	destroy: extraProto.destroy,
 
-	getKey: function(v,k) { return k }, // default: indexed
-
 	update: updateKeyedChildren,
 
 	updateChildren: updateKeyedChildren,
-
 
 	_placeItem: function(parent, item, spot, foot) {
 		if (!spot) item.moveTo(parent);
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	}
+	},
+
+	// FOR KEYED LIST
+
+	getKey: function(v,k) { return k }, // default: indexed
+
+	// FOR SELECT LIST
+
+	/**
+	 * select all by default
+	 * @function
+	 * @param {...*} [v]
+	 * @return {!Array}
+	 */
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
+
 };
 
 
@@ -407,50 +428,7 @@ function updateKeyedChildren(arr) {
 	return this
 }
 
-/**
- * @constructor
- * @param {!Object} template
- */
-function ListS(template) {
-	this.template = template;
-	this.refs = {};
-	this.node = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$');
-	this.node[picoKey] = this;
-
-	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		var key = ks[i],
-				model = template[ks[i]];
-		this.refs[ks[i]] = model.create(this, key);
-	}
-}
-
-var protoK = ListK.prototype;
-ListS.prototype = {
-	constructor: ListS,
-	root: null,
-	onremove: null,
-	ondestroy: null,
-
-	extra: protoK.extra,
-	moveTo: protoK.moveTo,
-	remove: protoK.remove,
-	destroy: protoK.destroy,
-	_placeItem: protoK._placeItem,
-
-	/**
-	 * select all by default
-	 * @function
-	 * @param {...*} [v]
-	 * @return {!Array}
-	 */
-	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
-
-	update: updateListChildren,
-	updateChildren: updateListChildren
-};
-
-function updateListChildren(v,k,o) {
+function updateSelectChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
@@ -473,6 +451,8 @@ function updateListChildren(v,k,o) {
 	return this
 }
 
+//import {ListK} from './_list-k'
+//import {ListS} from './_list-s'
 var svgURI = 'http://www.w3.org/2000/svg';
 
 
@@ -553,10 +533,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(
-		model.create ? ListK : ListS,
-		[[null, model]]
-	);
+	var lst = new Template(List, [[null, model]]);
 
 	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i]);
 	return lst

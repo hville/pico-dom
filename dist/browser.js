@@ -77,6 +77,8 @@ Template.prototype = {
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
 	attrs: wrapMethod('attrs'),
+	event: wrapMethod('event'),
+	events: wrapMethod('events'),
 	prop: wrapMethod('prop'),
 	props: wrapMethod('props'),
 	class: wrapMethod('class'),
@@ -130,6 +132,11 @@ function Extra(node) {
 var extraProto = Extra.prototype = {
 	constructor: Extra,
 	root: null,
+	_events: null,
+	oninsert: null, //TODO
+	onmove: null, //TODO
+	onremove: null,
+	ondestroy: null,
 
 	// INSTANCE UTILITIES
 	/**
@@ -204,7 +211,7 @@ var extraProto = Extra.prototype = {
 		var node = this.node,
 				origin = node.parentNode;
 		if (origin) {
-			// TODO onremove() || onremove(cb)
+			if (this.onremove && this.onremove()) return this
 			if (this.onmove) this.onmove(origin, null);
 			origin.removeChild(node);
 		}
@@ -226,14 +233,14 @@ var extraProto = Extra.prototype = {
 		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			if (this.onmove) this.onmove(this.node.parentNode, parent);
 			parent.insertBefore(node, anchor);
-			return this
 		}
+		return this
 	},
 
 	destroy: function() {
+		if (this.ondestroy && this.ondestroy()) return this
 		this.remove();
-		if (this.ondestroy) this.ondestroy(); //TODO if callback, this.ondestroy(destroy)
-		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
+		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i]);
 		this.node = this.refs = null;
 	},
 
@@ -242,27 +249,24 @@ var extraProto = Extra.prototype = {
 	updateChildren: updateChildren,
 	// EVENT LISTENERS
 	handleEvent: function(event) {
-		var handlers = this._on,
+		var handlers = this._events,
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	on: function(type, handler) { //TODO variadic
-		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
-			this.registerHandler(ks[i], type[ks[i]]);
-		}
-		else this.registerHandler(type, handler);
+	events: function(handlers) {
+		for (var i=0, ks=Object.keys(handlers); i<ks.length; ++i) this.event(ks[i], handlers[ks[i]]);
 		return this
 	},
-	registerHandler: function(type, handler) {
+	event: function(type, handler) {
 		if (!handler) {
-			if (this._on && this._on[type]) {
-				delete this._on[type];
+			if (this._events && this._events[type]) {
+				delete this._events[type];
 				this.node.removeEventListener(type, this, false);
 			}
 		}
 		else {
-			if (!this._on) this._on = {};
-			this._on[type] = handler;
+			if (!this._events) this._events = {};
+			this._events[type] = handler;
 			this.node.addEventListener(type, this, false);
 		}
 	}
@@ -285,17 +289,32 @@ function updateChildren(v,k,o) {
  * @constructor
  * @param {!Object} template
  */
-function ListK(template) {
+function List(template) {
 	this.template = template;
 	this.refs = {};
 	this.node = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
 	this.node[picoKey] = this;
+
+	if (template.create) { // keyed list
+		this.update = this.updateChildren = updateKeyedChildren;
+	}
+	else { // select list
+		this.update = this.updateChildren = updateSelectChildren;
+		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
+			var key = ks[i],
+					model = template[ks[i]];
+			this.refs[ks[i]] = model.create(this, key);
+		}
+	}
 }
 
-ListK.prototype = {
-	constructor: ListK,
+List.prototype = {
+	constructor: List,
 	root: null,
+	onremove: null,
+	ondestroy: null,
+
 	extra: extraProto.extra,
 
 	/**
@@ -339,6 +358,7 @@ ListK.prototype = {
 				spot = head.nextSibling;
 
 		if (origin) {
+			if (this.onremove && this.onremove()) return this
 			if (this.onmove) this.onmove(origin, null);
 			while(spot !== this.foot) {
 				var item = spot[picoKey];
@@ -354,8 +374,6 @@ ListK.prototype = {
 
 	destroy: extraProto.destroy,
 
-	getKey: function(v,k) { return k }, // default: indexed
-
 	update: updateKeyedChildren,
 
 	updateChildren: updateKeyedChildren,
@@ -366,7 +384,22 @@ ListK.prototype = {
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
 		else if (item.node !== spot) item.moveTo(parent, spot);
 		return item.foot || item.node
-	}
+	},
+
+	// FOR KEYED LIST
+
+	getKey: function(v,k) { return k }, // default: indexed
+
+	// FOR SELECT LIST
+
+	/**
+	 * select all by default
+	 * @function
+	 * @param {...*} [v]
+	 * @return {!Array}
+	 */
+	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
+
 };
 
 
@@ -398,47 +431,7 @@ function updateKeyedChildren(arr) {
 	return this
 }
 
-/**
- * @constructor
- * @param {!Object} template
- */
-function ListS(template) {
-	this.template = template;
-	this.refs = {};
-	this.node = exports.D.createComment('^');
-	this.foot = exports.D.createComment('$');
-	this.node[picoKey] = this;
-
-	for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-		var key = ks[i],
-				model = template[ks[i]];
-		this.refs[ks[i]] = model.create(this, key);
-	}
-}
-
-var protoK = ListK.prototype;
-ListS.prototype = {
-	constructor: ListS,
-	root: null,
-	extra: protoK.extra,
-	moveTo: protoK.moveTo,
-	remove: protoK.remove,
-	destroy: protoK.destroy,
-	_placeItem: protoK._placeItem,
-
-	/**
-	 * select all by default
-	 * @function
-	 * @param {...*} [v]
-	 * @return {!Array}
-	 */
-	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
-
-	update: updateListChildren,
-	updateChildren: updateListChildren
-};
-
-function updateListChildren(v,k,o) {
+function updateSelectChildren(v,k,o) {
 	var foot = this.foot,
 			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 			spot = this.node.nextSibling,
@@ -461,6 +454,8 @@ function updateListChildren(v,k,o) {
 	return this
 }
 
+//import {ListK} from './_list-k'
+//import {ListS} from './_list-s'
 var svgURI = 'http://www.w3.org/2000/svg';
 
 
@@ -541,10 +536,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(
-		model.create ? ListK : ListS,
-		[[null, model]]
-	);
+	var lst = new Template(List, [[null, model]]);
 
 	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i]);
 	return lst
