@@ -26,6 +26,7 @@ export function List(template) {
 List.prototype = {
 	constructor: List,
 	root: null,
+	onmove: null,
 	onremove: null,
 	ondestroy: null,
 

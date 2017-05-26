@@ -46,11 +46,7 @@ Template.prototype = {
 			if (typeof any === 'function') this.ops.push([any])
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-					var key = ks[i],
-							arg = any[ks[i]]
-					//if (Array.isArray(arg)) this[key](arg[0], arg[1]) //TODO
-					//else this[key](arg)
-					this[key](arg)
+					this[ks[i]](any[ks[i]])
 				}
 			}
 			else this.append(any)

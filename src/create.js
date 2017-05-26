@@ -1,8 +1,6 @@
 import {D} from './document'
 import {Template} from './_template'
 import {Extra} from './_extra'
-//import {ListK} from './_list-k'
-//import {ListS} from './_list-s'
 import {List} from './_list'
 
 var svgURI = 'http://www.w3.org/2000/svg'

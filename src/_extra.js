@@ -23,8 +23,7 @@ export var extraProto = Extra.prototype = {
 	constructor: Extra,
 	root: null,
 	_events: null,
-	oninsert: null, //TODO
-	onmove: null, //TODO
+	onmove: null,
 	onremove: null,
 	ondestroy: null,
 
