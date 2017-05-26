@@ -121,7 +121,6 @@ export var extraProto = Extra.prototype = {
 	},
 
 	destroy: function() {
-		if (this.ondestroy && this.ondestroy()) return this
 		this.remove()
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false)
 		this.node = this.refs = null

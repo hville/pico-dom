@@ -31,24 +31,19 @@ Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				cmp = new this.Co(run(ops[0], exports.D));
+				cmp = new this.Co(ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0]);
 
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
 
-		for (var i=1; i<ops.length; ++i) run(ops[i], cmp);
+		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a);
 		return cmp
 	},
 
 	// COMPONENT OPERATIONS
 	call: function(fcn) {
 		for (var i=1, args=[]; i<arguments.length; ++i) args[i-1] = arguments[i];
-		return this._clone({f: fcn, a:args})
-	},
-
-	_clone: function(op) {
-		var ops = this.ops;
-		return new Template(this.Co, ops.concat(op))
+		return new Template(this.Co, this.ops.concat({f: fcn, a:args}))
 	},
 
 	_ops: function(fcn, obj) {
@@ -104,19 +99,15 @@ Template.prototype = {
 
 function wrapMany(name) {
 	return function(a) {
-		return this._clone([])._ops(this.Co.prototype[name], a)
+		return (new Template(this.Co, this.ops.slice()))._ops(this.Co.prototype[name], a)
 	}
 }
 
 function wrapMethod(name) {
 	return function() {
 		for (var i=0, args=[]; i<arguments.length; ++i) args[i] = arguments[i];
-		return this._clone({f: this.Co.prototype[name], a: args})
+		return new Template(this.Co, this.ops.concat({f: this.Co.prototype[name], a: args}))
 	}
-}
-
-function run(op, ctx) {
-	return op.f ? op.f.apply(ctx, op.a) : op.a[0]
 }
 
 var picoKey = '_pico';
@@ -251,7 +242,6 @@ var extraProto = Extra.prototype = {
 	},
 
 	destroy: function() {
-		if (this.ondestroy && this.ondestroy()) return this
 		this.remove();
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
 		this.node = this.refs = null;
