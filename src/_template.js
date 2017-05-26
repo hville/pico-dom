@@ -46,7 +46,9 @@ Template.prototype = {
 			if (typeof any === 'function') this.ops.push([any])
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-					this[ks[i]](any[ks[i]])
+					var key = ks[i]
+					if (!this[key]) throw Error (key + ' is not a template method')
+					this[key](any[key])
 				}
 			}
 			else this.append(any)
@@ -55,6 +57,7 @@ Template.prototype = {
 	},
 
 	extra: wrapMethod('extra'),
+	extras: wrapMethod('extras'),
 
 	// ELEMENT OPERATIONS
 

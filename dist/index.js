@@ -59,11 +59,9 @@ Template.prototype = {
 			if (typeof any === 'function') this.ops.push([any]);
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-					var key = ks[i],
-							arg = any[ks[i]];
-					//if (Array.isArray(arg)) this[key](arg[0], arg[1]) //TODO
-					//else this[key](arg)
-					this[key](arg);
+					var key = ks[i];
+					if (!this[key]) throw Error (key + ' is not a template method')
+					this[key](any[key]);
 				}
 			}
 			else this.append(any);
@@ -72,6 +70,7 @@ Template.prototype = {
 	},
 
 	extra: wrapMethod('extra'),
+	extras: wrapMethod('extras'),
 
 	// ELEMENT OPERATIONS
 
@@ -114,6 +113,17 @@ function callOp(ctx, op) {
 var picoKey = '_pico';
 
 /**
+ * @function
+ * @param {!Object} obj
+ * @param {Function} fcn
+ * @param {*} [ctx]
+ * @returns {void}
+ */
+function eachKeys(obj, fcn, ctx) {
+	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, ks[i], obj[ks[i]]);
+}
+
+/**
  * @constructor
  * @extends EventListener
  * @param {Node} node - DOM node
@@ -134,8 +144,7 @@ var extraProto = Extra.prototype = {
 	constructor: Extra,
 	root: null,
 	_events: null,
-	oninsert: null, //TODO
-	onmove: null, //TODO
+	onmove: null,
 	onremove: null,
 	ondestroy: null,
 
@@ -178,11 +187,15 @@ var extraProto = Extra.prototype = {
 		return this
 	},
 	attrs: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.attr(ks[i], keyVals[ks[i]]);
+		eachKeys(keyVals, this.attr, this);
 		return this
 	},
 	props: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]]);
+		eachKeys(keyVals, this.prop, this);
+		return this
+	},
+	extras: function(keyVals) {
+		eachKeys(keyVals, this.extra, this);
 		return this
 	},
 	append: function() {
@@ -204,20 +217,6 @@ var extraProto = Extra.prototype = {
 
 	// PLACEMENT
 
-	/**
-	* @function
-	* @return {!Object} this
-	*/
-	remove: function() {
-		var node = this.node,
-				origin = node.parentNode;
-		if (origin) {
-			if (this.onremove && this.onremove()) return this
-			if (this.onmove) this.onmove(origin, null);
-			origin.removeChild(node);
-		}
-		return this
-	},
 
 	/**
 	* @function
@@ -238,9 +237,24 @@ var extraProto = Extra.prototype = {
 		return this
 	},
 
+	/**
+	* @function
+	* @return {!Object} this
+	*/
+	remove: function() { //TODO DESTROY CALLBACK??
+		var node = this.node,
+				origin = node.parentNode;
+		if (origin) {
+			if (this.onremove && this.onremove()) return this
+			if (this.onmove) this.onmove(origin, null);
+			origin.removeChild(node);
+		}
+		return this
+	},
+
 	destroy: function() {
 		if (this.ondestroy && this.ondestroy()) return this
-		this.remove();
+		this.remove(); //TODO DESTROY CALLBACK??
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
 		this.node = this.refs = null;
 	},
@@ -255,7 +269,7 @@ var extraProto = Extra.prototype = {
 		if (handler) handler.call(this, event);
 	},
 	events: function(handlers) {
-		for (var i=0, ks=Object.keys(handlers); i<ks.length; ++i) this.event(ks[i], handlers[ks[i]]);
+		eachKeys(handlers, this.event, this);
 		return this
 	},
 	event: function(type, handler) {
@@ -300,9 +314,8 @@ function List(template) {
 	if (!template.create) { // select list
 		this.update = this.updateChildren = updateSelectChildren;
 		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-			var key = ks[i],
-					model = template[ks[i]];
-			this.refs[ks[i]] = model.create(this, key);
+			var key = ks[i];
+			this.refs[key] = template[key].create(this, key);
 		}
 	}
 }
@@ -310,6 +323,7 @@ function List(template) {
 List.prototype = {
 	constructor: List,
 	root: null,
+	onmove: null,
 	onremove: null,
 	ondestroy: null,
 
@@ -451,8 +465,6 @@ function updateSelectChildren(v,k,o) {
 	return this
 }
 
-//import {ListK} from './_list-k'
-//import {ListS} from './_list-s'
 var svgURI = 'http://www.w3.org/2000/svg';
 
 

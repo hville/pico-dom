@@ -16,9 +16,8 @@ export function List(template) {
 	if (!template.create) { // select list
 		this.update = this.updateChildren = updateSelectChildren
 		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
-			var key = ks[i],
-					model = template[ks[i]]
-			this.refs[ks[i]] = model.create(this, key)
+			var key = ks[i]
+			this.refs[key] = template[key].create(this, key)
 		}
 	}
 }

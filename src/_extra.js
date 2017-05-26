@@ -1,6 +1,6 @@
 import {picoKey} from './picoKey'
 import {D} from './document'
-
+import {eachKeys} from './each-keys'
 
 /**
  * @constructor
@@ -66,11 +66,15 @@ export var extraProto = Extra.prototype = {
 		return this
 	},
 	attrs: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.attr(ks[i], keyVals[ks[i]])
+		eachKeys(keyVals, this.attr, this)
 		return this
 	},
 	props: function(keyVals) {
-		for (var i=0, ks=Object.keys(keyVals); i<ks.length; ++i) this.prop(ks[i], keyVals[ks[i]])
+		eachKeys(keyVals, this.prop, this)
+		return this
+	},
+	extras: function(keyVals) {
+		eachKeys(keyVals, this.extra, this)
 		return this
 	},
 	append: function() {
@@ -92,20 +96,6 @@ export var extraProto = Extra.prototype = {
 
 	// PLACEMENT
 
-	/**
-	* @function
-	* @return {!Object} this
-	*/
-	remove: function() {
-		var node = this.node,
-				origin = node.parentNode
-		if (origin) {
-			if (this.onremove && this.onremove()) return this
-			if (this.onmove) this.onmove(origin, null)
-			origin.removeChild(node)
-		}
-		return this
-	},
 
 	/**
 	* @function
@@ -126,9 +116,24 @@ export var extraProto = Extra.prototype = {
 		return this
 	},
 
+	/**
+	* @function
+	* @return {!Object} this
+	*/
+	remove: function() { //TODO DESTROY CALLBACK??
+		var node = this.node,
+				origin = node.parentNode
+		if (origin) {
+			if (this.onremove && this.onremove()) return this
+			if (this.onmove) this.onmove(origin, null)
+			origin.removeChild(node)
+		}
+		return this
+	},
+
 	destroy: function() {
 		if (this.ondestroy && this.ondestroy()) return this
-		this.remove()
+		this.remove() //TODO DESTROY CALLBACK??
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false)
 		this.node = this.refs = null
 	},
@@ -143,7 +148,7 @@ export var extraProto = Extra.prototype = {
 		if (handler) handler.call(this, event)
 	},
 	events: function(handlers) {
-		for (var i=0, ks=Object.keys(handlers); i<ks.length; ++i) this.event(ks[i], handlers[ks[i]])
+		eachKeys(handlers, this.event, this)
 		return this
 	},
 	event: function(type, handler) {
