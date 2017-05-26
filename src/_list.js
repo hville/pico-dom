@@ -2,6 +2,7 @@ import {D} from './document'
 import {picoKey} from './picoKey'
 import {extraProto} from './_extra'
 
+
 /**
  * @constructor
  * @param {!Object} template
@@ -25,9 +26,6 @@ export function List(template) {
 List.prototype = {
 	constructor: List,
 	root: null,
-	onmove: null,
-	onremove: null,
-	ondestroy: null,
 
 	extra: extraProto.extra,
 
@@ -46,7 +44,6 @@ List.prototype = {
 		if (!parent) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
-			if (this.onmove) this.onmove(origin, parent)
 
 			if (origin) { // relocate
 				var cursor
@@ -72,8 +69,6 @@ List.prototype = {
 				spot = head.nextSibling
 
 		if (origin) {
-			if (this.onremove && this.onremove()) return this
-			if (this.onmove) this.onmove(origin, null)
 			while(spot !== this.foot) {
 				var item = spot[picoKey]
 				spot = (item.foot || item.node).nextSibling

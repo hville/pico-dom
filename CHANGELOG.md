@@ -11,9 +11,7 @@
 
 ## [0.40.0] - 2017-05-24
 ### Changed
-- templates are now mutable and must be cloned manually
-- template.call changed to template.oncreate
-- template.assign and co.assign changed to .set
+- template.assign and co.assign changed to .extra
 - reverted .store and .common to .root
 - changed variadic on(*) to event(name, function) and events({name: function})
 

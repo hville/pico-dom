@@ -2,6 +2,7 @@ import {D} from './document'
 import {Template} from './_template'
 import {Extra} from './_extra'
 import {List} from './_list'
+import {identity} from './identity'
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -13,8 +14,8 @@ var svgURI = 'http://www.w3.org/2000/svg'
  * @return {!Object} Component
  */
 export function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [[D.createElementNS, svgURI, tag]])
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
+	var model = new Template(Extra, [{f: D.createElementNS, a:[svgURI, tag]}])
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
 
@@ -26,8 +27,8 @@ export function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [[D.createElement, tagName]])
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
+	var model = new Template(Extra, [{f: D.createElement, a: [tagName]}])
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
 
@@ -39,8 +40,8 @@ export function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [[D.createElementNS, nsURI, tag]])
-	for (var i=2; i<arguments.length; ++i) model.config(arguments[i])
+	var model = new Template(Extra, [{f: D.createElementNS, a: [nsURI, tag]}])
+	for (var i=2; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
 
@@ -51,8 +52,8 @@ export function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused
  * @return {!Object} Component
  */
 export function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [[D.createTextNode, txt]])
-	for (var i=1; i<arguments.length; ++i) model.config(arguments[i])
+	var model = new Template(Extra, [{f: D.createTextNode, a: [txt]}])
+	for (var i=1; i<arguments.length; ++i) model._config(arguments[i])
 	return model
 }
 
@@ -66,8 +67,8 @@ export function text(txt, options) { //eslint-disable-line no-unused-vars
 export function template(node, options) { //eslint-disable-line no-unused-vars
 	if (!node.cloneNode) throw Error('invalid node')
 
-	var modl = new Template(Extra, [[cloneNode, node]])
-	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i])
+	var modl = new Template(Extra, [{f: cloneNode, a: [node]}])
+	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i])
 	return modl
 }
 
@@ -83,8 +84,8 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(List, [[null, model]])
+	var lst = new Template(List, [{f:identity, a:[model]}])
 
-	for (var i=1; i<arguments.length; ++i) lst.config(arguments[i])
+	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst
 }

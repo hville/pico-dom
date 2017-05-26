@@ -22,9 +22,6 @@ ct('lifecycle - sync', function() { //TODO
 		list(
 			el('h1', {
 				extras: {
-					onmove: function() { ++moves },
-					onremove: function() { removed = true },
-					ondestroy: function() { destroyed = true },
 					update: function(t) { this.text(t) }
 				}
 			})

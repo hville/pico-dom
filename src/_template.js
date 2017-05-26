@@ -1,6 +1,5 @@
 import {D} from './document'
 
-
 /**
  * @constructor
  * @param {!Function} constructor
@@ -19,80 +18,87 @@ Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				cmp = new this.Co(callOp(D, ops[0]))
+				cmp = new this.Co(run(ops[0], D))
+
 		if (parent) cmp.root = parent.root || parent
 		if (key !== undefined) cmp.key = key
 
-		for (var i=1; i<ops.length; ++i) callOp(cmp, ops[i])
-		if (cmp.oncreate) cmp.oncreate()
+		for (var i=1; i<ops.length; ++i) run(ops[i], cmp)
 		return cmp
-	},
-
-	clone: function(options) {
-		var template = new Template(this.Co, this.ops.slice())
-		if (options) template.config(options)
-		return template
 	},
 
 	// COMPONENT OPERATIONS
 	call: function(fcn) {
-		for (var i=1, args=[fcn]; i<arguments.length; ++i) args[i] = arguments[i]
-		this.ops.push(args)
+		for (var i=1, args=[]; i<arguments.length; ++i) args[i-1] = arguments[i]
+		return new Template(this.Co, this.ops.concat({f: fcn, a:args}))
+	},
+
+	_ops: function(name, obj) {
+		var fcn = this.Co.prototype[name]
+		if (typeof fcn !== 'function') throw Error (name + 's is not a valid template method')
+
+		for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) {
+			this.ops.push({f: fcn, a: [ks[i], obj[ks[i]]]})
+		}
 		return this
 	},
 
-	config: function(any) {
+	_config: function(any) {
+		var cProto = this.Co.prototype
 		if (any != null) {
-			if (typeof any === 'function') this.ops.push([any])
+
+			if (typeof any === 'function') this.ops.push({f: any, a:[]})
+
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i]
 					if (!this[key]) throw Error (key + ' is not a template method')
-					this[key](any[key])
+					// break group functions extras, props, attrs
+					if (key[key.length-1] === 's' && any[key].constructor === Object) this._ops(key.slice(0,-1), any[key])
+					else this.ops.push({f: cProto[key], a:[any[key]]})
 				}
 			}
-			else this.append(any)
+
+			else this.ops.push({f: cProto.append, a: [any]})
 		}
 		return this
 	},
 
 	extra: wrapMethod('extra'),
-	extras: wrapMethod('extras'),
+	extras: wrapMany('extra'),
 
 	// ELEMENT OPERATIONS
 
-	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
-	attrs: wrapMethod('attrs'),
+	attrs: wrapMany('attr'),
+
 	event: wrapMethod('event'),
-	events: wrapMethod('events'),
+	events: wrapMany('event'),
+
 	prop: wrapMethod('prop'),
-	props: wrapMethod('props'),
+	props: wrapMany('prop'),
+
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 }
 
-function wrapMethod(name) {
-	return function(a, b) {
-		var proto = this.Co.prototype
-		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		var op = [proto[name]]
-
-		if (arguments.length === 1) op.push(a)
-		else if (arguments.length === 2) op.push(a, b)
-		else if (arguments.length > 2) {
-			op.push([a, b])
-			for (var i=2; i<arguments.length; ++i) op[1].push(arguments[i])
-		}
-
-		this.ops.push(op)
-		return this
+function wrapMany(name) {
+	return function(a) {
+		return (new Template(this.Co, this.ops.slice()))._ops(name, a)
 	}
 }
 
-function callOp(ctx, op) {
-	return !op[0] ? op[1]
-		: op.length === 0 ? op[0].call(ctx)
-		: op.length === 1 ? op[0].call(ctx, op[1])
-		: op[0].call(ctx, op[1], op[2])
+function wrapMethod(name) {
+	return function() {
+		var fcn = this.Co.prototype[name]
+		if (typeof fcn !== 'function') throw Error (name + ' is not a valid template method')
+
+		var args = []
+		for (var i=0; i<arguments.length; ++i) args[i] = arguments[i]
+		return new Template(this.Co, this.ops.concat({f: fcn, a: args}))
+	}
+}
+
+function run(op, ctx) {
+	op.f.apply(ctx, op.a)
 }

@@ -72,14 +72,14 @@ ct('element - event', function() {
 	ct('===', elm.textContent, 'aa')
 })
 
-ct('element - clone template', function() {
+ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = P.template(t0.clone({attrs: {id: 1}}).append(el('h1').append(1)).create().node),
+			t1 = P.template(t0.attrs({id: 1}).append(el('h1').append(1)).create().node),
 			t2 = P.template(el('h2', 2).create().node),
-			h0 = t0.clone().attr('id', 0).append(el('h0').append(0)).create(),
+			h0 = t0.attr('id', 0).append(el('h0').append(0)).create(),
 			h1 = t1.create(),
 			h2 = t2.attr('id', 2).create(),
-			h3 = t0.clone().attr('id', '3').append(el('h3').append(3)).create(),
+			h3 = t0.attr('id', '3').append(el('h3').append(3)).create(),
 			h4 = t0.attr('id', 4).append(el('h4').append(4)).create()
 
 	ct('===', h0.node.childNodes.length, 1)

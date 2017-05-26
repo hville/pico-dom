@@ -23,9 +23,6 @@ export var extraProto = Extra.prototype = {
 	constructor: Extra,
 	root: null,
 	_events: null,
-	onmove: null,
-	onremove: null,
-	ondestroy: null,
 
 	// INSTANCE UTILITIES
 	/**
@@ -105,12 +102,10 @@ export var extraProto = Extra.prototype = {
 	*/
 	moveTo: function(parent, before) {
 		var node = this.node,
-				origin = node.parentNode,
 				anchor = before || null
 		if (!parent) throw Error('invalid parent node')
 
-		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
-			if (this.onmove) this.onmove(this.node.parentNode, parent)
+		if (node.parentNode !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			parent.insertBefore(node, anchor)
 		}
 		return this
@@ -120,20 +115,16 @@ export var extraProto = Extra.prototype = {
 	* @function
 	* @return {!Object} this
 	*/
-	remove: function() { //TODO DESTROY CALLBACK??
+	remove: function() {
 		var node = this.node,
 				origin = node.parentNode
-		if (origin) {
-			if (this.onremove && this.onremove()) return this
-			if (this.onmove) this.onmove(origin, null)
-			origin.removeChild(node)
-		}
+		if (origin) origin.removeChild(node)
 		return this
 	},
 
 	destroy: function() {
 		if (this.ondestroy && this.ondestroy()) return this
-		this.remove() //TODO DESTROY CALLBACK??
+		this.remove()
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false)
 		this.node = this.refs = null
 	},
