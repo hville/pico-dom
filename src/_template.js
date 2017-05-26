@@ -103,5 +103,5 @@ function wrapMethod(name) {
 }
 
 function run(op, ctx) {
-	return op.f.apply(ctx, op.a)
+	return op.f ? op.f.apply(ctx, op.a) : op.a[0]
 }

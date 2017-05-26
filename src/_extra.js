@@ -21,8 +21,6 @@ export function Extra(node) {
 
 export var extraProto = Extra.prototype = {
 	constructor: Extra,
-	root: null,
-	_events: null,
 
 	// INSTANCE UTILITIES
 	/**

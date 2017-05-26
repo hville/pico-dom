@@ -2,7 +2,6 @@ import {D} from './document'
 import {Template} from './_template'
 import {Extra} from './_extra'
 import {List} from './_list'
-import {identity} from './identity'
 
 var svgURI = 'http://www.w3.org/2000/svg'
 
@@ -84,7 +83,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 export function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(List, [{f:identity, a:[model]}])
+	var lst = new Template(List, [{f:null, a:[model]}])
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i])
 	return lst

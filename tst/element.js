@@ -66,9 +66,9 @@ ct('element - event', function() {
 			elm = cmp.node
 
 	ct('===', elm.textContent, '')
-	elm.dispatchEvent(new win.Event('click'))
+	elm.dispatchEvent(new P.D.defaultView.Event('click'))
 	ct('===', elm.textContent, 'a')
-	elm.dispatchEvent(new win.Event('click'))
+	elm.dispatchEvent(new P.D.defaultView.Event('click'))
 	ct('===', elm.textContent, 'aa')
 })
 

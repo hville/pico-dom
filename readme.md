@@ -2,7 +2,7 @@
 
 # pico-dom
 
-*minimalist tool for dynamic DOM tree and component creation, updates, events and lifecycles functions. Supports svg, namespace, keyed lists, and conditional elements, all in under 2kb gzip, ES5, no dependencies. Support direct use in browser, CJS and ES modules*
+*minimalist tool for dynamic DOM tree and component creation, updates, events and lifecycles functions. Supports svg, namespace, keyed lists, and conditional elements, all in 2kb gzip, ES5, no dependencies. Support direct use in browser, CJS and ES modules*
 
 • [Example](#example) • [Why](#why) • [API](#api) • [License](#license)
 
@@ -70,7 +70,7 @@ To explore ideas for a flexible and concise API with minimal tooling and memory 
 * svg and namespace support
 * ability to inject a `document API` for server use and/or testing (e.g. `jsdom`)
 * no virtual DOM, all operations are done on actual nodes
-* less than 2 kb gzip, no dependencies
+* 2kb gzip, no dependencies
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
 * All in ES5 with ES modules, CJS module and iife for browsers. Should work well on mobile and older browsers.
@@ -81,7 +81,8 @@ To explore ideas for a flexible and concise API with minimal tooling and memory 
 * proof of concept. more example and test required to validate the idea and API
 * API still in flux
 * view and event helpers only
-* strictly DOM element creation and manipulation (no router, store, css utilities)
+* limited css utility
+* strictly DOM element creation and manipulation (no router, store, utilities)
 
 
 ## API
@@ -205,7 +206,7 @@ var textTemplate = text('ABC', function() {
 * `find(from [, test] [, until])` find a component within nodes or components and matching the test function. It parses nodes up and down following the html markup order.
   * eg. `find(document.body)` to get the first component in the document
   * eg. `find(tableComponent, function(c) { return c.key === 5 } )`
-
+* `css(ruleText)` to insert a rule in the document for cases where an exported template relies on a specific css rule that is not convenient or practical to include in a seperate css file
 
 ## License
 

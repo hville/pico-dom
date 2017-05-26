@@ -116,7 +116,7 @@ function wrapMethod(name) {
 }
 
 function run(op, ctx) {
-	return op.f.apply(ctx, op.a)
+	return op.f ? op.f.apply(ctx, op.a) : op.a[0]
 }
 
 var picoKey = '_pico';
@@ -151,8 +151,6 @@ function Extra(node) {
 
 var extraProto = Extra.prototype = {
 	constructor: Extra,
-	root: null,
-	_events: null,
 
 	// INSTANCE UTILITIES
 	/**
@@ -322,7 +320,6 @@ function List(template) {
 
 List.prototype = {
 	constructor: List,
-	root: null,
 
 	extra: extraProto.extra,
 
@@ -459,8 +456,6 @@ function updateSelectChildren(v,k,o) {
 	return this
 }
 
-function identity(v) { return v }
-
 var svgURI = 'http://www.w3.org/2000/svg';
 
 
@@ -541,7 +536,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(List, [{f:identity, a:[model]}]);
+	var lst = new Template(List, [{f:null, a:[model]}]);
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst
@@ -567,6 +562,28 @@ function find(start, test, until) { //find(test, head=body, foot=null)
 	return comp
 }
 
+var sheet = null;
+
+function css$$1(cssRuleText) {
+	(sheet || getSheet()).insertRule(
+		cssRuleText,
+		sheet.cssRules.length
+	);
+}
+
+function getSheet() {
+	var sheets = exports.D.styleSheets,
+			media = /^$|^all$/; //mediaTypes: all, print, screen, speach
+
+	// get existing sheet
+	for (var i=0; i<sheets.length; ++i) {
+		sheet = sheets[i];
+		if (media.test(sheet.media.mediaText) && !sheet.disabled) return sheet
+	}
+	// or create a new one
+	return sheet = exports.D.head.appendChild(exports.D.createElement('style')).sheet
+}
+
 // @ts-check
 
 // create template
@@ -579,5 +596,6 @@ exports.list = list;
 exports.template = template;
 exports.setDocument = setDocument;
 exports.find = find;
+exports.css = css$$1;
 
 }((this.picoDOM = this.picoDOM || {})));

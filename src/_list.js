@@ -25,7 +25,6 @@ export function List(template) {
 
 List.prototype = {
 	constructor: List,
-	root: null,
 
 	extra: extraProto.extra,
 
