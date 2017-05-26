@@ -15,6 +15,7 @@
 - template.call changed to template.oncreate
 - template.assign and co.assign changed to .set
 - reverted .store and .common to .root
+- changed variadic on(*) to event(name, function) and events({name: function})
 
 ## [0.33.0] - 2017-05-17
 ### Added

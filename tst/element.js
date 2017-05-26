@@ -1,12 +1,15 @@
 var ct = require('cotest'),
-		X = require('../dist/index.js'),
-		// @ts-ignore
-		JSDOM = require('jsdom').JSDOM
+		P = require('../dist/index.js')
 
-var win = (new JSDOM).window
-X.setDocument(win.document)
+if (!P.D) {
+	// @ts-ignore
+	var JSDOM = require('jsdom').JSDOM //eslint-disable-line global-require
+	var win = (new JSDOM).window
+	P.setDocument(win.document)
+}
 
-var el = X.element
+
+var el = P.element
 
 function toString(nodes) {
 	var str = ''
@@ -25,7 +28,7 @@ ct('element - static', function() {
 	// automagic
 	ct('===', toString(el('p', 'ab').create().node.childNodes), 'ab')
 	ct('===', el('p', function() {this.node.id = 'A'}).create().node.id, 'A')
-	ct('===', el('p', {attr: ['data-id', 'A'], prop: ['id', 'A']}).create().node.id, 'A')
+	ct('===', el('p', {attrs: {'data-id': 'A'}, props: {id: 'A'}}).create().node.id, 'A')
 })
 
 ct('element - mixed children', function() {
@@ -58,7 +61,7 @@ ct('element - root', function() {
 })
 
 ct('element - event', function() {
-	var tpl = el('h0').on('click', function(e) { e.target.textContent += 'a' }),
+	var tpl = el('h0').event('click', function(e) { e.target.textContent += 'a' }),
 			cmp = tpl.create(),
 			elm = cmp.node
 
@@ -71,8 +74,8 @@ ct('element - event', function() {
 
 ct('element - clone template', function() {
 	var t0 = el('div'),
-			t1 = X.template(t0.clone({attr: ['id', 1]}).append(el('h1').append(1)).create().node),
-			t2 = X.template(el('h2', 2).create().node),
+			t1 = P.template(t0.clone({attrs: {id: 1}}).append(el('h1').append(1)).create().node),
+			t2 = P.template(el('h2', 2).create().node),
 			h0 = t0.clone().attr('id', 0).append(el('h0').append(0)).create(),
 			h1 = t1.create(),
 			h2 = t2.attr('id', 2).create(),
@@ -94,9 +97,9 @@ ct('element - clone template', function() {
 
 ct('element - update', function() {
 	var co = el('h0').append(
-		X.text('a'),
-		X.text('b').extra('update', function(v) { this.text(v.toUpperCase()) }),
-		X.text('c').extra('update', function(v) { this.text(v.toUpperCase()); this.update = null })
+		P.text('a'),
+		P.text('b').extra('update', function(v) { this.text(v.toUpperCase()) }),
+		P.text('c').extra('update', function(v) { this.text(v.toUpperCase()); this.update = null })
 	).create()
 	ct('===', co.node.textContent, 'abc')
 

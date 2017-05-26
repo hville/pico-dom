@@ -1,13 +1,15 @@
 var ct = require('cotest'),
-		X = require('../dist/index.js'),
-		// @ts-ignore
-		JSDOM = require('jsdom').JSDOM
+		P = require('../dist/index.js')
 
-var win = (new JSDOM).window
-X.setDocument(win.document)
+if (!P.D) {
+	// @ts-ignore
+	var JSDOM = require('jsdom').JSDOM //eslint-disable-line global-require
+	var win = (new JSDOM).window
+	P.setDocument(win.document)
+}
 
-var el = X.element,
-		find = X.find
+var el = P.element,
+		find = P.find
 
 
 ct('find', function() {

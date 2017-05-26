@@ -1,7 +1,6 @@
 import {ListK} from './_list-k'
 import {D} from './document'
 import {picoKey} from './picoKey'
-import {setThis} from './set-this'
 
 /**
  * @constructor
@@ -25,7 +24,10 @@ var protoK = ListK.prototype
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	extra: setThis,
+	onremove: null,
+	ondestroy: null,
+
+	extra: protoK.extra,
 	moveTo: protoK.moveTo,
 	remove: protoK.remove,
 	destroy: protoK.destroy,

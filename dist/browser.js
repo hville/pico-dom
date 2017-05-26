@@ -27,9 +27,7 @@ function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	get node () {
-		return this.create().node
-	},
+	//COMMON
 
 	create: function(parent, key) {
 		var ops = this.ops,
@@ -49,8 +47,9 @@ Template.prototype = {
 	},
 
 	// COMPONENT OPERATIONS
-	call: function(fcn, a, b) {
-		this.ops.push([fcn, a, b]); //TODO
+	call: function(fcn) {
+		for (var i=1, args=[fcn]; i<arguments.length; ++i) args[i] = arguments[i];
+		this.ops.push(args);
 		return this
 	},
 
@@ -61,9 +60,9 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]];
-					if (!this[key]) this.set(key, arg);
-					else if (Array.isArray(arg)) this[key](arg[0], arg[1]);
-					else this[key](arg);
+					//if (Array.isArray(arg)) this[key](arg[0], arg[1]) //TODO
+					//else this[key](arg)
+					this[key](arg);
 				}
 			}
 			else this.append(any);
@@ -77,7 +76,9 @@ Template.prototype = {
 
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
+	attrs: wrapMethod('attrs'),
 	prop: wrapMethod('prop'),
+	props: wrapMethod('props'),
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 };
@@ -86,31 +87,25 @@ function wrapMethod(name) {
 	return function(a, b) {
 		var proto = this.Co.prototype;
 		if (typeof proto[name] !== 'function') throw Error (name + ' is not a valid method for this template')
-		if (arguments.length > 2) {
-			for (var i=0, args=[]; i<arguments.length; ++i) args[i] = arguments[i];
-			this.ops.push([proto[name], args]);
+		var op = [proto[name]];
+
+		if (arguments.length === 1) op.push(a);
+		else if (arguments.length === 2) op.push(a, b);
+		else if (arguments.length > 2) {
+			op.push([a, b]);
+			for (var i=2; i<arguments.length; ++i) op[1].push(arguments[i]);
 		}
-		else this.ops.push([proto[name], a, b]);
+
+		this.ops.push(op);
 		return this
 	}
 }
 
 function callOp(ctx, op) {
 	return !op[0] ? op[1]
-		: op[1] === undefined ? op[0].call(ctx)
-		: op[2] === undefined ? op[0].call(ctx, op[1])
+		: op.length === 0 ? op[0].call(ctx)
+		: op.length === 1 ? op[0].call(ctx, op[1])
 		: op[0].call(ctx, op[1], op[2])
-}
-
-/**
- * @function
- * @param {string|number} key
- * @param {*} val value
- * @returns {!Object} this
- */
-function setThis(key, val) {
-	this[key] = val;
-	return this
 }
 
 var picoKey = '_pico';
@@ -120,24 +115,33 @@ var picoKey = '_pico';
  * @extends EventListener
  * @param {Node} node - DOM node
  */
-function NodeCo(node) {
+function Extra(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node;
+
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text;
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
 
-	node[picoKey] = this.update ? this : null;
-	//TODO destroy, ondestroy
+	node[picoKey] = this;
 }
 
 
-var ncProto = NodeCo.prototype = {
-	constructor: NodeCo,
+var extraProto = Extra.prototype = {
+	constructor: Extra,
 	root: null,
 
 	// INSTANCE UTILITIES
-	extra: setThis,
+	/**
+	 * @function
+	 * @param {string|number} key
+	 * @param {*} val value
+	 * @returns {!Object} this
+	 */
+	extra: function(key, val) {
+		this[key] = val;
+		return this
+	},
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -200,6 +204,7 @@ var ncProto = NodeCo.prototype = {
 		var node = this.node,
 				origin = node.parentNode;
 		if (origin) {
+			// TODO onremove() || onremove(cb)
 			if (this.onmove) this.onmove(origin, null);
 			origin.removeChild(node);
 		}
@@ -227,7 +232,7 @@ var ncProto = NodeCo.prototype = {
 
 	destroy: function() {
 		this.remove();
-		if (this.ondestroy) this.ondestroy();
+		if (this.ondestroy) this.ondestroy(); //TODO if callback, this.ondestroy(destroy)
 		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i]);
 		this.node = this.refs = null;
 	},
@@ -291,7 +296,7 @@ function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	extra: setThis,
+	extra: extraProto.extra,
 
 	/**
 	* @function moveTo
@@ -347,12 +352,7 @@ ListK.prototype = {
 		return this
 	},
 
-	destroy: function() {
-		this.remove();
-		if (this.ondestroy) this.ondestroy();
-		this.node = this.refs = null;
-	},
-
+	destroy: extraProto.destroy,
 
 	getKey: function(v,k) { return k }, // default: indexed
 
@@ -420,7 +420,7 @@ var protoK = ListK.prototype;
 ListS.prototype = {
 	constructor: ListS,
 	root: null,
-	extra: setThis,
+	extra: protoK.extra,
 	moveTo: protoK.moveTo,
 	remove: protoK.remove,
 	destroy: protoK.destroy,
@@ -471,7 +471,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[exports.D.createElementNS, svgURI, tag]]);
+	var model = new Template(Extra, [[exports.D.createElementNS, svgURI, tag]]);
 	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -484,7 +484,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[exports.D.createElement, tagName]]);
+	var model = new Template(Extra, [[exports.D.createElement, tagName]]);
 	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -497,7 +497,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[exports.D.createElementNS, nsURI, tag]]);
+	var model = new Template(Extra, [[exports.D.createElementNS, nsURI, tag]]);
 	for (var i=2; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -509,7 +509,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(NodeCo, [[exports.D.createTextNode, txt]]);
+	var model = new Template(Extra, [[exports.D.createTextNode, txt]]);
 	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
 	return model
 }
@@ -524,7 +524,7 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
 function template(node, options) { //eslint-disable-line no-unused-vars
 	if (!node.cloneNode) throw Error('invalid node')
 
-	var modl = new Template(NodeCo, [[cloneNode, node]]);
+	var modl = new Template(Extra, [[cloneNode, node]]);
 	for (var i=1; i<arguments.length; ++i) modl.config(arguments[i]);
 	return modl
 }

@@ -1,6 +1,6 @@
 import {D} from './document'
 import {picoKey} from './picoKey'
-import {setThis} from './set-this'
+import {extraProto} from './_extra'
 
 /**
  * @constructor
@@ -17,7 +17,10 @@ export function ListK(template) {
 ListK.prototype = {
 	constructor: ListK,
 	root: null,
-	extra: setThis,
+	onremove: null,
+	ondestroy: null,
+
+	extra: extraProto.extra,
 
 	/**
 	* @function moveTo
@@ -60,6 +63,7 @@ ListK.prototype = {
 				spot = head.nextSibling
 
 		if (origin) {
+			if (this.onremove && this.onremove()) return this
 			if (this.onmove) this.onmove(origin, null)
 			while(spot !== this.foot) {
 				var item = spot[picoKey]
@@ -73,12 +77,7 @@ ListK.prototype = {
 		return this
 	},
 
-	destroy: function() {
-		this.remove()
-		if (this.ondestroy) this.ondestroy()
-		this.node = this.refs = null
-	},
-
+	destroy: extraProto.destroy,
 
 	getKey: function(v,k) { return k }, // default: indexed
 

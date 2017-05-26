@@ -1,10 +1,13 @@
 var ct = require('cotest'),
-		P = require('../dist/index.js'),
-		// @ts-ignore
-		JSDOM = require('jsdom').JSDOM
+		P = require('../dist/index.js')
 
+if (!P.D) {
+	// @ts-ignore
+	var JSDOM = require('jsdom').JSDOM //eslint-disable-line global-require
+	var win = (new JSDOM).window
+	P.setDocument(win.document)
+}
 
-P.setDocument((new JSDOM).window.document)
 
 var text = P.text
 

@@ -10,6 +10,11 @@ var D = typeof document !== 'undefined' ? document : null;
 * @return {Document} DOM document
 */
 
+/**
+ * @constructor
+ * @param {!Function} constructor
+ * @param {!Array} transforms
+ */
 function Template(constructor, transforms) {
 	this.Co = constructor;
 	this.ops = transforms || [];
@@ -19,9 +24,7 @@ function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	get node () {
-		return this.create().node
-	},
+	//COMMON
 
 	create: function(parent, key) {
 		var ops = this.ops,
@@ -54,7 +57,7 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]];
-					if (Array.isArray(arg)) this[key](arg[0], arg[1]);
+					if (Array.isArray(arg)) this[key](arg[0], arg[1]); //TODO
 					else this[key](arg);
 				}
 			}
@@ -69,7 +72,9 @@ Template.prototype = {
 
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
+	attrs: wrapMethod('attr'),
 	prop: wrapMethod('prop'),
+	props: wrapMethod('prop'),
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 };
@@ -487,7 +492,11 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-
+function text(txt, options) { //eslint-disable-line no-unused-vars
+	var model = new Template(NodeCo, [[D.createTextNode, txt]]);
+	for (var i=1; i<arguments.length; ++i) model.config(arguments[i]);
+	return model
+}
 
 
 /**
@@ -529,58 +538,6 @@ function list(model, options) { //eslint-disable-line no-unused-vars
 
 // create template
 
-// generic simple store for the examples
-
-function Store(config) {
-	this.data = {};
-	for (var i=0, ks=Object.keys(config); i<ks.length; ++i) this[ks[i]] = config[ks[i]];
-}
-
-Store.prototype = {
-	constructor: Store,
-
-	get: function(path) {
-		var data = this.data;
-		switch (arguments.length) {
-			case 0: return data
-			case 1:
-				if (Array.isArray(path)) {
-					for (var i=0; i<path.length; ++i) if ((data = data[path[i]]) === undefined) break
-					return data
-				}
-				else return data[path]
-			default:
-				return this.get.apply(this, arguments)
-		}
-	},
-
-	set: function(value, path) {
-		var data = this.data;
-		switch (arguments.length) {
-			case 0: throw Error('value required')
-			case 1:
-				this.data = value;
-				break
-			case 2:
-				if (Array.isArray(path)) {
-					for (var i=0; i<(path.length-1); ++i) if ((data = data[path[i]]) === undefined) throw Error('invalid path '+path.join())
-					data[path[path.length-1]] = value;
-				}
-				else {
-					data[path] = value;
-				}
-				break
-			default:
-				throw Error('invalid argument')
-		}
-		if (this.onchange) this.onchange();
-	},
-
-	act: function(name, args) {
-		return this[name].apply(this, args)
-	}
-};
-
 // immutable templates, svg elements
 var ic_circle = template( // template used to pre-resolve the node structure
 	svg('svg')
@@ -613,53 +570,44 @@ var ic_remove = ic_circle.clone().append( //ic_remove_circle_outline_black_36px
 	).node
 );
 
-var i = 0;
-var j = 0;
+var data = ['a', 'b', 'c'];
 
-var tableTemplate = element('table',
-	element('tbody',
+element('table',
+	element('ol',
 		list(
-			element('tr')
-			.class('abc')
-			.call(function() { i = this.key; })
+			element('li')
+			.on('click', function(e) {
+				var idx = data.indexOf(this.key),
+						id = e.target.id || e.target.parentNode.id;
+				console.log('CLICK', id, idx, data.length, data);
+				if (id === 'del') data.splice(idx, 1);
+				else if (id === 'add') data.splice(idx, 0, this.key+idx);
+				else console.log('CLASS', this.node.className), this.class('f4 blue'), this.attr('style', 'opacity: 0.8;');//this.node.style.opacity = '.8'
+				this.root.update(data);
+			})
+			.call(function() {})
+
+			.on('transitionend', function(e) { console.log(e.name); })
+			.class('f6 darkest-blue')
+			.attr('style', 'opacity: 0.1')
 			.append(
-				element('td')
-				.call(function() { this.i = i; })
-				.on('click', function() { this.root.store.delRow(this.i);})
-				.append(
-					ic_remove // title column
-				),
-				list( // data columns
-					element('td', function() { j = this.key; },
-						element('input')
-						.call(function() { this.i = i; this.j = j; })
-						.extra('update', function(val) { this.node.value = val; })
-						.on('change', function() { this.root.store.set(this.node.value, [this.i, this.j]); })
-					)
-				)
+				ic_add.attr('id', 'add'),
+				text(''),
+				ic_remove.attr('id', 'del')
 			)
-		),
-		element('tr').append(
-			element('td')
-			.on('click', function() { this.root.store.addRow(); })
-			.append(ic_add)
-		)
+			.call(function() {
+				var ctx = this;
+				this.node.ownerDocument.defaultView.requestAnimationFrame(
+					function() { ctx.attr('style', 'transition: all 9s ease; opacity: 1'); },
+			); })
+			//class('f6 darkest-blue')
+			//.attr('style', 'opacity: 1')
+			//.class('f1 orange')
+		).extra('getKey', function(v) { return v })
 	)
-); //741
-
-var store = new Store([]);
-var table = tableTemplate.create().extra('store', store).moveTo(document.body);
-
-store.onchange = function() { table.update( store.get() ); };
-store.set([['Jane', 'Roe'], ['John', 'Doe']]);
-
-store.addRow = function() {
-	store.set(['',''], store.get().length);
-};
-store.delRow = function(idx) {
-	var data = store.get().slice();
-	data.splice(idx,1);
-	store.set(data);
-};
+)
+.create()
+.update(data)
+.moveTo(document.body);
 
 }());

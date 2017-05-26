@@ -1,4 +1,3 @@
-import {setThis} from './set-this'
 import {picoKey} from './picoKey'
 import {D} from './document'
 
@@ -8,23 +7,38 @@ import {D} from './document'
  * @extends EventListener
  * @param {Node} node - DOM node
  */
-export function NodeCo(node) {
+export function Extra(node) {
 	if (node[picoKey] || node.parentNode) throw Error('node already used')
 	this.node = node
+
 	// default updater: null || text || value
 	if (node.nodeName === '#text') this.update = this.text
 	if ('value' in node && node.nodeName !== 'LI') this.update = this.value
 
-	node[picoKey] = this.update ? this : null
+	node[picoKey] = this
 }
 
 
-export var ncProto = NodeCo.prototype = {
-	constructor: NodeCo,
+export var extraProto = Extra.prototype = {
+	constructor: Extra,
 	root: null,
+	_events: null,
+	oninsert: null, //TODO
+	onmove: null, //TODO
+	onremove: null,
+	ondestroy: null,
 
 	// INSTANCE UTILITIES
-	extra: setThis,
+	/**
+	 * @function
+	 * @param {string|number} key
+	 * @param {*} val value
+	 * @returns {!Object} this
+	 */
+	extra: function(key, val) {
+		this[key] = val
+		return this
+	},
 
 	// NODE SETTERS
 	text: function(txt) {
@@ -87,6 +101,7 @@ export var ncProto = NodeCo.prototype = {
 		var node = this.node,
 				origin = node.parentNode
 		if (origin) {
+			if (this.onremove && this.onremove()) return this
 			if (this.onmove) this.onmove(origin, null)
 			origin.removeChild(node)
 		}
@@ -108,14 +123,14 @@ export var ncProto = NodeCo.prototype = {
 		if (origin !== parent || (anchor !== node && anchor !== node.nextSibling)) {
 			if (this.onmove) this.onmove(this.node.parentNode, parent)
 			parent.insertBefore(node, anchor)
-			return this
 		}
+		return this
 	},
 
 	destroy: function() {
+		if (this.ondestroy && this.ondestroy()) return this
 		this.remove()
-		if (this.ondestroy) this.ondestroy()
-		if (this._on) for (var i=0, ks=Object.keys(this._on); i<ks.length; ++i) this.registerHandler(ks[i])
+		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i])
 		this.node = this.refs = null
 	},
 
@@ -124,27 +139,24 @@ export var ncProto = NodeCo.prototype = {
 	updateChildren: updateChildren,
 	// EVENT LISTENERS
 	handleEvent: function(event) {
-		var handlers = this._on,
+		var handlers = this._events,
 				handler = handlers && handlers[event.type]
 		if (handler) handler.call(this, event)
 	},
-	on: function(type, handler) { //TODO variadic
-		if (typeof type === 'object') for (var i=0, ks=Object.keys(type); i<ks.length; ++i) {
-			this.registerHandler(ks[i], type[ks[i]])
-		}
-		else this.registerHandler(type, handler)
+	events: function(handlers) {
+		for (var i=0, ks=Object.keys(handlers); i<ks.length; ++i) this.event(ks[i], handlers[ks[i]])
 		return this
 	},
-	registerHandler: function(type, handler) {
+	event: function(type, handler) {
 		if (!handler) {
-			if (this._on && this._on[type]) {
-				delete this._on[type]
+			if (this._events && this._events[type]) {
+				delete this._events[type]
 				this.node.removeEventListener(type, this, false)
 			}
 		}
 		else {
-			if (!this._on) this._on = {}
-			this._on[type] = handler
+			if (!this._events) this._events = {}
+			this._events[type] = handler
 			this.node.addEventListener(type, this, false)
 		}
 	}

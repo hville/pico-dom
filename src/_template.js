@@ -15,9 +15,7 @@ export function Template(constructor, transforms) {
 Template.prototype = {
 	constructor: Template,
 
-	get node () {
-		return this.create().node
-	},
+	//COMMON
 
 	create: function(parent, key) {
 		var ops = this.ops,
@@ -50,8 +48,9 @@ Template.prototype = {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i],
 							arg = any[ks[i]]
-					if (Array.isArray(arg)) this[key](arg[0], arg[1])
-					else this[key](arg)
+					//if (Array.isArray(arg)) this[key](arg[0], arg[1]) //TODO
+					//else this[key](arg)
+					this[key](arg)
 				}
 			}
 			else this.append(any)
@@ -65,7 +64,11 @@ Template.prototype = {
 
 	on: wrapMethod('on'),
 	attr: wrapMethod('attr'),
+	attrs: wrapMethod('attrs'),
+	event: wrapMethod('event'),
+	events: wrapMethod('events'),
 	prop: wrapMethod('prop'),
+	props: wrapMethod('props'),
 	class: wrapMethod('class'),
 	append: wrapMethod('append')
 }
