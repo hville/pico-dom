@@ -7,6 +7,7 @@ var store = new Store([]),
 		j = 0
 
 var table = el('table',
+	el('caption', 'example with svg icons, keyed lists, events, store and data flow'),
 	el('tbody',
 		list(
 			el('tr',

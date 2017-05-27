@@ -52,6 +52,8 @@ Template.prototype = {
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i]
+					//TODO the error is triggered on this[key] while the operation is on cProto[key]
+					//TODO causing potential cryptic errors eg. T.call vs C.call vs T({call})
 					if (!this[key]) throw Error (key + ' is not a template method')
 
 					if (key[key.length-1] === 's' && any[key].constructor === Object) {

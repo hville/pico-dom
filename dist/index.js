@@ -32,13 +32,15 @@ Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				op0 = ops[0],
-				cmp = new this.Co(op0.f ? op0.f.apply(exports.D, op0.a) : op0.a[0]);
+				cmp = new this.Co(ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0]);
 
-		if (parent) cmp.root = parent.root || parent;
+		if (parent) {
+			cmp.parent = parent;
+			cmp.root = parent.root || parent;
+		}
 		if (key !== undefined) cmp.key = key;
 
-		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a);
+		for (var i=1; i<ops.length; ++i) { if (!ops[i].f) console.log(ops[i]); ops[i].f.apply(cmp, ops[i].a); }
 		return cmp
 	},
 
@@ -64,6 +66,8 @@ Template.prototype = {
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i];
+					//TODO the error is triggered on this[key] while the operation is on cProto[key]
+					//TODO causing potential cryptic errors eg. T.call vs C.call vs T({call})
 					if (!this[key]) throw Error (key + ' is not a template method')
 
 					if (key[key.length-1] === 's' && any[key].constructor === Object) {
@@ -114,16 +118,7 @@ function wrapMethod(name) {
 
 var picoKey = '_pico';
 
-/**
- * @function
- * @param {!Object} obj
- * @param {Function} fcn
- * @param {*} [ctx]
- * @returns {void}
- */
-function eachKeys(obj, fcn, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, ks[i], obj[ks[i]]);
-}
+//import {eachKeys} from './each-keys'
 
 /**
  * @constructor
@@ -183,18 +178,6 @@ var extraProto = Extra.prototype = {
 		if (this.node.value !== val) this.node.value = val;
 		return this
 	},
-	attrs: function(keyVals) {
-		eachKeys(keyVals, this.attr, this);
-		return this
-	},
-	props: function(keyVals) {
-		eachKeys(keyVals, this.prop, this);
-		return this
-	},
-	extras: function(keyVals) {
-		eachKeys(keyVals, this.extra, this);
-		return this
-	},
 	append: function() {
 		var node = this.node;
 		for (var i=0; i<arguments.length; ++i) {
@@ -244,7 +227,6 @@ var extraProto = Extra.prototype = {
 	},
 
 	destroy: function() {
-		if (this.ondestroy && this.ondestroy()) return this
 		this.remove();
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
 		this.node = this.refs = null;
@@ -258,10 +240,6 @@ var extraProto = Extra.prototype = {
 		var handlers = this._events,
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
-	},
-	events: function(handlers) {
-		eachKeys(handlers, this.event, this);
-		return this
 	},
 	event: function(type, handler) {
 		if (!handler) {

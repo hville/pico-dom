@@ -1,42 +1,68 @@
-import {text, element as el, list} from '../module'
-import {ic_remove, ic_add} from './icons'
+import {D, css, element as el, list} from '../module'
 
-var data = ['a', 'b', 'c']
+css('.transitionEx { opacity: 0.5; transition: all 2s ease; }')
+css('.transitionIn { opacity: 1.0; transition: all 2s ease; }')
 
-el('table',
+var options = {
+	templates: 'immutable template',
+	lists: 'select list',
+	components: 'dynamic components',
+	css: 'css rule insertion',
+	transitions: 'css transitions',
+	async: 'async operations',
+	events: 'event listeners setting and removal'
+}
+
+var listItem = el('li',
+	function() {
+		var comp = this,
+				moveTo = comp.moveTo,
+				remove = comp.remove
+
+		Object.defineProperty(this.parent, 'label', {
+			get: function() { return comp.textContent },
+			set: function(t) { comp.text(t) }
+		})
+		this.class('transitionEx pl5 light-blue')
+
+		// on insert, async change of the class to trigger transition
+		this.moveTo = function(parent, before) {
+			if (!this.node.parent) D.defaultView.requestAnimationFrame(function() {
+				comp.class('transitionIn pl1 dark-blue' )
+			})
+			return moveTo.call(this, parent, before)
+		}
+
+		// on remove, change the class and wait for transition end before removing
+		this.remove = function() {
+			this.event('transtionsend', function() {
+				this.event('transitionend') //remove the listener
+				remove.call(comp)
+			})
+			comp.class('transitionEx')
+			return this
+		}
+	},
+	'default initial textContent'
+)
+
+
+el('div',
+	el('h2', {class: 'pl3'}, 'example with'),
 	el('ol',
 		list(
-			el('li')
-			.on('click', function(e) {
-				var idx = data.indexOf(this.key),
-						id = e.target.id || e.target.parentNode.id
-				console.log('CLICK', id, idx, data.length, data)
-				if (id === 'del') data.splice(idx, 1)
-				else if (id === 'add') data.splice(idx, 0, this.key+idx)
-				else console.log('CLASS', this.node.className), this.class('f4 blue'), this.attr('style', 'opacity: 0.8;')//this.node.style.opacity = '.8'
-				this.root.update(data)
-			})
-			.call(function() {})
-
-			.on('transitionend', function(e) { console.log(e.name) })
-			.class('f6 darkest-blue')
-			.attr('style', 'opacity: 0.1')
-			.append(
-				ic_add.attr('id', 'add'),
-				text(''),
-				ic_remove.attr('id', 'del')
-			)
-			.call(function() {
-				var ctx = this
-				this.node.ownerDocument.defaultView.requestAnimationFrame(
-					function() { ctx.attr('style', 'transition: all 9s ease; opacity: 1') },
-			) })
-			//class('f6 darkest-blue')
-			//.attr('style', 'opacity: 1')
-			//.class('f1 orange')
-		).extra('getKey', function(v) { return v })
+			Object.keys(options).reduce(function(res, key) {
+				res[key] = listItem.extra('label', 'immutable template')
+				return res
+			}, {})
+			[
+			listItem.extra('label', 'immutable template'),
+			listItem.extra('label', 'select list'),
+			listItem.extra('label', 'components'),
+			listItem.extra('label', 'css rule insertion'),
+			listItem.extra('label', 'css transitions'),
+			listItem.extra('label', 'async operations'),
+			listItem.extra('label', 'event listeners setting and removal')
+		])
 	)
-)
-.create()
-.update(data)
-.moveTo(document.body)
+).create().update().moveTo(D.body)

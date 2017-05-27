@@ -1,6 +1,5 @@
 import {picoKey} from './picoKey'
 import {D} from './document'
-import {eachKeys} from './each-keys'
 
 /**
  * @constructor
@@ -58,18 +57,6 @@ export var extraProto = Extra.prototype = {
 	},
 	value: function(val) {
 		if (this.node.value !== val) this.node.value = val
-		return this
-	},
-	attrs: function(keyVals) {
-		eachKeys(keyVals, this.attr, this)
-		return this
-	},
-	props: function(keyVals) {
-		eachKeys(keyVals, this.prop, this)
-		return this
-	},
-	extras: function(keyVals) {
-		eachKeys(keyVals, this.extra, this)
 		return this
 	},
 	append: function() {
@@ -134,10 +121,6 @@ export var extraProto = Extra.prototype = {
 		var handlers = this._events,
 				handler = handlers && handlers[event.type]
 		if (handler) handler.call(this, event)
-	},
-	events: function(handlers) {
-		eachKeys(handlers, this.event, this)
-		return this
 	},
 	event: function(type, handler) {
 		if (!handler) {

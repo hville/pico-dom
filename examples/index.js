@@ -31,7 +31,7 @@ Template.prototype = {
 		}
 		if (key !== undefined) cmp.key = key;
 
-		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a);
+		for (var i=1; i<ops.length; ++i) { if (!ops[i].f) console.log(ops[i]); ops[i].f.apply(cmp, ops[i].a); }
 		return cmp
 	},
 
@@ -57,6 +57,8 @@ Template.prototype = {
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
 					var key = ks[i];
+					//TODO the error is triggered on this[key] while the operation is on cProto[key]
+					//TODO causing potential cryptic errors eg. T.call vs C.call vs T({call})
 					if (!this[key]) throw Error (key + ' is not a template method')
 
 					if (key[key.length-1] === 's' && any[key].constructor === Object) {
@@ -432,22 +434,6 @@ function updateSelectChildren(v,k,o) {
 	return this
 }
 
-var svgURI = 'http://www.w3.org/2000/svg';
-
-
-/**
- * @function svg
- * @param {string} tag tagName
- * @param {...*} [options] options
- * @return {!Object} Component
- */
-function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [{f: D.createElementNS, a:[svgURI, tag]}]);
-	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
-	return model
-}
-
-
 /**
  * @function element
  * @param {string} tagName tagName
@@ -484,25 +470,8 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @param {...*} [options] options
  * @return {!Object} Component
  */
-function template(node, options) { //eslint-disable-line no-unused-vars
-	if (!node.cloneNode) throw Error('invalid node')
-
-	var modl = new Template(Extra, [{f: cloneNode, a: [node]}]);
-	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
-	return modl
-}
-
-function cloneNode(node) {
-	return node.cloneNode(true)
-}
 
 
-/**
- * @function list
- * @param {Object|Array} model model
- * @param {...*} [options] options
- * @return {!Object} Component
- */
 function list(model, options) { //eslint-disable-line no-unused-vars
 	var lst = new Template(List, [{f:null, a:[model]}]);
 
@@ -510,151 +479,97 @@ function list(model, options) { //eslint-disable-line no-unused-vars
 	return lst
 }
 
+var sheet = null;
+
+function css$$1(cssRuleText) {
+	(sheet || getSheet()).insertRule(
+		cssRuleText,
+		sheet.cssRules.length
+	);
+}
+
+function getSheet() {
+	var sheets = D.styleSheets,
+			media = /^$|^all$/; //mediaTypes: all, print, screen, speach
+
+	// get existing sheet
+	for (var i=0; i<sheets.length; ++i) {
+		sheet = sheets[i];
+		if (media.test(sheet.media.mediaText) && !sheet.disabled) return sheet
+	}
+	// or create a new one
+	return sheet = D.head.appendChild(D.createElement('style')).sheet
+}
+
 // @ts-check
 
 // create template
 
-// generic simple store for the examples
+css$$1('.transitionEx { opacity: 0.5; transition: all 2s ease; }');
+css$$1('.transitionIn { opacity: 1.0; transition: all 2s ease; }');
 
-function Store(config) {
-	this.data = {};
-	for (var i=0, ks=Object.keys(config); i<ks.length; ++i) this[ks[i]] = config[ks[i]];
-}
-
-Store.prototype = {
-	constructor: Store,
-
-	get: function(path) {
-		var data = this.data;
-		switch (arguments.length) {
-			case 0: return data
-			case 1:
-				if (Array.isArray(path)) {
-					for (var i=0; i<path.length; ++i) if ((data = data[path[i]]) === undefined) break
-					return data
-				}
-				else return data[path]
-			default:
-				return this.get.apply(this, arguments)
-		}
-	},
-
-	set: function(value, path) {
-		var data = this.data;
-		switch (arguments.length) {
-			case 0: throw Error('value required')
-			case 1:
-				this.data = value;
-				break
-			case 2:
-				if (Array.isArray(path)) {
-					for (var i=0; i<(path.length-1); ++i) if ((data = data[path[i]]) === undefined) throw Error('invalid path '+path.join())
-					data[path[path.length-1]] = value;
-				}
-				else {
-					data[path] = value;
-				}
-				break
-			default:
-				throw Error('invalid argument')
-		}
-		if (this.onchange) this.onchange();
-	},
-
-	act: function(name, args) {
-		return this[name].apply(this, args)
-	}
+var options = {
+	templates: 'immutable template',
+	lists: 'select list',
+	components: 'dynamic components',
+	css: 'css rule insertion',
+	transitions: 'css transitions',
+	async: 'async operations',
+	events: 'event listeners setting and removal'
 };
 
-// immutable templates, svg elements
-var ic_circle = template( // template used to pre-resolve the node structure
-	svg('svg', {
-		attrs: {
-			fill: '#000000',
-			height: '24',
-			viewBox: '0 0 24 24',
-			width: '24'
-		}},
-		svg('path', {
-			attrs: {
-				fill: 'none',
-				d: 'M0 0h24v24H0z'
-			}
-		})
-	).create().node // template will clone the node instead of runing all steps
+var listItem = element('li',
+	function() {
+		var comp = this,
+				moveTo = comp.moveTo,
+				remove = comp.remove;
+
+		Object.defineProperty(this.parent, 'label', {
+			get: function() { return comp.textContent },
+			set: function(t) { comp.text(t); }
+		});
+		this.class('transitionEx pl5 light-blue');
+
+		// on insert, async change of the class to trigger transition
+		this.moveTo = function(parent, before) {
+			if (!this.node.parent) D.defaultView.requestAnimationFrame(function() {
+				comp.class('transitionIn pl1 dark-blue' );
+			});
+			return moveTo.call(this, parent, before)
+		};
+
+		// on remove, change the class and wait for transition end before removing
+		this.remove = function() {
+			this.event('transtionsend', function() {
+				this.event('transitionend'); //remove the listener
+				remove.call(comp);
+			});
+			comp.class('transitionEx');
+			return this
+		};
+	},
+	'default initial textContent'
 );
 
-var ic_add = ic_circle.append( //ic_add_circle_outline_black_36px
-	svg('path').attr('d',
-		'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
-	)
-);
 
-var ic_clear = ic_circle.append( //ic_clear_black_36px
-	svg('path').attr('d',
-		'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
-	)
-);
-
-var ic_remove = ic_circle.append( //ic_remove_circle_outline_black_36px
-	svg('path').attr('d',
-		'M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
-	)
-);
-
-var store = new Store([]);
-var i = 0;
-var j = 0;
-
-var table = element('table',
-	element('tbody',
+element('div',
+	element('h2', {class: 'pl3'}, 'example with'),
+	element('ol',
 		list(
-			element('tr',
-				function() {
-					i = this.key; this.class('abc');
-				},
-				element('td', //leading column with icon
-					function() { this.i = i; },
-					{ events: { click: function() { this.root.store.delRow(this.i); } } },
-					ic_remove
-				),
-				list( // data columns
-					element('td',
-						function() { j = this.key; },
-						element('input',
-							function() {
-								this.i = i; this.j = j;
-								this.update = this.value;
-								this.event('change', function() {
-									this.root.store.set(this.node.value, [this.i, this.j]);
-								});
-							}
-						)
-					)
-				)
-			)
-		),
-		element('tr',
-			element('td',
-				{ events: {click: function() { this.root.store.addRow(); } } },
-				ic_add
-			)
-		)
+			Object.keys(options).reduce(function(res, key) {
+				res[key] = listItem.extra('label', 'immutable template');
+				return res
+			}, {})
+			[
+			listItem.extra('label', 'immutable template'),
+			listItem.extra('label', 'select list'),
+			listItem.extra('label', 'components'),
+			listItem.extra('label', 'css rule insertion'),
+			listItem.extra('label', 'css transitions'),
+			listItem.extra('label', 'async operations'),
+			listItem.extra('label', 'event listeners setting and removal')
+		])
 	)
-).create()
-.extra('store', store)
-.moveTo(D.body);
-
-store.onchange = function() { table.update( store.get() ); };
-store.set([['Jane', 'Roe'], ['John', 'Doe']]);
-
-store.addRow = function() {
-	store.set(['',''], store.get().length);
-};
-store.delRow = function(idx) {
-	var data = store.get().slice();
-	data.splice(idx,1);
-	store.set(data);
-};
+).create().update().moveTo(D.body);
 
 }());

@@ -116,7 +116,6 @@ List template
 The 6 template generating functions take the following types of arguments:
 
 * **options**: Object to define future operations `{methodName: arguments}` upon component creation. Examples
-  * `{call: function() { this.update = this.text }}` to perform component operations
   * `{class: 'abc'}` to set the component node class attribute once an element component is created
   * `{attrs: {id: 'abc'}}` to set component node attributes once an element component is created
   * `{events: {click: function() { this.text('CLICKED!') } }}` to set element component event listeners
@@ -124,7 +123,7 @@ The 6 template generating functions take the following types of arguments:
   * `{extras: {someKey: someValue}}` to set component properties on the component itself
   * `{append: ['a', 0]}` to explicitly append children instead of just listing them in the fatory function
 
-* **transforms** are just functions called with the component context. Same as using the `{call: function}` option
+* **transforms** are just functions called with the component context.
 
 * **children** can be templates, nodes or numbers and strings to be converted to text nodes. Same as using the `{append: [...]}` option
 
@@ -187,6 +186,7 @@ Normally, only the main component is updated and the update trickles down the DO
 * `.refs`: used in list to hold node references
 * `.getKey(val, key, arr) => string`: to get the unique key for keyed lists
 * `.select(val, key) => array`: array of keys for conditional/select lists
+
 
 #### Lifecycle operations
 
