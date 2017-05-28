@@ -20,8 +20,7 @@ CNode.prototype = {
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,
 	remove: CElementProto.remove,
-	destroy: CElementProto.destroy,
-	_events: null,
+	destroy: CElementProto.remove,
 
 	text: function(val) {
 		this.node.nodeValue = val

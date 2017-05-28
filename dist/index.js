@@ -250,8 +250,7 @@ CNode.prototype = {
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,
 	remove: CElementProto.remove,
-	destroy: CElementProto.destroy,
-	_events: null,
+	destroy: CElementProto.remove,
 
 	text: function(val) {
 		this.node.nodeValue = val;
@@ -286,8 +285,8 @@ CList.prototype = {
 	constructor: CList,
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
-	destroy: CElementProto.destroy,
-	_events: null,
+	remove: remove,
+	destroy: remove,
 
 
 	/**
@@ -316,29 +315,6 @@ CList.prototype = {
 				parent.insertBefore(foot, anchor);
 			}
 		}
-		return this
-	},
-
-
-	/**
-	* @function remove
-	* @return {!Object} this
-	*/
-	remove: function() {
-		var head = this.node,
-				origin = head.parentNode,
-				spot = head.nextSibling;
-
-		if (origin) {
-			while(spot !== this.foot) {
-				var item = spot[picoKey];
-				spot = (item.foot || item.node).nextSibling;
-				item.remove();
-			}
-			origin.removeChild(this.foot);
-			origin.removeChild(head);
-		}
-
 		return this
 	},
 
@@ -413,6 +389,28 @@ function updateSelectChildren(v,k,o) {
 		spot = (item.foot || item.node).nextSibling;
 		item.remove();
 	}
+	return this
+}
+
+/**
+* @function remove
+* @return {!Object} this
+*/
+function remove() {
+	var head = this.node,
+			origin = head.parentNode,
+			spot = head.nextSibling;
+
+	if (origin) {
+		while(spot !== this.foot) {
+			var item = spot[picoKey];
+			spot = (item.foot || item.node).nextSibling;
+			item.remove();
+		}
+		origin.removeChild(this.foot);
+		origin.removeChild(head);
+	}
+
 	return this
 }
 

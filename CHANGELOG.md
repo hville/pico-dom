@@ -9,6 +9,10 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 ~~destroy, ondestroy~~
 
+## [1.0.1] - 2017-05-29
+### Fixed
+- minor destroy simplification for non-elements
+
 ## [1.0.0] - 2017-05-28
 ### Changed
 - major API changes
