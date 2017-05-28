@@ -16,10 +16,11 @@ export var TemplateProto = Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				node = ops[0].f ? ops[0].f.apply(D, ops[0].a) : ops[0].a[0],
-				cmp = new this.Co(node)
+				cmp = new this.Co(ops[0].f ? ops[0].f.apply(D, ops[0].a) : ops[0].a[0])
 
 		if (parent) cmp.root = parent.root || parent
+		else if (!cmp.refs) cmp.refs = {}
+
 		if (key !== undefined) cmp.key = key
 
 		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a)

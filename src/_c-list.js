@@ -8,8 +8,8 @@ import {CElementProto} from './_c-element'
  * @param {!Object} template
  */
 export function CList(template) {
-	this.template = template
 	this.root = null
+	this.template = template
 	this.node = D.createComment('^')
 	this.foot = D.createComment('$')
 	this.refs = {}

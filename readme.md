@@ -20,50 +20,54 @@ import {Store} from './Store' // any user store will do
 import {ic_remove, ic_add} from './icons'
 
 var store = new Store([]),
-    i = 0,
-    j = 0
+		i = 0,
+		j = 0
 
 var table = el('table',
-  el('tbody',
-    list(
-      el('tr',
-        function() {
-          i = this.key; this.class('abc')
-        },
-        el('td', //leading column with icon
-          function() { this.i = i },
-          { events: { click: function() { this.root.store.delRow(this.i) } } },
-          ic_remove
-        ),
-        list( // data columns
-          el('td',
-            function() { j = this.key },
-            el('input',
-              function() {
-                this.i = i; this.j = j
-                this.update = this.value
-                this.event('change', function() {
-                  this.root.store.set(this.node.value, [this.i, this.j])
-                })
-              }
-            )
-          )
-        )
-      )
-    ),
-    el('tr',
-      el('td',
-        { events: {click: function() { this.root.store.addRow() } } },
-        ic_add
-      )
-    )
-  )
+	el('caption', {class: 'f4'}, 'table example with...'),
+	el('tbody',
+		list(
+			el('tr',
+				function() { i = this.key },
+				el('td', //leading column with icon
+					function() { this.i = i },
+					{ events: { click: function() { this.root.store.delRow(this.i) } } },
+					ic_remove
+				),
+				list( // data columns
+					el('td',
+						function() { j = this.key },
+						el('input',
+							function() {
+								this.i = i; this.j = j
+								this.update = function(v) { this.node.value = v }
+								this.event('change', function() {
+									this.root.store.set(this.node.value, [this.i, this.j])
+								})
+							}
+						)
+					)
+				)
+			)
+		),
+		el('tr',
+			el('td',
+				{ events: {click: function() { this.root.store.addRow() } } },
+				ic_add
+			)
+		)
+	)
 ).create()
 .extra('store', store)
 .moveTo(D.body)
 
 store.onchange = function() { table.update( store.get() ) }
-store.set([['Jane', 'Roe'], ['John', 'Doe']])
+store.set([
+	['icons', 'SVG icons'],
+	['keyed', 'keyed list'],
+	['store', 'data flow'],
+	['event', 'event listeners']
+])
 ```
 
 ## Why
@@ -77,7 +81,7 @@ To explore ideas for a flexible and concise API with minimal tooling and memory 
 * svg and namespace support
 * ability to inject a `document API` for server use and/or testing (e.g. `jsdom`)
 * no virtual DOM, all operations are done on actual nodes
-* 2kb gzip, no dependencies
+* 2kb gzip, no dependencies, all under 600 lines including comments and jsDocs
 * all text injections and manipulations done through the secure `textContent` and `nodeValue` DOM API
 * available in CommonJS, ES6 modules and browser versions
 * All in ES5 with ES modules, CJS module and iife for browsers. Should work well on mobile and older browsers like IE9.
@@ -85,16 +89,12 @@ To explore ideas for a flexible and concise API with minimal tooling and memory 
 
 ### Limitations
 
-* proof of concept. more example and test required to validate the idea and API
-* API still in flux
 * view and event helpers only
 * limited css utility
-* strictly DOM element creation and manipulation (no router, store, utilities)
+* strictly DOM element creation and manipulation (no router, no store)
 
 
 ## API
-
-This is just an overview. Details can be found in the source code (under 600 lines including comments and jsDocs).
 
 ### Templates
 
@@ -121,9 +121,11 @@ The 6 template generating functions take the following types of arguments:
   * `{events: {click: function() { this.text('CLICKED!') } }}` to set element component event listeners
   * `{props: {id: 'abc'}}` to set component node properties
   * `{extras: {someKey: someValue}}` to set component properties on the component itself
-  * `{append: ['a', 0]}` to explicitly append children instead of just listing them in the fatory function
 
-* **transforms** are just functions called with the component context.
+* **transforms** are just functions called with the component context. Examples
+  * `function() { this.class('abc') }` to set the component node class attribute once an element component is created
+  * `function() { this.attr(id: 'abc') }` to set component node attributes once an element component is created
+  * `function() { this.event('click', handler) }` to set element component event listeners
 
 * **children** can be templates, nodes or numbers and strings to be converted to text nodes. Same as using the `{append: [...]}` option
 
@@ -155,9 +157,7 @@ lists can be stacked and nested.
 Components are created from templates: `template.create()`.
 Normally, only the main component is manually created and all other templates are initiated from within.
 
-In addition to the same methods found in templates (`attr(s)`, `props(s)`, `extra(s)`, `call`, `append`, `class`, `event`, `events`), Components have the following properties and methods for dealing with DOM Nodes
-
-EventHandlers are binded to the component context.
+In addition to the same methods found in templates (`attr(s)`, `extra(s)`, `call`, `append`, `class`, `event`), Components have the following properties and methods for dealing with DOM Nodes
 
 #### DOM references
 
@@ -173,11 +173,10 @@ EventHandlers are binded to the component context.
 #### Update Functions
 
 * `.text(v)`: to set the node textContent of element Component
-* `.value(v)`: to set the node value of element Component
 * `.update(...)` the function to trigger changes based on external data
 * `.updateChildren(..)` to pass update data down the tree.
 
-By default, update is set to `value` for input elements, `text` for text components and `updateChildren` for the rest.
+By default, update is set to `text` for text components and `updateChildren` for the rest.
 Normally, only the main component is updated and the update trickles down the DOM tree according the the rules predefined in the templates.
 
 #### Other
@@ -190,7 +189,7 @@ Normally, only the main component is updated and the update trickles down the DO
 
 #### Lifecycle operations
 
-Lifecycle hooks and async operations can be done by wrapping component default methods
+Lifecycle hooks are not provided directly but can be acheived by wrapping component methods
 
 * on creation: `template.call(...)`
 * on insert: `template.call(...)` or wrap `component.moveTo(...)`
@@ -199,9 +198,10 @@ Lifecycle hooks and async operations can be done by wrapping component default m
 
 ```javascript
 var textTemplate = text('ABC', function() {
-  var remove = this.remove
+  var item = this,
+      remove = item.remove
   this.remove = function() {
-    window.requestAnimationFrame(remove)
+    window.requestAnimationFrame(remove.call(item))
   }
 })
 ```

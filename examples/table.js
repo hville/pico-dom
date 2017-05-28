@@ -7,13 +7,11 @@ var store = new Store([]),
 		j = 0
 
 var table = el('table',
-	el('caption', 'example with svg icons, keyed lists, events, store and data flow'),
+	el('caption', {class: 'f4'}, 'table example with...'),
 	el('tbody',
 		list(
 			el('tr',
-				function() {
-					i = this.key; this.class('abc')
-				},
+				function() { i = this.key },
 				el('td', //leading column with icon
 					function() { this.i = i },
 					{ events: { click: function() { this.root.store.delRow(this.i) } } },
@@ -25,7 +23,7 @@ var table = el('table',
 						el('input',
 							function() {
 								this.i = i; this.j = j
-								this.update = this.value
+								this.update = function(v) { this.node.value = v }
 								this.event('change', function() {
 									this.root.store.set(this.node.value, [this.i, this.j])
 								})
@@ -47,7 +45,12 @@ var table = el('table',
 .moveTo(D.body)
 
 store.onchange = function() { table.update( store.get() ) }
-store.set([['Jane', 'Roe'], ['John', 'Doe']])
+store.set([
+	['icons', 'SVG icons'],
+	['keyed', 'keyed list'],
+	['store', 'data flow'],
+	['event', 'event listeners']
+])
 
 store.addRow = function() {
 	store.set(['',''], store.get().length)

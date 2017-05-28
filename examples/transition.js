@@ -1,9 +1,9 @@
 import {D, css, element as el, list} from '../module'
 
-css('.transitionEx { opacity: 0.5; transition: all 2s ease; }')
-css('.transitionIn { opacity: 1.0; transition: all 2s ease; }')
+css('.transitionEx { opacity: 0.5; transition: all 1s ease; }')
+css('.transitionIn { opacity: 1.0; transition: all 1s ease; }')
 
-var options = {
+var optionValues = {
 	templates: 'immutable template',
 	lists: 'select list',
 	components: 'dynamic components',
@@ -13,56 +13,71 @@ var options = {
 	events: 'event listeners setting and removal'
 }
 
-var listItem = el('li',
+var optionKeys = Object.keys(optionValues)
+
+
+var select = el('select',
+	list( optionKeys.map(function(k) {
+		return el('option', {attr: 'selected'}, k)
+	}))
+)
+.attr('multiple')
+.attr('size', optionKeys.length)
+
+
+var item = el('li',
 	function() {
 		var comp = this,
 				moveTo = comp.moveTo,
-				remove = comp.remove
+				destroy = comp.destroy
 
-		Object.defineProperty(this.parent, 'label', {
-			get: function() { return comp.textContent },
-			set: function(t) { comp.text(t) }
-		})
 		this.class('transitionEx pl5 light-blue')
 
 		// on insert, async change of the class to trigger transition
 		this.moveTo = function(parent, before) {
-			if (!this.node.parent) D.defaultView.requestAnimationFrame(function() {
+			if (!this.node.parentNode) D.defaultView.requestAnimationFrame(function() {
 				comp.class('transitionIn pl1 dark-blue' )
 			})
 			return moveTo.call(this, parent, before)
 		}
 
 		// on remove, change the class and wait for transition end before removing
-		this.remove = function() {
-			this.event('transtionsend', function() {
+		this.destroy = function() {
+			this.event('transitionend', function() {
 				this.event('transitionend') //remove the listener
-				remove.call(comp)
+				destroy.call(comp)
 			})
-			comp.class('transitionEx')
+			if (this.node.parentNode) D.defaultView.requestAnimationFrame(function() {
+				comp.class('transitionEx pl5 light-blue')
+			})
 			return this
 		}
-	},
-	'default initial textContent'
+		this.update = this.text
+	}
 )
 
 
 el('div',
 	el('h2', {class: 'pl3'}, 'example with'),
-	el('ol',
-		list(
-			Object.keys(options).reduce(function(res, key) {
-				res[key] = listItem.extra('label', 'immutable template')
-				return res
-			}, {})
-			[
-			listItem.extra('label', 'immutable template'),
-			listItem.extra('label', 'select list'),
-			listItem.extra('label', 'components'),
-			listItem.extra('label', 'css rule insertion'),
-			listItem.extra('label', 'css transitions'),
-			listItem.extra('label', 'async operations'),
-			listItem.extra('label', 'event listeners setting and removal')
-		])
+	el('div', {class: ''},
+		el('div', {class: 'fl w-25 pa3'},
+			select.class('v-top').call(function() {
+				this.root.refs.select = this
+				this.event('change', function() { this.root.update() })
+			})
+		),
+		el('div', {class: 'fl w-25 pa3'},
+			el('ol', {class: 'v-top'},
+				list(
+					item
+				).extra('update', function() {
+					var opts = this.root.refs.select.node.options,
+							keys = []
+					for (var i=0; i<opts.length; ++i) if (opts.item(i).selected) keys.push(opts.item(i).textContent)
+					this.updateChildren(keys)
+				}).extra('getKey', function(v) { return v })
+			)
+		),
+		el('div', {class: 'fl w-50 pa3'})
 	)
 ).create().update().moveTo(D.body)

@@ -29,10 +29,11 @@ var TemplateProto = Template.prototype = {
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				node = ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0],
-				cmp = new this.Co(node);
+				cmp = new this.Co(ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0]);
 
 		if (parent) cmp.root = parent.root || parent;
+		else if (!cmp.refs) cmp.refs = {};
+
 		if (key !== undefined) cmp.key = key;
 
 		for (var i=1; i<ops.length; ++i) ops[i].f.apply(cmp, ops[i].a);
@@ -80,7 +81,7 @@ var TemplateProto = Template.prototype = {
 			}
 
 			// child
-			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]}); //TODO pre-split?
+			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]});
 			else throw Error('invalid argument '+any)
 		}
 		return this
@@ -143,7 +144,6 @@ var CElementProto = CElement.prototype = {
 	destroy: function() {
 		this.remove();
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
-		this.node = this.root = this.refs = null; //TODO parent? foot? update? customkeys?
 		return this
 	},
 
@@ -260,8 +260,8 @@ CNode.prototype = {
  * @param {!Object} template
  */
 function CList(template) {
-	this.template = template;
 	this.root = null;
+	this.template = template;
 	this.node = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
 	this.refs = {};
