@@ -1,20 +1,24 @@
 import {D} from './document'
 import {picoKey} from './picoKey'
-import {extraProto} from './_extra'
+import {CElementProto} from './_c-element'
 
 
 /**
  * @constructor
  * @param {!Object} template
  */
-export function List(template) {
+export function CList(template) {
 	this.template = template
-	this.refs = {}
+	this.root = null
 	this.node = D.createComment('^')
 	this.foot = D.createComment('$')
+	this.refs = {}
 	this.node[picoKey] = this
 
-	if (!template.create) { // select list
+	//keyed
+	if (template.create) this.update = this.updateChildren
+	// select list
+	else {
 		this.update = this.updateChildren = updateSelectChildren
 		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 			var key = ks[i]
@@ -23,10 +27,12 @@ export function List(template) {
 	}
 }
 
-List.prototype = {
-	constructor: List,
+CList.prototype = {
+	constructor: CList,
+	extra: CElementProto.extra,
+	prop: CElementProto.prop,
+	destroy: CElementProto.destroy,
 
-	extra: extraProto.extra,
 
 	/**
 	* @function moveTo
@@ -80,12 +86,6 @@ List.prototype = {
 		return this
 	},
 
-	destroy: extraProto.destroy,
-
-	update: updateKeyedChildren,
-
-	updateChildren: updateKeyedChildren,
-
 	_placeItem: function(parent, item, spot, foot) {
 		if (!spot) item.moveTo(parent)
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot)
@@ -94,49 +94,48 @@ List.prototype = {
 	},
 
 	// FOR KEYED LIST
+	getKey: function(v,i,a) { //eslint-disable-line no-unused-vars
+		return i  // default: indexed
+	},
 
-	getKey: function(v,k) { return k }, // default: indexed
+	updateChildren: function updateKeyedChildren(arr) {
+		var foot = this.foot,
+				parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
+				spot = this.node.nextSibling,
+				items = this.refs,
+				newM = Object.create(null)
+		if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
+
+		for (var i=0; i<arr.length; ++i) {
+			var key = this.getKey(arr[i], i, arr),
+					model = this.template,
+					item = newM[key] = items[key] || model.create(this, key)
+
+			if (item) {
+				if (item.update) item.update(arr[i], i, arr)
+				spot = this._placeItem(parent, item, spot, foot).nextSibling
+			}
+		}
+
+		this.refs = newM
+		while(spot !== this.foot) {
+			item = spot[picoKey]
+			spot = (item.foot || item.node).nextSibling
+			item.destroy()
+		}
+		return this
+	},
 
 	// FOR SELECT LIST
-
 	/**
 	 * select all by default
 	 * @function
 	 * @param {...*} [v]
 	 * @return {!Array}
 	 */
-	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
-
+	select: function(v) { return Object.keys(this.refs) } //eslint-disable-line no-unused-vars
 }
 
-
-function updateKeyedChildren(arr) {
-	var foot = this.foot,
-			parent = foot.parentNode || this.moveTo(D.createDocumentFragment()).foot.parentNode,
-			spot = this.node.nextSibling,
-			items = this.refs,
-			newM = Object.create(null)
-	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
-
-	for (var i=0; i<arr.length; ++i) {
-		var key = this.getKey(arr[i], i, arr),
-				model = this.template,
-				item = newM[key] = items[key] || model.create(this, key)
-
-		if (item) {
-			if (item.update) item.update(arr[i], i, arr)
-			spot = this._placeItem(parent, item, spot, foot).nextSibling
-		}
-	}
-
-	this.refs = newM
-	while(spot !== this.foot) {
-		item = spot[picoKey]
-		spot = (item.foot || item.node).nextSibling
-		item.destroy()
-	}
-	return this
-}
 
 function updateSelectChildren(v,k,o) {
 	var foot = this.foot,

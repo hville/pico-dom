@@ -20,18 +20,16 @@ function setDocument(doc) {
  */
 function Template(constructor, transforms) {
 	this.Co = constructor;
-	this.ops = transforms || [];
+	this.ops = transforms;
 }
 
-
-Template.prototype = {
+var TemplateProto = Template.prototype = {
 	constructor: Template,
-
-	//COMMON
 
 	create: function(parent, key) {
 		var ops = this.ops,
-				cmp = new this.Co(ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0]);
+				node = ops[0].f ? ops[0].f.apply(exports.D, ops[0].a) : ops[0].a[0],
+				cmp = new this.Co(node);
 
 		if (parent) cmp.root = parent.root || parent;
 		if (key !== undefined) cmp.key = key;
@@ -40,178 +38,79 @@ Template.prototype = {
 		return cmp
 	},
 
-	// COMPONENT OPERATIONS
 	call: function(fcn) {
-		for (var i=1, args=[]; i<arguments.length; ++i) args[i-1] = arguments[i];
-		return new Template(this.Co, this.ops.concat({f: fcn, a:args}))
+		return new Template(this.Co, this.ops.concat({f: fcn, a:[]}))
 	},
 
-	_ops: function(fcn, obj) {
-		for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) {
-			this.ops.push({f: fcn, a: [ks[i], obj[ks[i]]]});
-		}
-		return this
-	},
+	text: wrapMethod('text'),
+	extra: wrapMethod('extra'),
+	prop: wrapMethod('prop'),
+	attr: wrapMethod('attr'),
+	class: wrapMethod('class'),
+	event: wrapMethod('event'),
+
+	append: wrapMethod('append'),
 
 	_config: function(any) {
 		var cProto = this.Co.prototype;
 		if (any != null) {
 
+			// transform
 			if (typeof any === 'function') this.ops.push({f: any, a:[]});
 
+			// options
 			else if (any.constructor === Object) {
 				for (var i=0, ks=Object.keys(any); i<ks.length; ++i) {
-					var key = ks[i];
-					if (!this[key]) throw Error (key + ' is not a template method')
+					var methodName = ks[i],
+							arg = any[ks[i]];
 
-					if (key[key.length-1] === 's' && any[key].constructor === Object) {
-						// break group functions extras, props, attrs
-						this._ops(cProto[key.slice(0,-1)], any[key]);
+					// call, text, class
+					if (this[methodName] && cProto[methodName]) this.ops.push({f: cProto[methodName], a:[arg]});
+
+					// extra(s), prop(s), attr(s), event(s)
+					else if (methodName[methodName.length-1] === 's' && this[methodName = methodName.slice(0,-1)] && cProto[methodName]) {
+						for (var j=0, kks=Object.keys(arg); j<kks.length; ++j) this.ops.push(
+							{f: cProto[methodName], a: [kks[j], arg[kks[j]]]}
+						);
 					}
-					else {
-						this.ops.push({f: cProto[key], a:[any[key]]});
-					}
+					// none of the above
+					else throw Error (ks[i] + ' is not a template method')
 				}
 			}
+
+			// child
 			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]});
 			else throw Error('invalid argument '+any)
 		}
 		return this
-	},
-
-	extra: wrapMethod('extra'),
-	extras: wrapMany('extra'),
-
-	// ELEMENT OPERATIONS
-
-	attr: wrapMethod('attr'),
-	attrs: wrapMany('attr'),
-
-	event: wrapMethod('event'),
-	events: wrapMany('event'),
-
-	prop: wrapMethod('prop'),
-	props: wrapMany('prop'),
-
-	class: wrapMethod('class'),
-	append: wrapMethod('append')
-};
-
-function wrapMany(name) {
-	return function(a) {
-		return (new Template(this.Co, this.ops.slice()))._ops(this.Co.prototype[name], a)
 	}
-}
+};
 
 function wrapMethod(name) {
 	return function() {
+		var cProto = this.Co.prototype;
 		for (var i=0, args=[]; i<arguments.length; ++i) args[i] = arguments[i];
-		return new Template(this.Co, this.ops.concat({f: this.Co.prototype[name], a: args}))
+		if (!cProto[name]) throw Error (name + ' is not a template method')
+		return new Template(this.Co, this.ops.concat({f: cProto[name], a: args}))
 	}
 }
 
 var picoKey = '_pico';
 
 /**
- * @function
- * @param {!Object} obj
- * @param {Function} fcn
- * @param {*} [ctx]
- * @returns {void}
- */
-function eachKeys(obj, fcn, ctx) {
-	for (var i=0, ks=Object.keys(obj); i<ks.length; ++i) fcn.call(ctx, ks[i], obj[ks[i]]);
-}
-
-/**
  * @constructor
  * @extends EventListener
- * @param {Node} node - DOM node
+ * @param {Element} node - DOM node
  */
-function Extra(node) {
-	if (node[picoKey] || node.parentNode) throw Error('node already used')
+function CElement(node) {
+	this.root = null;
 	this.node = node;
-
-	// default updater: null || text || value
-	if (node.nodeName === '#text') this.update = this.text;
-	if ('value' in node && node.nodeName !== 'LI') this.update = this.value;
-
+	this.update = this.updateChildren;
 	node[picoKey] = this;
 }
 
-
-var extraProto = Extra.prototype = {
-	constructor: Extra,
-
-	// INSTANCE UTILITIES
-	/**
-	 * @function
-	 * @param {string|number} key
-	 * @param {*} val value
-	 * @returns {!Object} this
-	 */
-	extra: function(key, val) {
-		this[key] = val;
-		return this
-	},
-
-	// NODE SETTERS
-	text: function(txt) {
-		var first = this.node.firstChild;
-		if (first && !first.nextSibling) {
-			if (first.nodeValue !== txt) first.nodeValue = txt;
-		}
-		else this.node.textContent = txt;
-		return this
-	},
-	attr: function(key, val) {
-		if (val === false) this.node.removeAttribute(key);
-		else this.node.setAttribute(key, val === true ? '' : val);
-		return this
-	},
-	prop: function(key, val) {
-		if (this.node[key] !== val) this.node[key] = val;
-		return this
-	},
-	class: function(val) {
-		this.node.setAttribute('class', val);
-		return this
-	},
-	value: function(val) {
-		if (this.node.value !== val) this.node.value = val;
-		return this
-	},
-	attrs: function(keyVals) {
-		eachKeys(keyVals, this.attr, this);
-		return this
-	},
-	props: function(keyVals) {
-		eachKeys(keyVals, this.prop, this);
-		return this
-	},
-	extras: function(keyVals) {
-		eachKeys(keyVals, this.extra, this);
-		return this
-	},
-	append: function() {
-		var node = this.node;
-		for (var i=0; i<arguments.length; ++i) {
-			var child = arguments[i];
-			if (child != null) {
-				if (Array.isArray(child)) this.append.apply(this, child);
-				else if (child.create) child.create(this).moveTo(node);
-				else if (child.moveTo) child.moveTo(node);
-				else node.appendChild(
-					child.cloneNode ? child.cloneNode(true) : exports.D.createTextNode(''+child)
-				);
-			}
-		}
-		return this
-	},
-
-
-	// PLACEMENT
-
+var CElementProto = CElement.prototype = {
+	constructor: CElement,
 
 	/**
 	* @function
@@ -244,22 +143,65 @@ var extraProto = Extra.prototype = {
 	destroy: function() {
 		this.remove();
 		if (this._events) for (var i=0, ks=Object.keys(this._events); i<ks.length; ++i) this.event(ks[i], false);
-		this.node = this.refs = null;
+		this.node = this.root = this.refs = null; //TODO parent? foot? update? customkeys?
+		return this
 	},
 
-	// UPDATE
-	update: updateChildren,
-	updateChildren: updateChildren,
+	/**
+	 * @function
+	 * @param {string|number} key
+	 * @param {*} val value
+	 * @returns {!Object} this
+	 */
+	extra: function(key, val) {
+		this[key] = val;
+		return this
+	},
+
+	prop: function(key, val) {
+		if (this.node[key] !== val) this.node[key] = val;
+		return this
+	},
+
+	text: function(txt) {
+		this.node.textContent = txt;
+		return this
+	},
+
+	attr: function(key, val) {
+		if (val === false) this.node.removeAttribute(key);
+		else this.node.setAttribute(key, val === true ? '' : val);
+		return this
+	},
+
+	class: function(val) {
+		this.node.setAttribute('class', val);
+		return this
+	},
+
+	append: function() {
+		var node = this.node;
+		for (var i=0; i<arguments.length; ++i) {
+			var child = arguments[i];
+			if (child != null) {
+				if (Array.isArray(child)) this.append.apply(this, child);
+				else if (child.create) child.create(this).moveTo(node);
+				else if (child.moveTo) child.moveTo(node);
+				else node.appendChild(
+					child.cloneNode ? child.cloneNode(true) : exports.D.createTextNode(''+child)
+				);
+			}
+		}
+		return this
+	},
+
 	// EVENT LISTENERS
 	handleEvent: function(event) {
 		var handlers = this._events,
 				handler = handlers && handlers[event.type];
 		if (handler) handler.call(this, event);
 	},
-	events: function(handlers) {
-		eachKeys(handlers, this.event, this);
-		return this
-	},
+
 	event: function(type, handler) {
 		if (!handler) {
 			if (this._events && this._events[type]) {
@@ -272,34 +214,63 @@ var extraProto = Extra.prototype = {
 			this._events[type] = handler;
 			this.node.addEventListener(type, this, false);
 		}
+	},
+
+	updateChildren: function updateChildren(v,k,o) {
+		var child = this.node.firstChild;
+		while (child) {
+			var co = child[picoKey];
+			if (co) {
+				if (co.update) co.update(v,k,o);
+				child = (co.foot || child).nextSibling;
+			}
+			else child = child.nextSibling;
+		}
+		return this
 	}
 };
 
-function updateChildren(v,k,o) {
-	var child = this.node.firstChild;
-	while (child) {
-		var co = child[picoKey];
-		if (co) {
-			if (co.update) co.update(v,k,o);
-			child = (co.foot || child).nextSibling;
-		}
-		else child = child.nextSibling;
-	}
-	return this
+/**
+ * @constructor
+ * @param {Node} node - DOM node
+ */
+function CNode(node) {
+	this.root = null;
+	this.node = node;
+	this.update = this.text;
+	node[picoKey] = this;
 }
+
+CNode.prototype = {
+	constructor: CNode,
+
+	prop: CElementProto.prop,
+	extra: CElementProto.extra,
+	moveTo: CElementProto.moveTo,
+	remove: CElementProto.remove,
+	destroy: CElementProto.destroy,
+
+	text: function(val) {
+		this.node.nodeValue = val;
+	}
+};
 
 /**
  * @constructor
  * @param {!Object} template
  */
-function List(template) {
+function CList(template) {
 	this.template = template;
-	this.refs = {};
+	this.root = null;
 	this.node = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
+	this.refs = {};
 	this.node[picoKey] = this;
 
-	if (!template.create) { // select list
+	//keyed
+	if (template.create) this.update = this.updateChildren;
+	// select list
+	else {
 		this.update = this.updateChildren = updateSelectChildren;
 		for (var i=0, ks=Object.keys(template); i<ks.length; ++i) {
 			var key = ks[i];
@@ -308,10 +279,12 @@ function List(template) {
 	}
 }
 
-List.prototype = {
-	constructor: List,
+CList.prototype = {
+	constructor: CList,
+	extra: CElementProto.extra,
+	prop: CElementProto.prop,
+	destroy: CElementProto.destroy,
 
-	extra: extraProto.extra,
 
 	/**
 	* @function moveTo
@@ -365,12 +338,6 @@ List.prototype = {
 		return this
 	},
 
-	destroy: extraProto.destroy,
-
-	update: updateKeyedChildren,
-
-	updateChildren: updateKeyedChildren,
-
 	_placeItem: function(parent, item, spot, foot) {
 		if (!spot) item.moveTo(parent);
 		else if (item.node === spot.nextSibling) spot[picoKey].moveTo(parent, foot);
@@ -379,49 +346,46 @@ List.prototype = {
 	},
 
 	// FOR KEYED LIST
-
 	getKey: function(v,k) { return k }, // default: indexed
 
-	// FOR SELECT LIST
+	updateChildren: function updateKeyedChildren(arr) {
+		var foot = this.foot,
+				parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
+				spot = this.node.nextSibling,
+				items = this.refs,
+				newM = Object.create(null);
+		if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
 
+		for (var i=0; i<arr.length; ++i) {
+			var key = this.getKey(arr[i], i, arr),
+					model = this.template,
+					item = newM[key] = items[key] || model.create(this, key);
+
+			if (item) {
+				if (item.update) item.update(arr[i], i, arr);
+				spot = this._placeItem(parent, item, spot, foot).nextSibling;
+			}
+		}
+
+		this.refs = newM;
+		while(spot !== this.foot) {
+			item = spot[picoKey];
+			spot = (item.foot || item.node).nextSibling;
+			item.destroy();
+		}
+		return this
+	},
+
+	// FOR SELECT LIST
 	/**
 	 * select all by default
 	 * @function
 	 * @param {...*} [v]
 	 * @return {!Array}
 	 */
-	select: function(v) { return Object.keys(this.refs) }, //eslint-disable-line no-unused-vars
-
+	select: function(v) { return Object.keys(this.refs) } //eslint-disable-line no-unused-vars
 };
 
-
-function updateKeyedChildren(arr) {
-	var foot = this.foot,
-			parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
-			spot = this.node.nextSibling,
-			items = this.refs,
-			newM = Object.create(null);
-	if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
-
-	for (var i=0; i<arr.length; ++i) {
-		var key = this.getKey(arr[i], i, arr),
-				model = this.template,
-				item = newM[key] = items[key] || model.create(this, key);
-
-		if (item) {
-			if (item.update) item.update(arr[i], i, arr);
-			spot = this._placeItem(parent, item, spot, foot).nextSibling;
-		}
-	}
-
-	this.refs = newM;
-	while(spot !== this.foot) {
-		item = spot[picoKey];
-		spot = (item.foot || item.node).nextSibling;
-		item.destroy();
-	}
-	return this
-}
 
 function updateSelectChildren(v,k,o) {
 	var foot = this.foot,
@@ -456,7 +420,7 @@ var svgURI = 'http://www.w3.org/2000/svg';
  * @return {!Object} Component
  */
 function svg(tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [{f: exports.D.createElementNS, a:[svgURI, tag]}]);
+	var model = new Template(CElement, [{f: exports.D.createElementNS, a:[svgURI, tag]}]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -469,7 +433,7 @@ function svg(tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function element(tagName, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [{f: exports.D.createElement, a: [tagName]}]);
+	var model = new Template(CElement, [{f: exports.D.createElement, a: [tagName]}]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -482,7 +446,7 @@ function element(tagName, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [{f: exports.D.createElementNS, a: [nsURI, tag]}]);
+	var model = new Template(CElement, [{f: exports.D.createElementNS, a: [nsURI, tag]}]);
 	for (var i=2; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -494,7 +458,7 @@ function elementNS(nsURI, tag, options) { //eslint-disable-line no-unused-vars
  * @return {!Object} Component
  */
 function text(txt, options) { //eslint-disable-line no-unused-vars
-	var model = new Template(Extra, [{f: exports.D.createTextNode, a: [txt]}]);
+	var model = new Template(CNode, [{f: exports.D.createTextNode, a: [txt]}]);
 	for (var i=1; i<arguments.length; ++i) model._config(arguments[i]);
 	return model
 }
@@ -502,14 +466,16 @@ function text(txt, options) { //eslint-disable-line no-unused-vars
 
 /**
  * @function template
- * @param {!Node} node source node
+ * @param {Node|Element} node source node
  * @param {...*} [options] options
  * @return {!Object} Component
  */
 function template(node, options) { //eslint-disable-line no-unused-vars
-	if (!node.cloneNode) throw Error('invalid node')
+	if (!node.nodeType || node.parentNode) throw Error('invalid or already used node')
 
-	var modl = new Template(Extra, [{f: cloneNode, a: [node]}]);
+	var modl = new Template(
+		node.nodeType === 1 ? CElement : CNode,
+		[{f: cloneNode, a: [node]}]);
 	for (var i=1; i<arguments.length; ++i) modl._config(arguments[i]);
 	return modl
 }
@@ -526,7 +492,7 @@ function cloneNode(node) {
  * @return {!Object} Component
  */
 function list(model, options) { //eslint-disable-line no-unused-vars
-	var lst = new Template(List, [{f:null, a:[model]}]);
+	var lst = new Template(CList, [{f:null, a:[model]}]);
 
 	for (var i=1; i<arguments.length; ++i) lst._config(arguments[i]);
 	return lst

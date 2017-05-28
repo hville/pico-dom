@@ -74,7 +74,7 @@ ct('element - event', function() {
 
 ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = P.template(t0.attrs({id: 1}).append(el('h1').append(1)).create().node),
+			t1 = P.template(t0.attr('id', 1).append(el('h1').append(1)).create().node),
 			t2 = P.template(el('h2', 2).create().node),
 			h0 = t0.attr('id', 0).append(el('h0').append(0)).create(),
 			h1 = t1.create(),
