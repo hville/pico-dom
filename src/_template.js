@@ -67,7 +67,7 @@ export var TemplateProto = Template.prototype = {
 			}
 
 			// child
-			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]}) //TODO pre-split?
+			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]})
 			else throw Error('invalid argument '+any)
 		}
 		return this

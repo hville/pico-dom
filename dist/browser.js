@@ -64,7 +64,7 @@ var TemplateProto = Template.prototype = {
 					var methodName = ks[i],
 							arg = any[ks[i]];
 
-					// call, text, class
+					// text, class
 					if (this[methodName] && cProto[methodName]) this.ops.push({f: cProto[methodName], a:[arg]});
 
 					// extra(s), prop(s), attr(s), event(s)
@@ -79,7 +79,7 @@ var TemplateProto = Template.prototype = {
 			}
 
 			// child
-			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]});
+			else if (cProto.append) this.ops.push({f: cProto.append, a: [any]}); //TODO pre-split?
 			else throw Error('invalid argument '+any)
 		}
 		return this
@@ -99,7 +99,6 @@ var picoKey = '_pico';
 
 /**
  * @constructor
- * @extends EventListener
  * @param {Element} node - DOM node
  */
 function CElement(node) {
@@ -346,7 +345,9 @@ CList.prototype = {
 	},
 
 	// FOR KEYED LIST
-	getKey: function(v,k) { return k }, // default: indexed
+	getKey: function(v,i,a) { //eslint-disable-line no-unused-vars
+		return i  // default: indexed
+	},
 
 	updateChildren: function updateKeyedChildren(arr) {
 		var foot = this.foot,
