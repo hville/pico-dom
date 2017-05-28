@@ -14,6 +14,7 @@ export function CElement(node) {
 
 export var CElementProto = CElement.prototype = {
 	constructor: CElement,
+	_events: null,
 
 	/**
 	* @function

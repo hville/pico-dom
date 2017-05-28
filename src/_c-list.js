@@ -32,6 +32,7 @@ CList.prototype = {
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	destroy: CElementProto.destroy,
+	_events: null,
 
 
 	/**

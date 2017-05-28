@@ -9,11 +9,14 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 ~~destroy, ondestroy~~
 
-## [0.40.0] - 2017-05-24
+## [1.0.0] - 2017-05-28
 ### Changed
-- template.assign and co.assign changed to .extra
+- major API changes
+- .assign changed to .extra and .extras
+- variadic template functions changed distinct single and plural form
+  - .prop(s), .attr(s) and .attrs
 - reverted .store and .common to .root
-- changed variadic on(*) to event(name, function) and events({name: function})
+- added examples: table and transition
 
 ## [0.33.0] - 2017-05-17
 ### Added
