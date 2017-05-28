@@ -41,7 +41,8 @@ var TemplateProto = Template.prototype = {
 	},
 
 	call: function(fcn) {
-		return new Template(this.Co, this.ops.concat({f: fcn, a:[]}))
+		for (var i=1, args=[]; i<arguments.length; ++i) args[i-1] = arguments[i];
+		return new Template(this.Co, this.ops.concat({f: fcn, a:args}))
 	},
 
 	text: wrapMethod('text'),
@@ -112,6 +113,7 @@ function CElement(node) {
 
 var CElementProto = CElement.prototype = {
 	constructor: CElement,
+	_events: null,
 
 	/**
 	* @function
@@ -249,6 +251,7 @@ CNode.prototype = {
 	moveTo: CElementProto.moveTo,
 	remove: CElementProto.remove,
 	destroy: CElementProto.destroy,
+	_events: null,
 
 	text: function(val) {
 		this.node.nodeValue = val;
@@ -284,6 +287,7 @@ CList.prototype = {
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	destroy: CElementProto.destroy,
+	_events: null,
 
 
 	/**
