@@ -266,7 +266,7 @@ function CList(template) {
 	this.template = template;
 	this.node = exports.D.createComment('^');
 	this.foot = exports.D.createComment('$');
-	this.refs = {};
+	this.refs = Object.create(null);
 	this.node[picoKey] = this;
 
 	//keyed
@@ -334,14 +334,12 @@ CList.prototype = {
 		var foot = this.foot,
 				parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 				spot = this.node.nextSibling,
-				items = this.refs,
-				newM = Object.create(null);
-		if (this.node.parentNode !== foot.parentNode) throw Error('keyedlist update parent mismatch')
+				items = this.refs;
 
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr),
 					model = this.template,
-					item = newM[key] = items[key] || model.create(this, key);
+					item = items[key] || (items[key] = model.create(this, key));
 
 			if (item) {
 				if (item.update) item.update(arr[i], i, arr);
@@ -349,9 +347,9 @@ CList.prototype = {
 			}
 		}
 
-		this.refs = newM;
 		while(spot !== this.foot) {
 			item = spot[picoKey];
+			items[item.key] = null;
 			spot = (item.foot || item.node).nextSibling;
 			item.destroy();
 		}
@@ -375,7 +373,6 @@ function updateSelectChildren(v,k,o) {
 			spot = this.node.nextSibling,
 			items = this.refs,
 			keys = this.select(v,k,o);
-	if (this.node.parentNode !== foot.parentNode) throw Error('selectlist update parent mismatch')
 
 	for (var i=0; i<keys.length; ++i) {
 		var item = items[keys[i]];

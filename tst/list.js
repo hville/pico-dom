@@ -110,7 +110,7 @@ ct('list nested', function() {
 ct('list keyed', function() {
 	var co = el('h0',
 		list(
-			text('').extra('update', function(v) { this.text(v.v) })
+			text('x').extra('update', function(v) { this.text(v.v); this.update = null })
 		).extra('getKey', v => v.k)
 	).create()
 	var elem = co.node
@@ -120,8 +120,14 @@ ct('list keyed', function() {
 	co.update([{k: 1, v:1}, {k: 'b', v:'b'}])
 	ct('===', toString(elem.childNodes), '^1b$')
 
+	co.update([{ k: 'b', v: 'bb' }, { k: 1, v: 11 }])
+	ct('===', toString(elem.childNodes), '^b1$', 'must use existing nodes')
+
 	co.update([{k: 'c', v:'c'}])
 	ct('===', toString(elem.childNodes), '^c$')
+
+	co.update([{ k: 'b', v: 'bbb' }, { k: 'c', v: 'ccc' }, { k: 1, v: 111 }])
+	ct('===', toString(elem.childNodes), '^bbbc111$', 're-creates removed nodes')
 })
 
 ct('list select', function() {
