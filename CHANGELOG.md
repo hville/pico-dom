@@ -7,7 +7,7 @@
 
 ## [Unreleased]
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
-~~destroy, ondestroy~~
+- minor: use Object.create(null) for key maps
 
 ## [1.0.1] - 2017-05-29
 ### Fixed
