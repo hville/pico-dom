@@ -14,6 +14,7 @@ export function CList(template) {
 	this.foot = D.createComment('$')
 	this.refs = Object.create(null)
 	this.node[picoKey] = this
+	this.foot[picoKey] = this
 
 	//keyed
 	if (template.create) this.update = this.updateChildren
@@ -124,11 +125,10 @@ function updateSelectChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling
 		}
 	}
-	while(spot !== this.foot) {
-		item = spot[picoKey]
-		spot = (item.foot || item.node).nextSibling
-		item.remove()
-	}
+	if (spot !== this.foot) do {
+		item = this.foot.previousSibling[picoKey]
+		item.destroy()
+	} while (item !== spot[picoKey])
 	return this
 }
 
@@ -142,11 +142,10 @@ function remove() {
 			spot = head.nextSibling
 
 	if (origin) {
-		while(spot !== this.foot) {
-			var item = spot[picoKey]
-			spot = (item.foot || item.node).nextSibling
-			item.remove()
-		}
+		if (spot !== this.foot) do {
+			var item = this.foot.previousSibling[picoKey]
+			item.destroy()
+		} while (item !== spot[picoKey])
 		origin.removeChild(this.foot)
 		origin.removeChild(head)
 	}
