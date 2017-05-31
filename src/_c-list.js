@@ -86,11 +86,8 @@ CList.prototype = {
 			var key = this.getKey(arr[i], i, arr),
 					model = this.template,
 					item = items[key] || (items[key] = model.create(this, key))
-
-			if (item) {
-				if (item.update) item.update(arr[i], i, arr)
-				spot = this._placeItem(parent, item, spot, foot).nextSibling
-			}
+			if (item.update) item.update(arr[i], i, arr)
+			spot = this._placeItem(parent, item, spot, foot).nextSibling
 		}
 
 		while(spot !== this.foot) {
