@@ -8,7 +8,6 @@ import {picoKey} from './picoKey'
 export function CElement(node) {
 	this.root = null
 	this.node = node
-	this.update = this.updateChildren
 	node[picoKey] = this
 }
 
@@ -16,6 +15,7 @@ export var CElementProto = CElement.prototype = {
 	constructor: CElement,
 	_events: null,
 	foot: null,
+	getParent: function() { return this.node.parentNode[picoKey] },
 
 	/**
 	* @function
@@ -119,17 +119,19 @@ export var CElementProto = CElement.prototype = {
 			this.node.addEventListener(type, this, false)
 		}
 	},
+	update: updateChildren,
+	updateChildren: updateChildren
+}
 
-	updateChildren: function updateChildren(v,k,o) {
-		var child = this.node.firstChild
-		while (child) {
-			var co = child[picoKey]
-			if (co) {
-				if (co.update) co.update(v,k,o)
-				child = (co.foot || child).nextSibling
-			}
-			else child = child.nextSibling
+function updateChildren(v, k, o) {
+	var child = this.node.firstChild
+	while (child) {
+		var co = child[picoKey]
+		if (co) {
+			if (co.update) co.update(v, k, o)
+			child = (co.foot || child).nextSibling
 		}
-		return this
+		else child = child.nextSibling
 	}
+	return this
 }

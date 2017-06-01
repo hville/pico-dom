@@ -107,7 +107,6 @@ var picoKey = '_pico';
 function CElement(node) {
 	this.root = null;
 	this.node = node;
-	this.update = this.updateChildren;
 	node[picoKey] = this;
 }
 
@@ -115,6 +114,7 @@ var CElementProto = CElement.prototype = {
 	constructor: CElement,
 	_events: null,
 	foot: null,
+	getParent: function() { return this.node.parentNode[picoKey] },
 
 	/**
 	* @function
@@ -218,20 +218,22 @@ var CElementProto = CElement.prototype = {
 			this.node.addEventListener(type, this, false);
 		}
 	},
-
-	updateChildren: function updateChildren(v,k,o) {
-		var child = this.node.firstChild;
-		while (child) {
-			var co = child[picoKey];
-			if (co) {
-				if (co.update) co.update(v,k,o);
-				child = (co.foot || child).nextSibling;
-			}
-			else child = child.nextSibling;
-		}
-		return this
-	}
+	update: updateChildren,
+	updateChildren: updateChildren
 };
+
+function updateChildren(v, k, o) {
+	var child = this.node.firstChild;
+	while (child) {
+		var co = child[picoKey];
+		if (co) {
+			if (co.update) co.update(v, k, o);
+			child = (co.foot || child).nextSibling;
+		}
+		else child = child.nextSibling;
+	}
+	return this
+}
 
 /**
  * @constructor
@@ -240,25 +242,25 @@ var CElementProto = CElement.prototype = {
 function CNode(node) {
 	this.root = null;
 	this.node = node;
-	this.update = this.text;
 	node[picoKey] = this;
 }
 
 CNode.prototype = {
 	constructor: CNode,
 	foot: null,
-
-
+	getParent: CElementProto.getParent,
 	prop: CElementProto.prop,
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,
 	remove: CElementProto.remove,
 	destroy: CElementProto.remove,
-
-	text: function(val) {
-		this.node.nodeValue = val;
-	}
+	text: nodeValue,
+	update: nodeValue
 };
+
+function nodeValue(val) {
+	this.node.nodeValue = val;
+}
 
 /**
  * @constructor
@@ -287,6 +289,7 @@ function CList(template) {
 
 CList.prototype = {
 	constructor: CList,
+	getParent: CElementProto.getParent,
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	remove: remove,
@@ -305,7 +308,7 @@ CList.prototype = {
 				origin = next.parentNode,
 				anchor = before || null;
 
-		if (!parent) throw Error('invalid parent node')
+		if (!parent.nodeType) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
 
@@ -348,12 +351,12 @@ CList.prototype = {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 
-		while(spot !== this.foot) {
-			item = spot[picoKey];
+		if (spot !== this.foot) do {
+			item = foot.previousSibling[picoKey];
 			items[item.key] = null;
-			spot = (item.foot || item.node).nextSibling;
 			item.destroy();
-		}
+		} while (item !== spot[picoKey])
+
 		return this
 	},
 

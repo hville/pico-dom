@@ -9,22 +9,22 @@ import {picoKey} from './picoKey'
 export function CNode(node) {
 	this.root = null
 	this.node = node
-	this.update = this.text
 	node[picoKey] = this
 }
 
 CNode.prototype = {
 	constructor: CNode,
 	foot: null,
-
-
+	getParent: CElementProto.getParent,
 	prop: CElementProto.prop,
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,
 	remove: CElementProto.remove,
 	destroy: CElementProto.remove,
+	text: nodeValue,
+	update: nodeValue
+}
 
-	text: function(val) {
-		this.node.nodeValue = val
-	}
+function nodeValue(val) {
+	this.node.nodeValue = val
 }

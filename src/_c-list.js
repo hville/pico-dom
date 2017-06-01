@@ -30,6 +30,7 @@ export function CList(template) {
 
 CList.prototype = {
 	constructor: CList,
+	getParent: CElementProto.getParent,
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	remove: remove,
@@ -48,7 +49,7 @@ CList.prototype = {
 				origin = next.parentNode,
 				anchor = before || null
 
-		if (!parent) throw Error('invalid parent node')
+		if (!parent.nodeType) throw Error('invalid parent node')
 
 		if (origin !== parent || (anchor !== foot && anchor !== foot.nextSibling)) {
 
@@ -91,12 +92,12 @@ CList.prototype = {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling
 		}
 
-		while(spot !== this.foot) {
-			item = spot[picoKey]
+		if (spot !== this.foot) do {
+			item = foot.previousSibling[picoKey]
 			items[item.key] = null
-			spot = (item.foot || item.node).nextSibling
 			item.destroy()
-		}
+		} while (item !== spot[picoKey])
+
 		return this
 	},
 
