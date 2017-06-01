@@ -48,20 +48,20 @@ ct('element - static, multiple mixed arguments', function() {
 })
 
 ct('element - root', function() {
-	var h1 = {},
-			h2 = {}
-	var h0 = el('h0').append(
-		el('h1').call(function() {h1 = this}),
-		el('h2').call(function() {h2 = this})
+	var h2 = {},
+			h3 = {}
+	var h1 = el('h1').append(
+		el('h2').call(function() {h2 = this}),
+		el('h3').call(function() {h3 = this})
 	).create().extra('a', 'a')
-	ct('===', h1.root, h0)
-	ct('===', h2.root, h0)
-	ct('===', h1.root.a, 'a')
+	ct('===', h2.root, h1)
+	ct('===', h3.root, h1)
 	ct('===', h2.root.a, 'a')
+	ct('===', h3.root.a, 'a')
 })
 
 ct('element - event', function() {
-	var tpl = el('h0').event('click', function(e) { e.target.textContent += 'a' }),
+	var tpl = el('h1').event('click', function(e) { e.target.textContent += 'a' }),
 			cmp = tpl.create(),
 			elm = cmp.node
 
@@ -74,29 +74,29 @@ ct('element - event', function() {
 
 ct('element - immutable template', function() {
 	var t0 = el('div'),
-			t1 = P.template(t0.attr('id', 1).append(el('h1').append(1)).create().node),
-			t2 = P.template(el('h2', 2).create().node),
-			h0 = t0.attr('id', 0).append(el('h0').append(0)).create(),
-			h1 = t1.create(),
-			h2 = t2.attr('id', 2).create(),
-			h3 = t0.attr('id', '3').append(el('h3').append(3)).create(),
-			h4 = t0.attr('id', 4).append(el('h4').append(4)).create()
+			t1 = P.template(t0.attr('id', 1).append(el('h2').append(1)).create().node),
+			t2 = P.template(el('h3', 2).create().node),
+			h1 = t0.attr('id', 0).append(el('h1').append(0)).create(),
+			h2 = t1.create(),
+			h3 = t2.attr('id', 2).create(),
+			h4 = t0.attr('id', '3').append(el('h3').append(3)).create(),
+			h5 = t0.attr('id', 4).append(el('h4').append(4)).create()
 
-	ct('===', h0.node.childNodes.length, 1)
 	ct('===', h1.node.childNodes.length, 1)
 	ct('===', h2.node.childNodes.length, 1)
 	ct('===', h3.node.childNodes.length, 1)
 	ct('===', h4.node.childNodes.length, 1)
+	ct('===', h5.node.childNodes.length, 1)
 
-	ct('===', h0.node.id, '0')
-	ct('===', h1.node.id, '1')
-	ct('===', h2.node.id, '2')
-	ct('===', h3.node.id, '3')
-	ct('===', h4.node.id, '4')
+	ct('===', h1.node.id, '0')
+	ct('===', h2.node.id, '1')
+	ct('===', h3.node.id, '2')
+	ct('===', h4.node.id, '3')
+	ct('===', h5.node.id, '4')
 })
 
 ct('element - update', function() {
-	var co = el('h0').append(
+	var co = el('h1').append(
 		P.text('a'),
 		P.text('b').extra('update', function(v) { this.text(v.toUpperCase()) }),
 		P.text('c').extra('update', function(v) { this.text(v.toUpperCase()); this.update = null })
@@ -109,11 +109,11 @@ ct('element - update', function() {
 	ct('===', co.node.textContent, 'eED')
 })
 
-ct('element - custom element', function() {
-	var co = el('h0').append(
-		el('h1').append(
-			el('h2', 'x').call(
-				function() {
+ct('element - custom element', function () {
+	var co = el('h1').append(
+		el('h2').append(
+			el('h3', 'x').call(
+				function () {
 					this.root.update = this.text.bind(this)
 				}
 			)

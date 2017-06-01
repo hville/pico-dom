@@ -87,7 +87,7 @@ ct('list nested', function() {
 	var co = el('div',
 		list(
 			list(
-				el('h0',
+				el('h1',
 					text('')
 				)
 			)
@@ -108,7 +108,7 @@ ct('list nested', function() {
 })
 
 ct('list keyed', function() {
-	var co = el('h0',
+	var co = el('h1',
 		list(
 			text('x').extra('update', function(v) { this.text(v.v); this.update = null })
 		).extra('getKey', v => v.k)
@@ -131,7 +131,7 @@ ct('list keyed', function() {
 })
 
 ct('list select', function() {
-	var co = el('h0',
+	var co = el('h1',
 		list({
 			a: text('').extra('update', function(v) { this.text('a'+v) }),
 			b: text('').extra('update', function(v) { this.text('b'+v) })
