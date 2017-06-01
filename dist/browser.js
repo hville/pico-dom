@@ -341,13 +341,12 @@ CList.prototype = {
 
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr),
-					model = this.template,
-					item = items[key] || (items[key] = model.create(this, key));
+					item = items[key] || (items[key] = this.template.create(this, key));
 			if (item.update) item.update(arr[i], i, arr);
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 
-		if (spot !== this.foot) do {
+		if (spot !== foot) do {
 			item = foot.previousSibling[picoKey];
 			items[item.key] = null;
 			item.destroy();
@@ -381,8 +380,8 @@ function updateSelectChildren(v,k,o) {
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
 	}
-	if (spot !== this.foot) do {
-		item = this.foot.previousSibling[picoKey];
+	if (spot !== foot) do {
+		item = foot.previousSibling[picoKey];
 		item.destroy();
 	} while (item !== spot[picoKey])
 	return this
