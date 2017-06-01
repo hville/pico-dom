@@ -338,18 +338,23 @@ CList.prototype = {
 		var foot = this.foot,
 				parent = foot.parentNode || this.moveTo(exports.D.createDocumentFragment()).foot.parentNode,
 				spot = this.node.nextSibling,
-				items = this.refs;
+				items = this.refs,
+				refs = Object.create(null);
 
 		for (var i=0; i<arr.length; ++i) {
 			var key = this.getKey(arr[i], i, arr),
+<<<<<<< HEAD
 					item = items[key] || (items[key] = this.template.create(this, key));
+=======
+					item = refs[key] = items[key] || this.template.create(this, key);
+>>>>>>> 0c171f02415ec8ee8a219ea5e156b50c8e84d06c
 			if (item.update) item.update(arr[i], i, arr);
 			spot = this._placeItem(parent, item, spot, foot).nextSibling;
 		}
+		this.refs = refs;
 
 		if (spot !== foot) do {
 			item = foot.previousSibling[picoKey];
-			items[item.key] = null;
 			item.destroy();
 		} while (item !== spot[picoKey])
 
