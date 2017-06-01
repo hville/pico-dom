@@ -117,6 +117,7 @@ export var CElementProto = CElement.prototype = {
 			this._events[type] = handler
 			this.node.addEventListener(type, this, false)
 		}
+		return this
 	},
 	update: updateChildren,
 	updateChildren: updateChildren
