@@ -113,7 +113,6 @@ var CElementProto = CElement.prototype = {
 	constructor: CElement,
 	_events: null,
 	foot: null,
-	getParent: function() { return this.node.parentNode[picoKey] },
 
 	/**
 	* @function
@@ -247,7 +246,6 @@ function CNode(node) {
 CNode.prototype = {
 	constructor: CNode,
 	foot: null,
-	getParent: CElementProto.getParent,
 	prop: CElementProto.prop,
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,
@@ -288,7 +286,6 @@ function CList(template) {
 
 CList.prototype = {
 	constructor: CList,
-	getParent: CElementProto.getParent,
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	remove: remove,

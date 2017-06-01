@@ -15,7 +15,6 @@ export var CElementProto = CElement.prototype = {
 	constructor: CElement,
 	_events: null,
 	foot: null,
-	getParent: function() { return this.node.parentNode[picoKey] },
 
 	/**
 	* @function

@@ -15,7 +15,6 @@ export function CNode(node) {
 CNode.prototype = {
 	constructor: CNode,
 	foot: null,
-	getParent: CElementProto.getParent,
 	prop: CElementProto.prop,
 	extra: CElementProto.extra,
 	moveTo: CElementProto.moveTo,

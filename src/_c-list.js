@@ -30,7 +30,6 @@ export function CList(template) {
 
 CList.prototype = {
 	constructor: CList,
-	getParent: CElementProto.getParent,
 	extra: CElementProto.extra,
 	prop: CElementProto.prop,
 	remove: remove,

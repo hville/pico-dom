@@ -11,7 +11,7 @@
 
 ## [1.0.1] - 2017-05-29
 ### Fixed
-- minor destroy simplification for non-elements
+- minor internal simplifications for lists
 
 ## [1.0.0] - 2017-05-28
 ### Changed
